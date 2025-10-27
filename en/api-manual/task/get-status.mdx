@@ -1,0 +1,95 @@
+---
+title: "Get Task Status"
+description: "Query async task generation status and progress"
+api: "GET https://ai.kaiho.cc/v1/tasks/{task_id}"
+---
+
+## Overview
+
+Many AI generation tasks (such as video generation) are processed asynchronously. Use the Task Management API to query task status, progress, and results.
+
+## Task Lifecycle
+
+<Steps>
+  <Step title="Create Task">
+    Call generation API to create task and get `task_id`
+  </Step>
+  <Step title="Queued">
+    Task is waiting in queue for processing
+  </Step>
+  <Step title="Processing">
+    Task is being generated, progress can be viewed
+  </Step>
+  <Step title="Completed / Failed">
+    Task completed or failed, retrieve results or error information
+  </Step>
+</Steps>
+
+## Request Example
+
+```python
+import requests
+
+task_id = "task_abc123"
+api_key = "YOUR_API_KEY"
+
+response = requests.get(
+    f"https://ai.kaiho.cc/v1/tasks/{task_id}",
+    headers={"Authorization": f"Bearer {api_key}"}
+)
+
+status = response.json()
+print(f"Task status: {status['status']}")
+print(f"Progress: {status['progress']}%")
+
+if status['status'] == 'completed':
+    print(f"Result: {status['result']}")
+elif status['status'] == 'failed':
+    print(f"Error: {status['error']}")
+```
+
+## Response Formats
+
+### Completed
+
+```json
+{
+  "id": "task_abc123",
+  "type": "video_generation",
+  "status": "completed",
+  "progress": 100,
+  "result": {
+    "video_url": "https://storage.kaiho.cc/videos/video-123.mp4",
+    "thumbnail_url": "https://storage.kaiho.cc/videos/thumb-123.jpg",
+    "duration": 10,
+    "resolution": "1920x1080"
+  },
+  "created_at": "2024-01-15T10:30:00Z",
+  "completed_at": "2024-01-15T10:33:30Z"
+}
+```
+
+## Using Webhooks (Recommended)
+
+Avoid frequent polling by using webhooks to receive completion notifications:
+
+```python
+# Specify webhook when creating task
+response = requests.post(
+    "https://ai.kaiho.cc/v1/videos/generations",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={
+        "model": "sora-2",
+        "prompt": "Video description...",
+        "webhook_url": "https://your-server.com/webhook"
+    }
+)
+```
+
+<Tip>
+  **Performance Optimization:** Using webhooks instead of polling significantly reduces API calls, lowers latency, and saves costs.
+</Tip>
+
+
+
+

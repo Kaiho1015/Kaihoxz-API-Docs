@@ -1,0 +1,84 @@
+---
+title: "Whisper-1 Audio Transcription"
+description: "Convert audio to text using Whisper model"
+api: "POST https://ai.kaiho.cc/v1/audio/transcriptions"
+---
+
+## Overview
+
+Whisper-1 is OpenAI's speech recognition model that accurately transcribes audio to text, supporting multiple languages and audio formats.
+
+## Supported Features
+
+<CardGroup cols={2}>
+  <Card title="Multi-language Recognition" icon="language">
+    Supports automatic recognition of 99+ languages
+  </Card>
+  <Card title="Timestamps" icon="clock">
+    Optional word-level or segment-level timestamps
+  </Card>
+  <Card title="Speaker Separation" icon="users">
+    Distinguish different speakers (beta feature)
+  </Card>
+  <Card title="Format Conversion" icon="file-export">
+    Supports multiple output formats
+  </Card>
+</CardGroup>
+
+## Request Parameters
+
+<ParamField body="file" type="file" required>
+  Audio file to transcribe.
+  
+  Supported formats: mp3, mp4, mpeg, mpga, m4a, wav, webm
+  
+  Maximum file size: 25 MB
+</ParamField>
+
+<ParamField body="model" type="string" required>
+  Model ID, use `whisper-1`.
+</ParamField>
+
+<ParamField body="language" type="string">
+  Language code (ISO-639-1) of the audio, e.g. `en` or `zh`.
+  
+  Specifying the language improves accuracy and speed.
+</ParamField>
+
+<ParamField body="response_format" type="string" default="json">
+  Output format:
+  - `json` - JSON format
+  - `text` - Plain text
+  - `srt` - Subtitle file format
+  - `verbose_json` - Detailed JSON with timestamps
+  - `vtt` - WebVTT subtitle format
+</ParamField>
+
+## Request Example
+
+```python
+import openai
+
+client = openai.OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://ai.kaiho.cc/v1"
+)
+
+# Basic transcription
+with open("audio.mp3", "rb") as audio_file:
+    transcription = client.audio.transcriptions.create(
+        model="whisper-1",
+        file=audio_file,
+        language="en"
+    )
+
+print(transcription.text)
+```
+
+<Tip>
+  **Accuracy Improvement:** Specify the correct language code and include proper nouns or technical terms in the prompt to significantly improve transcription accuracy.
+</Tip>
+
+
+
+

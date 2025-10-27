@@ -1,0 +1,235 @@
+---
+title: "OpenAI 多模态响应 API"
+description: "支持文本和图像输出的多模态 API"
+api: "POST https://ai.kaiho.cc/v1/chat/completions"
+---
+
+## 概述
+
+OpenAI 多模态响应 API 允许模型生成包含文本和图像的组合响应，适用于需要视觉解释的场景。
+
+## 支持的模型
+
+<CardGroup cols={2}>
+  <Card title="GPT-4o" icon="openai">
+    最强大的多模态模型
+  </Card>
+  <Card title="GPT-4o-mini" icon="bolt">
+    高效的多模态模型
+  </Card>
+</CardGroup>
+
+## 启用多模态输出
+
+通过设置 `response_format` 参数启用多模态响应：
+
+<ParamField body="response_format" type="object">
+  响应格式配置。
+  
+  <Expandable title="多模态配置">
+    <ParamField body="type" type="string">
+      设置为 `multimodal` 启用多模态输出
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## 请求示例
+
+<CodeGroup>
+
+```bash cURL
+curl https://ai.kaiho.cc/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "gpt-4o",
+    "messages": [
+      {
+        "role": "user",
+        "content": "画一个流程图，展示用户注册的过程"
+      }
+    ],
+    "response_format": {
+      "type": "multimodal"
+    }
+  }'
+```
+
+```python Python
+import openai
+
+client = openai.OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://ai.kaiho.cc/v1"
+)
+
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[
+        {
+            "role": "user",
+            "content": "画一个流程图，展示用户注册的过程"
+        }
+    ],
+    response_format={"type": "multimodal"}
+)
+
+# 处理多模态响应
+for item in response.choices[0].message.content:
+    if item.type == "text":
+        print(f"文本: {item.text}")
+    elif item.type == "image_url":
+        print(f"图像: {item.image_url.url}")
+```
+
+```javascript JavaScript
+import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: 'YOUR_API_KEY',
+  baseURL: 'https://ai.kaiho.cc/v1'
+});
+
+const response = await client.chat.completions.create({
+  model: 'gpt-4o',
+  messages: [
+    {
+      role: 'user',
+      content: '画一个流程图，展示用户注册的过程'
+    }
+  ],
+  response_format: { type: 'multimodal' }
+});
+
+// 处理多模态响应
+response.choices[0].message.content.forEach(item => {
+  if (item.type === 'text') {
+    console.log('文本:', item.text);
+  } else if (item.type === 'image_url') {
+    console.log('图像:', item.image_url.url);
+  }
+});
+```
+
+</CodeGroup>
+
+## 响应格式
+
+多模态响应包含文本和图像的数组：
+
+```json
+{
+  "id": "chatcmpl-123",
+  "object": "chat.completion",
+  "created": 1677652288,
+  "model": "gpt-4o",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "这是一个用户注册流程图："
+          },
+          {
+            "type": "image_url",
+            "image_url": {
+              "url": "https://storage.kaiho.cc/generated/image-123.png",
+              "detail": "high"
+            }
+          },
+          {
+            "type": "text",
+            "text": "流程包括以下步骤..."
+          }
+        ]
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 20,
+    "completion_tokens": 150,
+    "total_tokens": 170
+  }
+}
+```
+
+## 输入多模态内容
+
+您也可以在输入中混合文本和图像：
+
+```python
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "分析这张图片并创建一个相似的版本"
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "https://example.com/image.jpg"
+                    }
+                }
+            ]
+        }
+    ],
+    response_format={"type": "multimodal"}
+)
+```
+
+## 使用场景
+
+<CardGroup cols={2}>
+  <Card title="图表生成" icon="chart-line">
+    让 AI 生成数据可视化图表
+  </Card>
+  <Card title="流程图" icon="diagram-project">
+    创建业务流程或技术架构图
+  </Card>
+  <Card title="UI 设计" icon="palette">
+    生成界面设计原型
+  </Card>
+  <Card title="教育内容" icon="graduation-cap">
+    创建带有插图的教学材料
+  </Card>
+</CardGroup>
+
+## 图像规格
+
+生成的图像具有以下特点：
+
+- **格式**：PNG
+- **分辨率**：1024x1024（默认）
+- **存储**：临时存储 24 小时
+- **访问**：通过 HTTPS URL
+
+## 最佳实践
+
+<AccordionGroup>
+  <Accordion title="明确描述需求" icon="message">
+    在提示词中清楚说明您需要的图像类型和风格。
+  </Accordion>
+  
+  <Accordion title="处理混合内容" icon="layer-group">
+    准备好处理文本和图像的混合响应数组。
+  </Accordion>
+  
+  <Accordion title="保存生成的图像" icon="download">
+    图像 URL 仅临时有效，需要及时下载保存。
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  **计费说明：** 多模态响应按生成的文本 tokens 和图像数量分别计费。
+</Note>
+
+
+

@@ -1,0 +1,62 @@
+---
+title: "Gemini Native Format"
+description: "Use Google Gemini native API format"
+api: "POST https://ai.kaiho.cc/v1/models/{model}:generateContent"
+---
+
+## Overview
+
+The Gemini Native Format API provides a native interface for interacting with Google Gemini models, supporting multimodal inputs and advanced features.
+
+## Supported Models
+
+<CardGroup cols={2}>
+  <Card title="Gemini 2.0 Flash" icon="bolt">
+    Latest generation model, fast and powerful
+  </Card>
+  <Card title="Gemini 1.5 Pro" icon="star">
+    Strong reasoning capabilities with long context support
+  </Card>
+  <Card title="Gemini 1.5 Flash" icon="gauge-high">
+    Fast response for real-time applications
+  </Card>
+  <Card title="Gemini 1.0 Pro" icon="sparkles">
+    Stable and reliable foundation model
+  </Card>
+</CardGroup>
+
+## Request Example
+
+<CodeGroup>
+
+```python Python
+import google.generativeai as genai
+
+genai.configure(
+    api_key="YOUR_API_KEY",
+    transport="rest",
+    client_options={"api_endpoint": "https://ai.kaiho.cc/v1"}
+)
+
+model = genai.GenerativeModel('gemini-2.0-flash-exp')
+
+response = model.generate_content(
+    "Explain the basic principles of quantum computing",
+    generation_config={
+        "temperature": 0.7,
+        "max_output_tokens": 1000
+    }
+)
+
+print(response.text)
+```
+
+</CodeGroup>
+
+<Tip>
+  **Long Context Processing:** Gemini 1.5 Pro supports up to 2 million tokens of context, ideal for processing long documents and video analysis.
+</Tip>
+
+
+
+

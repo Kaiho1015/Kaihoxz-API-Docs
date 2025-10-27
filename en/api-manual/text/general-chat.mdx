@@ -1,0 +1,165 @@
+---
+title: "General Chat API"
+description: "Unified chat interface supporting multiple text generation models"
+api: "POST https://ai.kaiho.cc/v1/chat/completions"
+---
+
+## Overview
+
+The General Chat API provides a unified interface to access multiple large language models, fully compatible with the OpenAI Chat Completions API format.
+
+## Supported Models
+
+<CardGroup cols={2}>
+  <Card title="GPT Series" icon="openai">
+    - `gpt-4o`
+    - `gpt-4o-mini`
+    - `gpt-4-turbo`
+    - `gpt-3.5-turbo`
+  </Card>
+  <Card title="Claude Series" icon="brain">
+    - `claude-3-5-sonnet`
+    - `claude-3-opus`
+    - `claude-3-sonnet`
+    - `claude-3-haiku`
+  </Card>
+  <Card title="Gemini Series" icon="google">
+    - `gemini-2.0-flash`
+    - `gemini-1.5-pro`
+    - `gemini-1.5-flash`
+  </Card>
+  <Card title="Other Models" icon="sparkles">
+    - `deepseek-chat`
+    - `qwen-max`
+    - `glm-4`
+  </Card>
+</CardGroup>
+
+## Request Parameters
+
+<ParamField body="model" type="string" required>
+  Model ID to use. Supports any model from the list above.
+</ParamField>
+
+<ParamField body="messages" type="array" required>
+  Array of message conversation history.
+  
+  <Expandable title="Message Object">
+    <ParamField body="role" type="string" required>
+      Message role: `system`, `user`, or `assistant`
+    </ParamField>
+    <ParamField body="content" type="string" required>
+      Message content
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="temperature" type="number" default={1}>
+  Sampling temperature, range 0-2. Higher values (e.g. 0.8) make output more random, lower values (e.g. 0.2) make it more deterministic.
+</ParamField>
+
+<ParamField body="max_tokens" type="integer">
+  Maximum number of tokens to generate.
+</ParamField>
+
+<ParamField body="stream" type="boolean" default={false}>
+  Whether to enable streaming output.
+</ParamField>
+
+## Request Example
+
+<CodeGroup>
+
+```bash cURL
+curl https://ai.kaiho.cc/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "gpt-4o",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a helpful AI assistant."
+      },
+      {
+        "role": "user",
+        "content": "What is machine learning?"
+      }
+    ],
+    "temperature": 0.7,
+    "max_tokens": 1000
+  }'
+```
+
+```python Python
+import openai
+
+client = openai.OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://ai.kaiho.cc/v1"
+)
+
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[
+        {"role": "system", "content": "You are a helpful AI assistant."},
+        {"role": "user", "content": "What is machine learning?"}
+    ],
+    temperature=0.7,
+    max_tokens=1000
+)
+
+print(response.choices[0].message.content)
+```
+
+</CodeGroup>
+
+## Response Format
+
+```json
+{
+  "id": "chatcmpl-123",
+  "object": "chat.completion",
+  "created": 1677652288,
+  "model": "gpt-4o",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Machine learning is a branch of artificial intelligence..."
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 20,
+    "completion_tokens": 150,
+    "total_tokens": 170
+  }
+}
+```
+
+## Streaming Output
+
+Enable `stream: true` for real-time responses:
+
+```python
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Tell me a story"}],
+    stream=True
+)
+
+for chunk in response:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="")
+```
+
+<Tip>
+  **Best Practice:** Use `temperature` to control output creativity. Use lower values (0.2-0.5) for factual content, higher values (0.7-1.0) for creative content.
+</Tip>
+
+
+
+

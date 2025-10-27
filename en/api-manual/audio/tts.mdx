@@ -1,0 +1,104 @@
+---
+title: "TTS Text-to-Speech"
+description: "Convert text to natural and fluent speech"
+api: "POST https://ai.kaiho.cc/v1/audio/speech"
+---
+
+## Overview
+
+The TTS (Text-to-Speech) API uses advanced speech synthesis technology to convert text into natural, fluent human voices, supporting multiple languages and voice options.
+
+## Supported Voices
+
+<CardGroup cols={3}>
+  <Card title="Alloy" icon="a">
+    Neutral, balanced voice
+  </Card>
+  <Card title="Echo" icon="e">
+    Male, steady voice
+  </Card>
+  <Card title="Fable" icon="f">
+    Male, expressive voice
+  </Card>
+  <Card title="Onyx" icon="o">
+    Male, deep and powerful
+  </Card>
+  <Card title="Nova" icon="n">
+    Female, friendly and warm
+  </Card>
+  <Card title="Shimmer" icon="s">
+    Female, soft and sweet
+  </Card>
+</CardGroup>
+
+## Request Parameters
+
+<ParamField body="model" type="string" required>
+  TTS model:
+  - `tts-1` - Standard quality, fast speed
+  - `tts-1-hd` - High definition quality, more natural
+</ParamField>
+
+<ParamField body="input" type="string" required>
+  Text to convert to speech, up to 4096 characters.
+</ParamField>
+
+<ParamField body="voice" type="string" required>
+  Voice to use: `alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer`
+</ParamField>
+
+<ParamField body="speed" type="number" default={1.0}>
+  Speech speed, range 0.25 - 4.0.
+  - 1.0 = Normal speed
+  - 0.5 = Half speed
+  - 2.0 = Double speed
+</ParamField>
+
+## Request Example
+
+```python
+import openai
+from pathlib import Path
+
+client = openai.OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://ai.kaiho.cc/v1"
+)
+
+# Generate speech
+response = client.audio.speech.create(
+    model="tts-1-hd",
+    voice="nova",
+    input="Welcome to Kaihoxz text-to-speech service. We provide the most natural AI voice synthesis technology.",
+    speed=1.0
+)
+
+# Save to file
+speech_file_path = Path("speech.mp3")
+response.stream_to_file(speech_file_path)
+
+print(f"Speech saved to: {speech_file_path}")
+```
+
+## Voice Characteristics
+
+| Voice | Gender | Characteristics | Use Cases |
+|-------|--------|----------------|-----------|
+| Alloy | Neutral | Clear, professional | News, education, customer service |
+| Echo | Male | Steady, authoritative | Business, broadcasting |
+| Fable | Male | Lively, expressive | Storytelling, advertising |
+| Onyx | Male | Deep, powerful | Documentaries, serious content |
+| Nova | Female | Friendly, warm | Assistants, guidance |
+| Shimmer | Female | Soft, sweet | Children's content, casual scenarios |
+
+<Warning>
+  **Usage Guidelines:** Please ensure that generated speech content complies with local laws and regulations. It must not be used for fraud, impersonation, or other illegal purposes.
+</Warning>
+
+<Tip>
+  **Performance Optimization:** For real-time applications, use the `tts-1` model with `opus` format to achieve the lowest latency.
+</Tip>
+
+
+
+

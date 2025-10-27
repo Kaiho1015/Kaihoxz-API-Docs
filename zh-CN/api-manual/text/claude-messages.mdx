@@ -1,0 +1,208 @@
+---
+title: "Claude Messages API"
+description: "使用 Anthropic Claude 原生消息格式"
+api: "POST https://ai.kaiho.cc/v1/messages"
+---
+
+## 概述
+
+Claude Messages API 提供了与 Anthropic Claude 模型交互的原生接口格式，支持高级功能如系统提示词和多模态输入。
+
+## 支持的模型
+
+<CardGroup cols={2}>
+  <Card title="Claude 3.5 Sonnet" icon="star">
+    最新最强大的模型，平衡性能和速度
+  </Card>
+  <Card title="Claude 3 Opus" icon="crown">
+    最强大的模型，适合复杂任务
+  </Card>
+  <Card title="Claude 3 Sonnet" icon="bolt">
+    高性能模型，适合大多数用途
+  </Card>
+  <Card title="Claude 3 Haiku" icon="gauge-high">
+    最快速的模型，适合简单任务
+  </Card>
+</CardGroup>
+
+## 请求参数
+
+<ParamField body="model" type="string" required>
+  Claude 模型 ID：
+  - `claude-3-5-sonnet-20241022`
+  - `claude-3-opus-20240229`
+  - `claude-3-sonnet-20240229`
+  - `claude-3-haiku-20240307`
+</ParamField>
+
+<ParamField body="messages" type="array" required>
+  对话消息数组，必须以 `user` 角色开始。
+</ParamField>
+
+<ParamField body="system" type="string">
+  系统提示词，定义 AI 的行为和角色。
+</ParamField>
+
+<ParamField body="max_tokens" type="integer" required>
+  生成的最大 token 数量，必填参数。
+</ParamField>
+
+<ParamField body="temperature" type="number" default={1}>
+  采样温度，范围 0-1。
+</ParamField>
+
+<ParamField body="stream" type="boolean" default={false}>
+  是否启用流式输出。
+</ParamField>
+
+## 请求示例
+
+<CodeGroup>
+
+```bash cURL
+curl https://ai.kaiho.cc/v1/messages \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -d '{
+    "model": "claude-3-5-sonnet-20241022",
+    "max_tokens": 1024,
+    "system": "你是一位专业的技术顾问。",
+    "messages": [
+      {
+        "role": "user",
+        "content": "解释一下什么是 REST API"
+      }
+    ]
+  }'
+```
+
+```python Python
+import anthropic
+
+client = anthropic.Anthropic(
+    api_key="YOUR_API_KEY",
+    base_url="https://ai.kaiho.cc/v1"
+)
+
+message = client.messages.create(
+    model="claude-3-5-sonnet-20241022",
+    max_tokens=1024,
+    system="你是一位专业的技术顾问。",
+    messages=[
+        {"role": "user", "content": "解释一下什么是 REST API"}
+    ]
+)
+
+print(message.content[0].text)
+```
+
+```javascript JavaScript
+import Anthropic from '@anthropic-ai/sdk';
+
+const client = new Anthropic({
+  apiKey: 'YOUR_API_KEY',
+  baseURL: 'https://ai.kaiho.cc/v1'
+});
+
+const message = await client.messages.create({
+  model: 'claude-3-5-sonnet-20241022',
+  max_tokens: 1024,
+  system: '你是一位专业的技术顾问。',
+  messages: [
+    { role: 'user', content: '解释一下什么是 REST API' }
+  ]
+});
+
+console.log(message.content[0].text);
+```
+
+</CodeGroup>
+
+## 响应格式
+
+```json
+{
+  "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
+  "type": "message",
+  "role": "assistant",
+  "content": [
+    {
+      "type": "text",
+      "text": "REST API 是一种软件架构风格..."
+    }
+  ],
+  "model": "claude-3-5-sonnet-20241022",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 25,
+    "output_tokens": 180
+  }
+}
+```
+
+## 多模态输入
+
+Claude 支持图像和文本的混合输入：
+
+```python
+message = client.messages.create(
+    model="claude-3-5-sonnet-20241022",
+    max_tokens=1024,
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "url",
+                        "url": "https://example.com/image.jpg"
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": "这张图片里有什么？"
+                }
+            ]
+        }
+    ]
+)
+```
+
+## 流式输出
+
+```python
+with client.messages.stream(
+    model="claude-3-5-sonnet-20241022",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "写一首诗"}]
+) as stream:
+    for text in stream.text_stream:
+        print(text, end="", flush=True)
+```
+
+## 最佳实践
+
+<AccordionGroup>
+  <Accordion title="使用系统提示词" icon="message">
+    通过 `system` 参数设置 AI 的角色和行为，这比在消息中设置更有效。
+  </Accordion>
+  
+  <Accordion title="控制输出长度" icon="ruler">
+    合理设置 `max_tokens` 以控制成本和响应时间。
+  </Accordion>
+  
+  <Accordion title="选择合适的模型" icon="sliders">
+    - 复杂推理任务：使用 Opus
+    - 日常对话：使用 Sonnet
+    - 快速响应：使用 Haiku
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+  **注意：** 与 OpenAI API 不同，Claude Messages API 的 `max_tokens` 参数是必填的。
+</Warning>
+
+
+

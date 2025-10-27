@@ -1,0 +1,408 @@
+---
+title: "获取任务状态"
+description: "查询异步任务的生成状态和进度"
+api: "GET https://ai.kaiho.cc/v1/tasks/{task_id}"
+---
+
+## 概述
+
+许多 AI 生成任务（如视频生成）是异步处理的。使用任务管理 API 可以查询任务状态、进度和结果。
+
+## 任务生命周期
+
+<Steps>
+  <Step title="创建任务">
+    调用生成 API 创建任务，获得 `task_id`
+  </Step>
+  <Step title="排队中 (queued)">
+    任务在队列中等待处理
+  </Step>
+  <Step title="处理中 (processing)">
+    任务正在生成中，可查看进度
+  </Step>
+  <Step title="完成 (completed) / 失败 (failed)">
+    任务完成或失败，可获取结果或错误信息
+  </Step>
+</Steps>
+
+## 请求参数
+
+<ParamField path="task_id" type="string" required>
+  任务的唯一标识符，在创建任务时返回。
+</ParamField>
+
+## 请求示例
+
+<CodeGroup>
+
+```bash cURL
+curl https://ai.kaiho.cc/v1/tasks/task_abc123 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```python Python
+import requests
+
+task_id = "task_abc123"
+api_key = "YOUR_API_KEY"
+
+response = requests.get(
+    f"https://ai.kaiho.cc/v1/tasks/{task_id}",
+    headers={"Authorization": f"Bearer {api_key}"}
+)
+
+status = response.json()
+print(f"任务状态: {status['status']}")
+print(f"进度: {status['progress']}%")
+
+if status['status'] == 'completed':
+    print(f"结果: {status['result']}")
+elif status['status'] == 'failed':
+    print(f"错误: {status['error']}")
+```
+
+```javascript JavaScript
+import axios from 'axios';
+
+const taskId = 'task_abc123';
+const apiKey = 'YOUR_API_KEY';
+
+const response = await axios.get(
+  `https://ai.kaiho.cc/v1/tasks/${taskId}`,
+  {
+    headers: { 'Authorization': `Bearer ${apiKey}` }
+  }
+);
+
+const status = response.data;
+console.log('任务状态:', status.status);
+console.log('进度:', status.progress + '%');
+
+if (status.status === 'completed') {
+  console.log('结果:', status.result);
+} else if (status.status === 'failed') {
+  console.log('错误:', status.error);
+}
+```
+
+</CodeGroup>
+
+## 响应格式
+
+### 排队中
+
+```json
+{
+  "id": "task_abc123",
+  "type": "video_generation",
+  "status": "queued",
+  "progress": 0,
+  "queue_position": 5,
+  "estimated_time": 180,
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+### 处理中
+
+```json
+{
+  "id": "task_abc123",
+  "type": "video_generation",
+  "status": "processing",
+  "progress": 45,
+  "current_step": "rendering",
+  "estimated_time_remaining": 90,
+  "created_at": "2024-01-15T10:30:00Z",
+  "started_at": "2024-01-15T10:31:00Z"
+}
+```
+
+### 已完成
+
+```json
+{
+  "id": "task_abc123",
+  "type": "video_generation",
+  "status": "completed",
+  "progress": 100,
+  "result": {
+    "video_url": "https://storage.kaiho.cc/videos/video-123.mp4",
+    "thumbnail_url": "https://storage.kaiho.cc/videos/thumb-123.jpg",
+    "duration": 10,
+    "resolution": "1920x1080",
+    "size_bytes": 15728640
+  },
+  "created_at": "2024-01-15T10:30:00Z",
+  "started_at": "2024-01-15T10:31:00Z",
+  "completed_at": "2024-01-15T10:33:30Z",
+  "processing_time": 150
+}
+```
+
+### 失败
+
+```json
+{
+  "id": "task_abc123",
+  "type": "video_generation",
+  "status": "failed",
+  "progress": 65,
+  "error": {
+    "code": "content_violation",
+    "message": "生成的内容违反了我们的内容政策",
+    "details": "检测到不适当的内容"
+  },
+  "created_at": "2024-01-15T10:30:00Z",
+  "started_at": "2024-01-15T10:31:00Z",
+  "failed_at": "2024-01-15T10:32:45Z"
+}
+```
+
+## 任务状态说明
+
+| 状态 | 说明 | 可用字段 |
+|------|------|---------|
+| `queued` | 任务已创建，等待处理 | `queue_position`, `estimated_time` |
+| `processing` | 任务正在处理中 | `progress`, `current_step`, `estimated_time_remaining` |
+| `completed` | 任务成功完成 | `result`, `processing_time` |
+| `failed` | 任务处理失败 | `error` |
+| `cancelled` | 任务被取消 | - |
+
+## 轮询最佳实践
+
+<AccordionGroup>
+  <Accordion title="合理的轮询间隔" icon="clock">
+    ```python
+    import time
+    
+    def poll_task(task_id):
+        while True:
+            status = get_task_status(task_id)
+            
+            if status['status'] in ['completed', 'failed']:
+                return status
+            
+            # 根据进度调整轮询间隔
+            if status['progress'] < 20:
+                time.sleep(10)  # 初期较慢，10秒轮询一次
+            else:
+                time.sleep(5)   # 后期较快，5秒轮询一次
+    ```
+  </Accordion>
+  
+  <Accordion title="使用指数退避" icon="chart-line">
+    ```python
+    import time
+    
+    def poll_with_backoff(task_id, max_attempts=100):
+        interval = 2
+        max_interval = 60
+        
+        for attempt in range(max_attempts):
+            status = get_task_status(task_id)
+            
+            if status['status'] in ['completed', 'failed']:
+                return status
+            
+            time.sleep(interval)
+            interval = min(interval * 1.5, max_interval)  # 指数增长，最大60秒
+    ```
+  </Accordion>
+  
+  <Accordion title="使用预估时间" icon="hourglass">
+    ```python
+    def smart_poll(task_id):
+        status = get_task_status(task_id)
+        
+        # 根据预估剩余时间智能等待
+        if 'estimated_time_remaining' in status:
+            wait_time = max(5, status['estimated_time_remaining'] / 5)
+            time.sleep(wait_time)
+        else:
+            time.sleep(10)
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## 使用 Webhook（推荐）
+
+避免频繁轮询，使用 webhook 接收完成通知：
+
+```python
+# 创建任务时指定 webhook
+response = requests.post(
+    "https://ai.kaiho.cc/v1/videos/generations",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={
+        "model": "sora-2",
+        "prompt": "视频描述...",
+        "webhook_url": "https://your-server.com/webhook",
+        "webhook_events": ["completed", "failed"]  # 指定要接收的事件
+    }
+)
+```
+
+Webhook 回调示例：
+
+```json
+{
+  "event": "task.completed",
+  "task_id": "task_abc123",
+  "type": "video_generation",
+  "status": "completed",
+  "result": {
+    "video_url": "https://storage.kaiho.cc/videos/video-123.mp4",
+    "duration": 10
+  },
+  "completed_at": "2024-01-15T10:33:30Z"
+}
+```
+
+## 批量查询任务
+
+查询多个任务的状态：
+
+<CodeGroup>
+
+```bash cURL
+curl https://ai.kaiho.cc/v1/tasks \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -G \
+  -d "ids=task_abc123,task_def456,task_ghi789"
+```
+
+```python Python
+import requests
+
+task_ids = ["task_abc123", "task_def456", "task_ghi789"]
+
+response = requests.get(
+    "https://ai.kaiho.cc/v1/tasks",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    params={"ids": ",".join(task_ids)}
+)
+
+tasks = response.json()
+for task in tasks['data']:
+    print(f"{task['id']}: {task['status']} ({task['progress']}%)")
+```
+
+</CodeGroup>
+
+## 取消任务
+
+取消正在处理的任务：
+
+```python
+import requests
+
+response = requests.delete(
+    f"https://ai.kaiho.cc/v1/tasks/task_abc123",
+    headers={"Authorization": "Bearer YOUR_API_KEY"}
+)
+
+print(response.json())
+# {"id": "task_abc123", "status": "cancelled"}
+```
+
+<Warning>
+  **注意：** 已经开始处理的任务可能无法立即取消，仍会产生部分费用。
+</Warning>
+
+## 任务历史查询
+
+获取您的任务历史记录：
+
+```python
+response = requests.get(
+    "https://ai.kaiho.cc/v1/tasks",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    params={
+        "type": "video_generation",  # 筛选任务类型
+        "status": "completed",        # 筛选任务状态
+        "limit": 50,                  # 每页数量
+        "offset": 0                   # 偏移量
+    }
+)
+
+tasks = response.json()
+```
+
+## 错误码说明
+
+| 错误码 | 说明 | 处理建议 |
+|--------|------|---------|
+| `task_not_found` | 任务不存在 | 检查 task_id 是否正确 |
+| `content_violation` | 内容违规 | 修改提示词，避免违规内容 |
+| `insufficient_credits` | 余额不足 | 充值账户 |
+| `processing_timeout` | 处理超时 | 简化任务或联系支持 |
+| `system_error` | 系统错误 | 稍后重试或联系支持 |
+
+## 完整示例
+
+综合使用任务管理的完整示例：
+
+```python
+import requests
+import time
+
+API_KEY = "YOUR_API_KEY"
+BASE_URL = "https://ai.kaiho.cc/v1"
+
+def create_video_task(prompt):
+    """创建视频生成任务"""
+    response = requests.post(
+        f"{BASE_URL}/videos/generations",
+        headers={"Authorization": f"Bearer {API_KEY}"},
+        json={
+            "model": "sora-2",
+            "prompt": prompt,
+            "duration": 10,
+            "resolution": "1920x1080"
+        }
+    )
+    return response.json()
+
+def get_task_status(task_id):
+    """获取任务状态"""
+    response = requests.get(
+        f"{BASE_URL}/tasks/{task_id}",
+        headers={"Authorization": f"Bearer {API_KEY}"}
+    )
+    return response.json()
+
+def wait_for_completion(task_id, timeout=600):
+    """等待任务完成"""
+    start_time = time.time()
+    
+    while True:
+        if time.time() - start_time > timeout:
+            raise TimeoutError(f"任务超时: {task_id}")
+        
+        status = get_task_status(task_id)
+        
+        print(f"状态: {status['status']}, 进度: {status.get('progress', 0)}%")
+        
+        if status['status'] == 'completed':
+            return status['result']
+        elif status['status'] == 'failed':
+            raise Exception(f"任务失败: {status['error']}")
+        
+        # 智能等待
+        time.sleep(5)
+
+# 使用示例
+task = create_video_task("一只猫在弹钢琴")
+print(f"任务已创建: {task['id']}")
+
+result = wait_for_completion(task['id'])
+print(f"视频已生成: {result['video_url']}")
+```
+
+<Tip>
+  **性能优化：** 使用 webhook 代替轮询可以显著减少API调用次数，降低延迟并节省成本。
+</Tip>
+
+
+

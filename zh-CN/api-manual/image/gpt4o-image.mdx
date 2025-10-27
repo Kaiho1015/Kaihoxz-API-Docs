@@ -1,0 +1,246 @@
+---
+title: "GPT-4o 图像生成"
+description: "使用 GPT-4o 模型生成高质量图像"
+api: "POST https://ai.kaiho.cc/v1/images/generations"
+---
+
+## 概述
+
+GPT-4o 图像生成 API 允许您通过文本描述创建高质量的 AI 生成图像，支持多种尺寸和风格。
+
+## 支持的模型
+
+<CardGroup cols={3}>
+  <Card title="DALL-E 3" icon="image">
+    OpenAI 最新的图像生成模型
+  </Card>
+  <Card title="DALL-E 2" icon="photo-film">
+    高性价比的图像生成
+  </Card>
+  <Card title="Stable Diffusion" icon="paintbrush">
+    开源图像生成模型
+  </Card>
+</CardGroup>
+
+## 请求参数
+
+<ParamField body="prompt" type="string" required>
+  图像描述文本，最多 4000 个字符。描述越详细，生成的图像越精确。
+</ParamField>
+
+<ParamField body="model" type="string" default="dall-e-3">
+  使用的模型：
+  - `dall-e-3` - 最新最强大
+  - `dall-e-2` - 经济实惠
+  - `stable-diffusion-xl` - 开源选择
+</ParamField>
+
+<ParamField body="n" type="integer" default={1}>
+  生成图像的数量，范围 1-10（DALL-E 3 仅支持 1）。
+</ParamField>
+
+<ParamField body="size" type="string" default="1024x1024">
+  图像尺寸：
+  - DALL-E 3: `1024x1024`, `1024x1792`, `1792x1024`
+  - DALL-E 2: `256x256`, `512x512`, `1024x1024`
+</ParamField>
+
+<ParamField body="quality" type="string" default="standard">
+  图像质量（仅 DALL-E 3）：
+  - `standard` - 标准质量
+  - `hd` - 高清质量（更慢，更贵）
+</ParamField>
+
+<ParamField body="style" type="string" default="vivid">
+  图像风格（仅 DALL-E 3）：
+  - `vivid` - 生动鲜艳
+  - `natural` - 自然写实
+</ParamField>
+
+<ParamField body="response_format" type="string" default="url">
+  响应格式：
+  - `url` - 返回图像 URL
+  - `b64_json` - 返回 base64 编码
+</ParamField>
+
+## 请求示例
+
+<CodeGroup>
+
+```bash cURL
+curl https://ai.kaiho.cc/v1/images/generations \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "dall-e-3",
+    "prompt": "一只戴着太阳镜的柴犬在海滩上冲浪，数字艺术风格",
+    "n": 1,
+    "size": "1024x1024",
+    "quality": "hd",
+    "style": "vivid"
+  }'
+```
+
+```python Python
+import openai
+
+client = openai.OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://ai.kaiho.cc/v1"
+)
+
+response = client.images.generate(
+    model="dall-e-3",
+    prompt="一只戴着太阳镜的柴犬在海滩上冲浪，数字艺术风格",
+    n=1,
+    size="1024x1024",
+    quality="hd",
+    style="vivid"
+)
+
+image_url = response.data[0].url
+print(f"生成的图像: {image_url}")
+```
+
+```javascript JavaScript
+import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: 'YOUR_API_KEY',
+  baseURL: 'https://ai.kaiho.cc/v1'
+});
+
+const response = await client.images.generate({
+  model: 'dall-e-3',
+  prompt: '一只戴着太阳镜的柴犬在海滩上冲浪，数字艺术风格',
+  n: 1,
+  size: '1024x1024',
+  quality: 'hd',
+  style: 'vivid'
+});
+
+console.log('生成的图像:', response.data[0].url);
+```
+
+</CodeGroup>
+
+## 响应格式
+
+```json
+{
+  "created": 1677652288,
+  "data": [
+    {
+      "url": "https://storage.kaiho.cc/generated/img-123.png",
+      "revised_prompt": "一只戴着时尚太阳镜的可爱柴犬站在冲浪板上..."
+    }
+  ]
+}
+```
+
+<Note>
+  **修订提示词：** DALL-E 3 可能会自动优化您的提示词以提高图像质量，优化后的提示词会在 `revised_prompt` 字段返回。
+</Note>
+
+## 图像编辑
+
+编辑现有图像（仅 DALL-E 2）：
+
+```python
+response = client.images.edit(
+    image=open("original.png", "rb"),
+    mask=open("mask.png", "rb"),  # 可选：标记要编辑的区域
+    prompt="将狗替换为猫",
+    n=1,
+    size="1024x1024"
+)
+```
+
+## 图像变体
+
+基于现有图像创建变体（仅 DALL-E 2）：
+
+```python
+response = client.images.create_variation(
+    image=open("original.png", "rb"),
+    n=2,
+    size="1024x1024"
+)
+```
+
+## 最佳实践
+
+<AccordionGroup>
+  <Accordion title="编写有效的提示词" icon="wand-magic-sparkles">
+    - 描述清晰具体
+    - 包含风格信息（如"水彩画"、"3D 渲染"）
+    - 描述光照和氛围
+    - 指定视角和构图
+  </Accordion>
+  
+  <Accordion title="选择合适的尺寸" icon="expand">
+    - 社交媒体：1024x1024
+    - 手机壁纸：1024x1792
+    - 桌面壁纸：1792x1024
+  </Accordion>
+  
+  <Accordion title="控制成本" icon="coins">
+    - 使用 standard 质量进行测试
+    - 确定效果后再使用 hd 质量
+    - DALL-E 2 更经济实惠
+  </Accordion>
+</AccordionGroup>
+
+## 提示词示例
+
+<Tabs>
+  <Tab title="写实风格">
+    ```
+    一位穿着专业西装的亚洲女性在现代办公室，
+    自然光线，浅景深，索尼A7III拍摄，
+    专业摄影，超高清，写实风格
+    ```
+  </Tab>
+  
+  <Tab title="插画风格">
+    ```
+    可爱的卡通猫咪在读书，
+    温暖的色调，柔和的灯光，
+    扁平插画风格，Dribbble风格，
+    简约设计
+    ```
+  </Tab>
+  
+  <Tab title="艺术风格">
+    ```
+    赛博朋克城市夜景，
+    霓虹灯，未来主义建筑，
+    雨后湿润的街道，
+    高对比度，Blade Runner风格
+    ```
+  </Tab>
+</Tabs>
+
+## 内容政策
+
+以下内容类型将被拒绝：
+
+- ❌ 暴力或血腥内容
+- ❌ 成人或性暗示内容
+- ❌ 仇恨或歧视性内容
+- ❌ 真实人物肖像（未经许可）
+
+<Warning>
+  **使用限制：** 生成的图像有效期为 24 小时，请及时下载保存。商业使用前请查看使用条款。
+</Warning>
+
+## 定价对比
+
+| 模型 | 标准质量 | 高清质量 |
+|------|---------|---------|
+| DALL-E 3 (1024×1024) | $0.040/张 | $0.080/张 |
+| DALL-E 3 (1792×1024) | $0.080/张 | $0.120/张 |
+| DALL-E 2 (1024×1024) | $0.020/张 | - |
+
+
+

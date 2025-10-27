@@ -1,0 +1,71 @@
+---
+title: "OpenAI Multimodal Responses API"
+description: "API supporting text and image outputs"
+api: "POST https://ai.kaiho.cc/v1/chat/completions"
+---
+
+## Overview
+
+The OpenAI Multimodal Responses API allows models to generate combined responses containing text and images, suitable for scenarios requiring visual explanations.
+
+## Supported Models
+
+<CardGroup cols={2}>
+  <Card title="GPT-4o" icon="openai">
+    Most powerful multimodal model
+  </Card>
+  <Card title="GPT-4o-mini" icon="bolt">
+    Efficient multimodal model
+  </Card>
+</CardGroup>
+
+## Enable Multimodal Output
+
+Enable multimodal responses by setting the `response_format` parameter:
+
+<ParamField body="response_format" type="object">
+  Response format configuration.
+  
+  <Expandable title="Multimodal Configuration">
+    <ParamField body="type" type="string">
+      Set to `multimodal` to enable multimodal output
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Request Example
+
+```python
+import openai
+
+client = openai.OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://ai.kaiho.cc/v1"
+)
+
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[
+        {
+            "role": "user",
+            "content": "Draw a flowchart showing the user registration process"
+        }
+    ],
+    response_format={"type": "multimodal"}
+)
+
+# Handle multimodal response
+for item in response.choices[0].message.content:
+    if item.type == "text":
+        print(f"Text: {item.text}")
+    elif item.type == "image_url":
+        print(f"Image: {item.image_url.url}")
+```
+
+<Note>
+  **Billing:** Multimodal responses are billed separately for generated text tokens and number of images.
+</Note>
+
+
+
+

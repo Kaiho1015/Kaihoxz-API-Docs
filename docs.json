@@ -1,122 +1,121 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Kaihoxz API Documentation",
   "theme": "mint",
-  "name": "Mint Starter Kit",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#0EA5E9",
+    "light": "#38BDF8",
+    "dark": "#0284C7"
   },
   "favicon": "/favicon.svg",
+  
+  "logo": {
+    "light": "/logo/title-loge.png",
+    "dark": "/logo/title-loge.png"
+  },
+
+  "topbar": {
+    "style": "default"
+  },
+
+  "topbarCtaButton": {
+    "name": "Dashboard",
+    "url": "https://ai.kaiho.cc/panel"
+  },
+
+  "anchors": [
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/Kaiho1015/docs"
+    },
+    {
+      "name": "Discord",
+      "icon": "discord",
+      "url": "https://discord.gg/你的邀请码"
+    }
+  ],
+
+  "tabs": [
+    {
+      "name": "API 手册",
+      "url": "api-manual"
+    },
+    {
+      "name": "使用技巧",
+      "url": "guides"
+    }
+  ],
+
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "概览",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "开始使用",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
-            ]
-          },
-          {
-            "group": "Customization",
-            "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "zh-CN/index"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API 手册",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "文本系列",
             "pages": [
-              "api-reference/introduction"
+              "zh-CN/api-manual/text/general-chat",
+              "zh-CN/api-manual/text/claude-messages",
+              "zh-CN/api-manual/text/gemini-native",
+              "zh-CN/api-manual/text/openai-multimodal"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "图像系列",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "zh-CN/api-manual/image/gpt4o-image"
+            ]
+          },
+          {
+            "group": "视频系列",
+            "pages": [
+              "zh-CN/api-manual/video/sora2"
+            ]
+          },
+          {
+            "group": "音频系列",
+            "pages": [
+              "zh-CN/api-manual/audio/whisper-transcription",
+              "zh-CN/api-manual/audio/tts"
+            ]
+          },
+          {
+            "group": "任务管理",
+            "pages": [
+              "zh-CN/api-manual/task/get-status"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "使用技巧",
+        "groups": [
+          {
+            "group": "快速开始",
+            "pages": [
+              "zh-CN/guides/quickstart"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
+    ]
   },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+
+  "footerSocials": {
+    "github": "https://github.com/Kaiho1015",
+    "discord": "https://discord.gg/你的邀请码",
+    "website": "https://ai.kaiho.cc"
   }
 }

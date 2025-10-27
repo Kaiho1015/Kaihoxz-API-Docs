@@ -1,0 +1,119 @@
+---
+title: "Sora2 Video Generation"
+description: "Generate high-quality video content using Sora2 AI model"
+api: "POST https://ai.kaiho.cc/v1/videos/generations"
+---
+
+## Overview
+
+Sora2 is OpenAI's latest video generation model capable of creating realistic video content from text descriptions, supporting various resolutions and durations.
+
+<Warning>
+  **Async Task:** Video generation is an asynchronous operation. Use the [Task Management API](/en/api-manual/task/get-status) to query generation status.
+</Warning>
+
+## Supported Models
+
+<CardGroup cols={2}>
+  <Card title="Sora2" icon="video">
+    OpenAI's latest video generation model
+  </Card>
+  <Card title="Sora Turbo" icon="gauge-high">
+    Faster generation speed
+  </Card>
+  <Card title="Runway Gen-3" icon="film">
+    High-quality video generation
+  </Card>
+  <Card title="Pika 1.5" icon="sparkles">
+    Creative video generation
+  </Card>
+</CardGroup>
+
+## Request Parameters
+
+<ParamField body="prompt" type="string" required>
+  Video description text, up to 500 characters. Describe scenes, actions, camera movements, etc. in detail.
+</ParamField>
+
+<ParamField body="duration" type="integer" default={5}>
+  Video duration in seconds, range 2-20 seconds.
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1280x720">
+  Video resolution:
+  - `1920x1080` - Full HD
+  - `1280x720` - HD
+  - `640x360` - SD
+  - `1024x1024` - Square (social media)
+</ParamField>
+
+## Request Example
+
+```python
+import requests
+import time
+
+# Create video generation task
+response = requests.post(
+    "https://ai.kaiho.cc/v1/videos/generations",
+    headers={
+        "Content-Type": "application/json",
+        "Authorization": "Bearer YOUR_API_KEY"
+    },
+    json={
+        "model": "sora-2",
+        "prompt": "A golden retriever chasing falling leaves in an autumn park, sunlight filtering through trees, slow motion, cinematic quality",
+        "duration": 10,
+        "resolution": "1920x1080",
+        "fps": 30,
+        "style": "cinematic"
+    }
+)
+
+task_id = response.json()["id"]
+
+# Poll task status
+while True:
+    status = requests.get(
+        f"https://ai.kaiho.cc/v1/tasks/{task_id}",
+        headers={"Authorization": "Bearer YOUR_API_KEY"}
+    ).json()
+    
+    if status["status"] == "completed":
+        print(f"Video completed: {status['result']['video_url']}")
+        break
+    
+    time.sleep(5)
+```
+
+## Prompt Templates
+
+<Tabs>
+  <Tab title="Natural Scenery">
+    ```
+    [Scene]: Magnificent mountain landscape
+    [Time]: Sunrise
+    [Lighting]: Golden morning light piercing through clouds
+    [Camera]: Drone slowly ascending
+    [Style]: Documentary-grade, BBC Earth style
+    ```
+  </Tab>
+  
+  <Tab title="Product Showcase">
+    ```
+    [Product]: Latest iPhone
+    [Action]: 360-degree rotation display
+    [Environment]: Minimalist white background
+    [Lighting]: Professional product photography lighting
+    [Style]: Apple product ad style
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  **Storage Duration:** Generated videos are saved for 7 days. Please download promptly.
+</Note>
+
+
+
+

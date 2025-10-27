@@ -1,0 +1,349 @@
+---
+title: "Sora2 视频生成"
+description: "使用 Sora2 AI 模型生成高质量视频内容"
+api: "POST https://ai.kaiho.cc/v1/videos/generations"
+---
+
+## 概述
+
+Sora2 是 OpenAI 的最新视频生成模型，能够根据文本描述创建逼真的视频内容，支持多种分辨率和时长。
+
+<Warning>
+  **异步任务：** 视频生成是异步操作，需要使用[任务管理 API](/zh-CN/api-manual/task/get-status) 查询生成状态。
+</Warning>
+
+## 支持的模型
+
+<CardGroup cols={2}>
+  <Card title="Sora2" icon="video">
+    OpenAI 最新视频生成模型
+  </Card>
+  <Card title="Sora Turbo" icon="gauge-high">
+    更快的生成速度
+  </Card>
+  <Card title="Runway Gen-3" icon="film">
+    高质量视频生成
+  </Card>
+  <Card title="Pika 1.5" icon="sparkles">
+    创意视频生成
+  </Card>
+</CardGroup>
+
+## 请求参数
+
+<ParamField body="prompt" type="string" required>
+  视频描述文本，最多 500 个字符。详细描述场景、动作、镜头运动等。
+</ParamField>
+
+<ParamField body="model" type="string" default="sora-2">
+  使用的模型：
+  - `sora-2` - 最新最强大
+  - `sora-turbo` - 快速生成
+  - `runway-gen3` - 高质量
+  - `pika-1.5` - 创意风格
+</ParamField>
+
+<ParamField body="duration" type="integer" default={5}>
+  视频时长（秒），范围 2-20 秒。
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1280x720">
+  视频分辨率：
+  - `1920x1080` - Full HD
+  - `1280x720` - HD
+  - `640x360` - SD
+  - `1024x1024` - 方形（社交媒体）
+</ParamField>
+
+<ParamField body="fps" type="integer" default={24}>
+  帧率，可选值：24, 30, 60
+</ParamField>
+
+<ParamField body="style" type="string">
+  视频风格：
+  - `realistic` - 写实风格
+  - `cinematic` - 电影风格
+  - `animated` - 动画风格
+  - `artistic` - 艺术风格
+</ParamField>
+
+<ParamField body="webhook_url" type="string">
+  任务完成时的回调 URL（可选）。
+</ParamField>
+
+## 请求示例
+
+<CodeGroup>
+
+```bash cURL
+curl https://ai.kaiho.cc/v1/videos/generations \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "sora-2",
+    "prompt": "一只金毛犬在秋天的公园里追逐飘落的树叶，阳光透过树叶洒下，慢镜头，电影级画质",
+    "duration": 10,
+    "resolution": "1920x1080",
+    "fps": 30,
+    "style": "cinematic"
+  }'
+```
+
+```python Python
+import requests
+import time
+
+# 创建视频生成任务
+response = requests.post(
+    "https://ai.kaiho.cc/v1/videos/generations",
+    headers={
+        "Content-Type": "application/json",
+        "Authorization": "Bearer YOUR_API_KEY"
+    },
+    json={
+        "model": "sora-2",
+        "prompt": "一只金毛犬在秋天的公园里追逐飘落的树叶，阳光透过树叶洒下，慢镜头，电影级画质",
+        "duration": 10,
+        "resolution": "1920x1080",
+        "fps": 30,
+        "style": "cinematic"
+    }
+)
+
+task = response.json()
+task_id = task["id"]
+print(f"任务ID: {task_id}")
+
+# 轮询任务状态
+while True:
+    status_response = requests.get(
+        f"https://ai.kaiho.cc/v1/tasks/{task_id}",
+        headers={"Authorization": "Bearer YOUR_API_KEY"}
+    )
+    
+    status = status_response.json()
+    
+    if status["status"] == "completed":
+        print(f"视频生成完成: {status['result']['video_url']}")
+        break
+    elif status["status"] == "failed":
+        print(f"生成失败: {status['error']}")
+        break
+    
+    print(f"进度: {status['progress']}%")
+    time.sleep(5)
+```
+
+```javascript JavaScript
+import axios from 'axios';
+
+const apiKey = 'YOUR_API_KEY';
+const baseURL = 'https://ai.kaiho.cc/v1';
+
+async function generateVideo() {
+  // 创建视频生成任务
+  const response = await axios.post(
+    `${baseURL}/videos/generations`,
+    {
+      model: 'sora-2',
+      prompt: '一只金毛犬在秋天的公园里追逐飘落的树叶，阳光透过树叶洒下，慢镜头，电影级画质',
+      duration: 10,
+      resolution: '1920x1080',
+      fps: 30,
+      style: 'cinematic'
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      }
+    }
+  );
+
+  const taskId = response.data.id;
+  console.log('任务ID:', taskId);
+
+  // 轮询任务状态
+  while (true) {
+    const statusResponse = await axios.get(
+      `${baseURL}/tasks/${taskId}`,
+      {
+        headers: { 'Authorization': `Bearer ${apiKey}` }
+      }
+    );
+
+    const status = statusResponse.data;
+
+    if (status.status === 'completed') {
+      console.log('视频生成完成:', status.result.video_url);
+      break;
+    } else if (status.status === 'failed') {
+      console.log('生成失败:', status.error);
+      break;
+    }
+
+    console.log('进度:', status.progress + '%');
+    await new Promise(resolve => setTimeout(resolve, 5000));
+  }
+}
+
+generateVideo();
+```
+
+</CodeGroup>
+
+## 响应格式
+
+创建任务时的响应：
+
+```json
+{
+  "id": "task_abc123",
+  "status": "pending",
+  "created_at": "2024-01-15T10:30:00Z",
+  "estimated_time": 120
+}
+```
+
+任务完成后的状态：
+
+```json
+{
+  "id": "task_abc123",
+  "status": "completed",
+  "progress": 100,
+  "result": {
+    "video_url": "https://storage.kaiho.cc/videos/video-123.mp4",
+    "thumbnail_url": "https://storage.kaiho.cc/videos/thumb-123.jpg",
+    "duration": 10,
+    "resolution": "1920x1080",
+    "size_bytes": 15728640
+  },
+  "created_at": "2024-01-15T10:30:00Z",
+  "completed_at": "2024-01-15T10:32:30Z"
+}
+```
+
+## 使用 Webhook
+
+配置 webhook 以自动接收完成通知：
+
+```python
+response = requests.post(
+    "https://ai.kaiho.cc/v1/videos/generations",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={
+        "model": "sora-2",
+        "prompt": "视频描述...",
+        "webhook_url": "https://your-server.com/webhook",
+        "webhook_secret": "your_secret_key"  # 用于验证请求
+    }
+)
+```
+
+Webhook 回调格式：
+
+```json
+{
+  "event": "video.completed",
+  "task_id": "task_abc123",
+  "status": "completed",
+  "result": {
+    "video_url": "https://storage.kaiho.cc/videos/video-123.mp4",
+    "duration": 10
+  }
+}
+```
+
+## 提示词最佳实践
+
+<AccordionGroup>
+  <Accordion title="描述场景细节" icon="eye">
+    包含环境、光线、天气、时间等细节描述。
+    
+    示例：*"日落时分的海滩，金色的阳光洒在波光粼粼的海面上"*
+  </Accordion>
+  
+  <Accordion title="指定镜头运动" icon="video">
+    描述相机运动方式以获得更好的效果。
+    
+    示例：*"缓慢推进镜头"*、*"环绕拍摄"*、*"鸟瞰视角"*
+  </Accordion>
+  
+  <Accordion title="明确主体动作" icon="person-running">
+    清楚描述主体的动作和表情。
+    
+    示例：*"一个小女孩开心地奔跑，笑容灿烂"*
+  </Accordion>
+  
+  <Accordion title="参考电影风格" icon="film">
+    引用知名导演或电影风格。
+    
+    示例：*"韦斯·安德森对称构图风格"*、*"诺兰式的史诗感"*
+  </Accordion>
+</AccordionGroup>
+
+## 提示词模板
+
+<Tabs>
+  <Tab title="自然风光">
+    ```
+    [场景]: 壮丽的山景
+    [时间]: 日出时分
+    [光线]: 金色晨光穿透云层
+    [镜头]: 无人机缓慢上升拍摄
+    [风格]: 纪录片级别，BBC地球脉动风格
+    ```
+  </Tab>
+  
+  <Tab title="人物特写">
+    ```
+    [主体]: 一位老人
+    [动作]: 专注地制作陶器
+    [环境]: 传统工作室，温暖的灯光
+    [镜头]: 特写镜头，浅景深
+    [风格]: 纪实摄影，感人的人文故事
+    ```
+  </Tab>
+  
+  <Tab title="产品展示">
+    ```
+    [产品]: iPhone 最新款
+    [动作]: 360度旋转展示
+    [环境]: 简约白色背景
+    [光线]: 专业产品摄影光线
+    [风格]: Apple产品广告风格
+    ```
+  </Tab>
+</Tabs>
+
+## 生成时间估算
+
+| 时长 | 分辨率 | 预计时间 |
+|------|--------|---------|
+| 5秒 | 720p | 1-2 分钟 |
+| 5秒 | 1080p | 2-3 分钟 |
+| 10秒 | 720p | 3-5 分钟 |
+| 10秒 | 1080p | 5-8 分钟 |
+| 20秒 | 1080p | 10-15 分钟 |
+
+<Tip>
+  **节省时间：** 在测试提示词时，先使用较低分辨率和较短时长，确定效果后再生成高质量版本。
+</Tip>
+
+## 内容限制
+
+- ❌ 暴力血腥内容
+- ❌ 成人内容
+- ❌ 侵权内容
+- ❌ 误导性深度伪造
+- ✅ 创意内容
+- ✅ 教育内容
+- ✅ 营销视频
+
+<Note>
+  **存储时间：** 生成的视频保存 7 天，请及时下载。
+</Note>
+
+
+

@@ -1,0 +1,78 @@
+---
+title: "Claude Messages API"
+description: "Use Anthropic Claude native message format"
+api: "POST https://ai.kaiho.cc/v1/messages"
+---
+
+## Overview
+
+The Claude Messages API provides a native interface for interacting with Anthropic Claude models, supporting advanced features like system prompts and multimodal inputs.
+
+## Supported Models
+
+<CardGroup cols={2}>
+  <Card title="Claude 3.5 Sonnet" icon="star">
+    Latest and most powerful, balances performance and speed
+  </Card>
+  <Card title="Claude 3 Opus" icon="crown">
+    Most powerful model for complex tasks
+  </Card>
+  <Card title="Claude 3 Sonnet" icon="bolt">
+    High-performance model for most use cases
+  </Card>
+  <Card title="Claude 3 Haiku" icon="gauge-high">
+    Fastest model for simple tasks
+  </Card>
+</CardGroup>
+
+## Request Parameters
+
+<ParamField body="model" type="string" required>
+  Claude model ID:
+  - `claude-3-5-sonnet-20241022`
+  - `claude-3-opus-20240229`
+  - `claude-3-sonnet-20240229`
+  - `claude-3-haiku-20240307`
+</ParamField>
+
+<ParamField body="max_tokens" type="integer" required>
+  Maximum number of tokens to generate. Required parameter.
+</ParamField>
+
+<ParamField body="system" type="string">
+  System prompt to define AI behavior and role.
+</ParamField>
+
+## Request Example
+
+<CodeGroup>
+
+```python Python
+import anthropic
+
+client = anthropic.Anthropic(
+    api_key="YOUR_API_KEY",
+    base_url="https://ai.kaiho.cc/v1"
+)
+
+message = client.messages.create(
+    model="claude-3-5-sonnet-20241022",
+    max_tokens=1024,
+    system="You are a professional technical consultant.",
+    messages=[
+        {"role": "user", "content": "Explain what is REST API"}
+    ]
+)
+
+print(message.content[0].text)
+```
+
+</CodeGroup>
+
+<Warning>
+  **Note:** Unlike OpenAI API, the `max_tokens` parameter is required for Claude Messages API.
+</Warning>
+
+
+
+

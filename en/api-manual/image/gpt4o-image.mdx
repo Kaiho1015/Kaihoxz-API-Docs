@@ -1,0 +1,104 @@
+---
+title: "GPT-4o Image Generation"
+description: "Generate high-quality images using GPT-4o model"
+api: "POST https://ai.kaiho.cc/v1/images/generations"
+---
+
+## Overview
+
+The GPT-4o Image Generation API allows you to create high-quality AI-generated images from text descriptions, supporting various sizes and styles.
+
+## Supported Models
+
+<CardGroup cols={3}>
+  <Card title="DALL-E 3" icon="image">
+    OpenAI's latest image generation model
+  </Card>
+  <Card title="DALL-E 2" icon="photo-film">
+    Cost-effective image generation
+  </Card>
+  <Card title="Stable Diffusion" icon="paintbrush">
+    Open-source image generation model
+  </Card>
+</CardGroup>
+
+## Request Parameters
+
+<ParamField body="prompt" type="string" required>
+  Image description text, up to 4000 characters. More detailed descriptions produce more precise images.
+</ParamField>
+
+<ParamField body="model" type="string" default="dall-e-3">
+  Model to use:
+  - `dall-e-3` - Latest and most powerful
+  - `dall-e-2` - Economical choice
+  - `stable-diffusion-xl` - Open-source option
+</ParamField>
+
+<ParamField body="size" type="string" default="1024x1024">
+  Image size:
+  - DALL-E 3: `1024x1024`, `1024x1792`, `1792x1024`
+  - DALL-E 2: `256x256`, `512x512`, `1024x1024`
+</ParamField>
+
+<ParamField body="quality" type="string" default="standard">
+  Image quality (DALL-E 3 only):
+  - `standard` - Standard quality
+  - `hd` - High definition (slower, more expensive)
+</ParamField>
+
+## Request Example
+
+<CodeGroup>
+
+```python Python
+import openai
+
+client = openai.OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://ai.kaiho.cc/v1"
+)
+
+response = client.images.generate(
+    model="dall-e-3",
+    prompt="A Shiba Inu wearing sunglasses surfing at the beach, digital art style",
+    n=1,
+    size="1024x1024",
+    quality="hd",
+    style="vivid"
+)
+
+image_url = response.data[0].url
+print(f"Generated image: {image_url}")
+```
+
+</CodeGroup>
+
+## Prompt Examples
+
+<Tabs>
+  <Tab title="Realistic Style">
+    ```
+    A professional Asian woman in a business suit in a modern office,
+    natural lighting, shallow depth of field, shot on Sony A7III,
+    professional photography, ultra HD, realistic style
+    ```
+  </Tab>
+  
+  <Tab title="Illustration Style">
+    ```
+    Cute cartoon cat reading a book,
+    warm color palette, soft lighting,
+    flat illustration style, Dribbble style,
+    minimalist design
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  **Usage Restrictions:** Generated images are valid for 24 hours. Please download and save them promptly. Review terms of use before commercial use.
+</Warning>
+
+
+
+

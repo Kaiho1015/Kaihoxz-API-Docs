@@ -1,0 +1,166 @@
+---
+title: "Quick Start"
+description: "Get started with Kaihoxz API in 5 minutes"
+---
+
+## 📋 Prerequisites
+
+Before you begin, you'll need:
+
+- A Kaihoxz account
+- An API key (obtain from the [Dashboard](https://ai.kaiho.cc/panel))
+- Basic programming knowledge
+
+## 1️⃣ Get Your API Key
+
+<Steps>
+  <Step title="Login to Console">
+    Visit [Kaihoxz Dashboard](https://ai.kaiho.cc/panel) and log in
+  </Step>
+  <Step title="Generate Key">
+    Click "Create New Key" on the API Key Management page
+  </Step>
+  <Step title="Save Your Key">
+    Copy and securely save your API key
+  </Step>
+</Steps>
+
+<Warning>
+  **Security Note:** Never expose your API key in public code or on the client side
+</Warning>
+
+## 2️⃣ Make Your First Request
+
+### Using cURL
+
+```bash
+curl https://ai.kaiho.cc/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "gpt-4o",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello, please introduce yourself"
+      }
+    ]
+  }'
+```
+
+### Using Python
+
+```python
+import openai
+
+client = openai.OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://ai.kaiho.cc/v1"
+)
+
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[
+        {"role": "user", "content": "Hello, please introduce yourself"}
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+
+### Using JavaScript/Node.js
+
+```javascript
+import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: 'YOUR_API_KEY',
+  baseURL: 'https://ai.kaiho.cc/v1'
+});
+
+async function main() {
+  const response = await client.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      { role: 'user', content: 'Hello, please introduce yourself' }
+    ]
+  });
+  
+  console.log(response.choices[0].message.content);
+}
+
+main();
+```
+
+## 3️⃣ Understanding the Response
+
+A successful response looks like this:
+
+```json
+{
+  "id": "chatcmpl-123",
+  "object": "chat.completion",
+  "created": 1677652288,
+  "model": "gpt-4o",
+  "choices": [{
+    "index": 0,
+    "message": {
+      "role": "assistant",
+      "content": "Hello! I'm an AI assistant..."
+    },
+    "finish_reason": "stop"
+  }],
+  "usage": {
+    "prompt_tokens": 9,
+    "completion_tokens": 12,
+    "total_tokens": 21
+  }
+}
+```
+
+## 4️⃣ Explore More Features
+
+<CardGroup cols={2}>
+  <Card
+    title="Text Generation API"
+    icon="comments"
+    href="/en/api-manual/text/general-chat"
+  >
+    Learn about complete Chat API parameters and options
+  </Card>
+  <Card
+    title="Image Generation API"
+    icon="image"
+    href="/en/api-manual/image/gpt4o-image"
+  >
+    Generate images with AI
+  </Card>
+  <Card
+    title="Video Generation API"
+    icon="video"
+    href="/en/api-manual/video/sora2"
+  >
+    Create AI video content
+  </Card>
+  <Card
+    title="Task Management"
+    icon="tasks"
+    href="/en/api-manual/task/get-status"
+  >
+    Manage async generation tasks
+  </Card>
+</CardGroup>
+
+## 📚 Next Steps
+
+- Check the [API Manual](/en/api-manual/text/general-chat) to learn about all available models and parameters
+- Join our [Discord Community](https://discord.gg/your_invite_code) to connect with other developers
+- Visit [GitHub](https://github.com/Kaiho1015) for example code
+
+<Tip>
+  **Tip:** All APIs are compatible with OpenAI SDK, so you can use your existing OpenAI integration code directly!
+</Tip>
+
+
+
+
