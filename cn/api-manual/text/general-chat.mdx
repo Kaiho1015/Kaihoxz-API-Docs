@@ -533,28 +533,39 @@ api: "POST https://ai.kaiho.cc/v1/chat/completions"
 <ResponseExample>
   ```json 200 theme={null}
   {
-    "code": 200,
-    "data": {
-      "id": "chatcmpl-9876543210",
-      "object": "chat.completion",
-      "created": 1677652288,
-      "model": "gpt-5",
-      "choices": [
-        {
-          "index": 0,
-          "message": {
-            "role": "assistant",
-            "content": "人工智能（AI）的发展历史可以追溯到20世纪50年代...\n\n1. **早期阶段（1950s-1960s）**：图灵测试的提出标志着AI研究的开始...\n\n2. **专家系统时代（1970s-1980s）**：基于规则的系统开始应用于医疗诊断、金融分析等领域...\n\n3. **机器学习兴起（1990s-2000s）**：统计学习方法逐渐成为主流...\n\n4. **深度学习革命（2010s-至今）**：神经网络技术的突破带来了AI的爆发式发展..."
-          },
-          "finish_reason": "stop"
-        }
-      ],
-      "usage": {
-        "prompt_tokens": 28,
-        "completion_tokens": 320,
-        "total_tokens": 348
+    "id": "chatcmpl-CdA8u0qPqzeN2gu8QLuQfjaP9CHU4",
+    "object": "chat.completion",
+    "created": 1763449816,
+    "model": "gpt-5-2025-08-07",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "冒泡排序（Bubble Sort）是一种简单的比较交换排序。它通过重复遍历序列，比较相邻元素并把较大的“冒泡”到右侧末端，直到序列有序。\n\n核心思想\n- 每一趟从左到右比较相邻元素，若前者大于后者则交换。一次趟结束后，当前未排部分中最大的元素被放到末尾。\n- 重复多趟，直到没有发生交换或已完成 n−1 趟。\n\n流程示例（以 [5, 1, 4, 2] 为例）\n- 第1趟：比较并交换 → [1, 5, 4, 2] → [1, 4, 5, 2] → [1, 4, 2, 5]（最大元素5到末尾）\n- 第2趟：比较并交换 → [1, 4, 2, 5] → [1, 2, 4, 5]（已整体有序，可提前结束）\n\n性质\n- 时间复杂度：平均/最坏 O(n^2)，最好 O(n)（当已基本有序且使用提前退出优化）\n- 空间复杂度：O(1)（就地排序）\n- 稳定性：稳定（相等元素相对次序不变）\n- 适用场景：数据量小或序列几乎有序；不适合大规模无序数据\n\n常见优化\n- 提前退出：某趟未发生交换则已排序完成。\n- 缩短边界：记录本趟最后一次交换的位置，下一趟只需遍历到该位置。\n- 双向冒泡（鸡尾酒排序）：从左到右、再从右到左各走一遍，更快收敛。\n\n简要伪代码\nfunction bubbleSort(a):\n    n = length(a)\n    repeat\n        swapped = false\n        for j = 0 to n-2:\n            if a[j] > a[j+1]:\n                swap(a[j], a[j+1])\n                swapped = true\n        n = n - 1    // 末尾已就位，缩短范围\n    until swapped == false\n\n如需，我可以给出某种语言的实现代码或更多变体说明。",
+          "refusal": null,
+          "annotations": []
+        },
+        "finish_reason": "stop"
       }
-    }
+    ],
+    "usage": {
+      "prompt_tokens": 24,
+      "completion_tokens": 1030,
+      "total_tokens": 1054,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 512,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "service_tier": "default",
+    "system_fingerprint": null
   }
   ```
 
@@ -654,9 +665,10 @@ api: "POST https://ai.kaiho.cc/v1/chat/completions"
 
   * **OpenAI**: `gpt-5`, `gpt-5-chat-latest`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-pro`
   * **Anthropic**: `claude-sonnet-4-5-20250929`, `claude-opus-4-1-20250805`, `claude-haiku-4-5-20251001`, `claude-opus-4-1-20250805-thinking`, `claude-sonnet-4-5-20250929-thinking`
-  * **Google**: `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.5-pro-thinking`, `gemini-2.5-flash-lite`
+  * **Google**: `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.5-pro-thinking`, `gemini-2.5-flash-lite`,`gemini-3-pro-preview-thinking`,`gemini-3-pro-image-preview`,`gemini-3-pro-preview`
   * **DeepSeek**: `deepseek-v3.1-250821`, `deepseek-v3.1-think-250821`, `deepseek-v3-0324`
   * **Doubao**: `doubao-seed-1-6-251015`, `doubao-seed-1-6-flash-250828`, `doubao-seed-1-6-thinking-250715`
+  * **X.AI**: `grok-4.1`
   * 更多模型持续更新中...
 </ParamField>
 
@@ -810,6 +822,12 @@ api: "POST https://ai.kaiho.cc/v1/chat/completions"
 * `gpt-5-nano` - GPT-5 超轻量版本
 * `gpt-5-pro` - GPT-5 专业增强版
 
+
+###X.ai 系列
+* `grok-4.1` - Grok 4.1 快速响应版本
+
+
+
 ### Anthropic 系列
 
 * `claude-haiku-4-5-20251001` - Claude 4.5 快速响应版本
@@ -824,6 +842,8 @@ api: "POST https://ai.kaiho.cc/v1/chat/completions"
 * `gemini-2.5-pro` - Gemini 2.5 专业版
 * `gemini-2.5-flash-lite` - Gemini 2.5 超轻量版
 * `gemini-2.5-pro-thinking` - Gemini 2.5 Pro 深度思考版
+* `gemini-3-pro-preview-thinking` - Gemini 3 Pro 深度思考版
+* `gemini-3-pro-preview` - Gemini 3 Pro 深度思考版
 
 ### DeepSeek 系列
 
