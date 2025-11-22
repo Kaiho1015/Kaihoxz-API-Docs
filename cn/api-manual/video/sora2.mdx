@@ -6,593 +6,593 @@ api: "POST https://ai.kaiho.cc/v1/videos"
 
 
 <RequestExample>
-  ```bash cURL theme={null}
-
- curl --request POST \
-   --url https://ai.kaiho.cc/v1/viodes \
-   --header 'Authorization: Bearer <token>' \
-   --header 'Content-Type: application/json' \
-   --form 'prompt=your_prompt' \
-   --form 'model=gpt-5' \
-   --form 'seconds=30' \
-   --form 'size=large' \
-   --form 'input_reference=your_input_reference' \
-   --form 'callback_url=your_callback_url'
-
-  ```
-
-  ```python Python theme={null}
-  import requests
-
-  url = "https://ai.kaiho.cc/v1/viodes"
-
-  payload = {
-      "prompt": "your_prompt",
-      "model": "gpt-5",
-      "seconds": 30,
-      "size": "large",
-      "input_reference": "your_input_reference",
-      "callback_url": "your_callback_url"
-  }
-
-  headers = {
-      "Authorization": "Bearer <token>",
-      "Content-Type": "application/json"
-  }
-
-  response = requests.post(url, data=payload, headers=headers)
-
-  print(response.json())
-
-  ```
-
-  ```javascript JavaScript theme={null}
-  const url = "https://ai.kaiho.cc/v1/viodes";
-
-  const formData = new FormData();
-  formData.append("prompt", "your_prompt");
-  formData.append("model", "gpt-5");
-  formData.append("seconds", 30);
-  formData.append("size", "large");
-  formData.append("input_reference", "your_input_reference");
-  formData.append("callback_url", "your_callback_url");
-
-  const headers = {
-      "Authorization": "Bearer <token>",
-      "Content-Type": "application/json"
-  };
-
-  fetch(url, {
-      method: "POST",
-      headers: headers,
-      body: formData
-  })
-  .then(response => response.json())
-  .then(data => console.log(data))
-  .catch(error => console.error('Error:', error));
-
-  ```
-
-  ```go Go theme={null}
-  package main
-
-  import (
-      "bytes"
-      "fmt"
-      "net/http"
-      "mime/multipart"
-      "os"
-  )
-
-  func main() {
-      url := "https://ai.kaiho.cc/v1/viodes"
-
-      var b bytes.Buffer
-      writer := multipart.NewWriter(&b)
-      writer.WriteField("prompt", "your_prompt")
-      writer.WriteField("model", "gpt-5")
-      writer.WriteField("seconds", "30")
-      writer.WriteField("size", "large")
-      writer.WriteField("input_reference", "your_input_reference")
-      writer.WriteField("callback_url", "your_callback_url")
-
-      req, err := http.NewRequest("POST", url, &b)
-      if err != nil {
-          fmt.Println("Error creating request:", err)
-          return
-      }
-
-      req.Header.Add("Authorization", "Bearer <token>")
-      req.Header.Add("Content-Type", writer.FormDataContentType())
-
-      client := &http.Client{}
-      resp, err := client.Do(req)
-      if err != nil {
-          fmt.Println("Error sending request:", err)
-          return
-      }
-      defer resp.Body.Close()
-
-      fmt.Println("Response status:", resp.Status)
-  }
-
-  ```
-
-  ```java Java theme={null}
-  import java.net.URI;
-  import java.net.http.HttpClient;
-  import java.net.http.HttpRequest;
-  import java.net.http.HttpResponse;
-  import java.net.http.HttpHeaders;
-  import java.nio.file.Files;
-  import java.nio.file.Paths;
-  import java.util.Map;
-
-  public class Main {
-      public static void main(String[] args) throws Exception {
-          String url = "https://ai.kaiho.cc/v1/viodes";
-          String payload = "prompt=your_prompt&model=gpt-5&seconds=30&size=large&input_reference=your_input_reference&callback_url=your_callback_url";
-
-          HttpClient client = HttpClient.newHttpClient();
-          HttpRequest request = HttpRequest.newBuilder()
-              .uri(URI.create(url))
-              .header("Authorization", "Bearer <token>")
-              .header("Content-Type", "application/json")
-              .POST(HttpRequest.BodyPublishers.ofString(payload))
-              .build();
-
-          HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-          System.out.println(response.body());
-      }
-  }
-
-  ```
-
-  ```php PHP theme={null}
-  <?php
-
-  $url = "https://ai.kaiho.cc/v1/viodes";
-
-  $payload = [
-      "prompt" => "your_prompt",
-      "model" => "gpt-5",
-      "seconds" => 30,
-      "size" => "large",
-      "input_reference" => "your_input_reference",
-      "callback_url" => "your_callback_url"
-  ];
-
-  $ch = curl_init($url);
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($ch, CURLOPT_POST, true);
-  curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-  curl_setopt($ch, CURLOPT_HTTPHEADER, [
-      "Authorization: Bearer <token>",
-      "Content-Type: application/json"
-  ]);
-
-  $response = curl_exec($ch);
-  curl_close($ch);
-
-  echo $response;
-  ?>
-
-  ```
-
-  ```swift Swift theme={null}
-  import Foundation
-
-  let url = URL(string: "https://ai.kaiho.cc/v1/viodes")!
-
-  var request = URLRequest(url: url)
-  request.httpMethod = "POST"
-  request.setValue("Bearer <token>", forHTTPHeaderField: "Authorization")
-  request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-  let body: [String: Any] = [
-      "prompt": "your_prompt",
-      "model": "gpt-5",
-      "seconds": 30,
-      "size": "large",
-      "input_reference": "your_input_reference",
-      "callback_url": "your_callback_url"
-  ]
-
-  let data = try? JSONSerialization.data(withJSONObject: body)
-  request.httpBody = data
-
-  let task = URLSession.shared.dataTask(with: request) { data, response, error in
-      if let error = error {
-          print("Error: \(error)")
-          return
-      }
-
-      if let data = data, let responseString = String(data: data, encoding: .utf8) {
-          print(responseString)
-      }
-  }
-
-  task.resume()
-
-  ```
-
-  ```csharp C# theme={null}
-  using System;
-  using System.Net.Http;
-  using System.Text;
-  using System.Threading.Tasks;
-
-  class Program
-  {
-      static async Task Main(string[] args)
-      {
-          var url = "https://ai.kaiho.cc/v1/viodes";
-
-          var payload = @"{
-              ""prompt"": ""your_prompt"",
-              ""model"": ""gpt-5"",
-              ""seconds"": 30,
-              ""size"": ""large"",
-              ""input_reference"": ""your_input_reference"",
-              ""callback_url"": ""your_callback_url""
-          }";
-
-          using var client = new HttpClient();
-          client.DefaultRequestHeaders.Add("Authorization", "Bearer <token>");
-
-          var content = new StringContent(payload, Encoding.UTF8, "application/json");
-          var response = await client.PostAsync(url, content);
-          var result = await response.Content.ReadAsStringAsync();
-
-          Console.WriteLine(result);
-      }
-  }
-
-  ```
-
-  ```c C theme={null}
-  #include <stdio.h>
-  #include <curl/curl.h>
-
-  int main(void) {
-      CURL *curl;
-      CURLcode res;
-
-      curl_global_init(CURL_GLOBAL_DEFAULT);
-      curl = curl_easy_init();
-
-      if(curl) {
-          const char *url = "https://ai.kaiho.cc/v1/viodes";
-          const char *payload = "{"
-              "\"prompt\":\"your_prompt\","
-              "\"model\":\"gpt-5\","
-              "\"seconds\":\"30\","
-              "\"size\":\"large\","
-              "\"input_reference\":\"your_input_reference\","
-              "\"callback_url\":\"your_callback_url\""
-          "}";
-
-          struct curl_slist *headers = NULL;
-          headers = curl_slist_append(headers, "Authorization: Bearer <token>");
-          headers = curl_slist_append(headers, "Content-Type: application/json");
-
-          curl_easy_setopt(curl, CURLOPT_URL, url);
-          curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
-          curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-
-          res = curl_easy_perform(curl);
-
-          if(res != CURLE_OK) {
-              fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                      curl_easy_strerror(res));
-          }
-
-          curl_slist_free_all(headers);
-          curl_easy_cleanup(curl);
-      }
-
-      curl_global_cleanup();
-      return 0;
-  }
-
-  ```
-
-  ```objectivec Objective-C theme={null}
-  #import <Foundation/Foundation.h>
-
-  int main(int argc, const char * argv[]) {
-      @autoreleasepool {
-          NSURL *url = [NSURL URLWithString:@"https://ai.kaiho.cc/v1/viodes"];
-
-          NSDictionary *payload = @{
-              @"prompt": @"your_prompt",
-              @"model": @"gpt-5",
-              @"seconds": @30,
-              @"size": @"large",
-              @"input_reference": @"your_input_reference",
-              @"callback_url": @"your_callback_url"
-          };
-
-          NSError *error;
-          NSData *jsonData = [NSJSONSerialization dataWithJSONObject:payload
-                                                            options:0
-                                                              error:&error];
-
-          NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
-          [request setHTTPMethod:@"POST"];
-          [request setValue:@"Bearer <token>" forHTTPHeaderField:@"Authorization"];
-          [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-          [request setHTTPBody:jsonData];
-
-          NSURLSessionDataTask *task = [[NSURLSession sharedSession]
-              dataTaskWithRequest:request
-              completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-                  if (error) {
-                      NSLog(@"Error: %@", error);
-                      return;
-                  }
-                  NSString *result = [[NSString alloc] initWithData:data
-                                                          encoding:NSUTF8StringEncoding];
-                  NSLog(@"%@", result);
-              }];
-
-          [task resume];
-          [[NSRunLoop mainRunLoop] run];
-      }
-      return 0;
-  }
-
-  ```
-
-  ```ocaml OCaml theme={null}
-  (* Requires cohttp and yojson libraries *)
-  open Lwt
-  open Cohttp
-  open Cohttp_lwt_unix
-
-  let url = "https://ai.kaiho.cc/v1/viodes"
-
-  let payload = {|{
-    "prompt": "your_prompt",
-    "model": "gpt-5",
-    "seconds": 30,
-    "size": "large",
-    "input_reference": "your_input_reference",
-    "callback_url": "your_callback_url"
-  }|}
-
-  let () =
-    let headers = Header.init ()
-      |> fun h -> Header.add h "Authorization" "Bearer <token>"
-      |> fun h -> Header.add h "Content-Type" "application/json"
-    in
-    let body = Cohttp_lwt.Body.of_string payload in
-
-    let response = Client.post ~headers ~body (Uri.of_string url) >>= fun (resp, body) ->
-      body |> Cohttp_lwt.Body.to_string >|= fun body_str ->
-      print_endline body_str
-    in
-    Lwt_main.run response
-
-  ```
-
-  ```dart Dart theme={null}
-  import 'dart:convert';
-  import 'package:http/http.dart' as http;
-
-  void main() async {
-    final url = Uri.parse('https://ai.kaiho.cc/v1/viodes');
-
-    final payload = {
-      'prompt': 'your_prompt',
-      'model': 'gpt-5',
-      'seconds': 30,
-      'size': 'large',
-      'input_reference': 'your_input_reference',
-      'callback_url': 'your_callback_url'
+    ```bash cURL theme={null}
+
+    curl --request POST \
+    --url https://ai.kaiho.cc/v1/viodes \
+    --header 'Authorization: Bearer <token>' \
+    --header 'Content-Type: application/json' \
+    --form 'prompt=your_prompt' \
+    --form 'model=gpt-5' \
+    --form 'seconds=30' \
+    --form 'size=large' \
+    --form 'input_reference=your_input_reference' \
+    --form 'callback_url=your_callback_url'
+
+    ```
+
+    ```python Python theme={null}
+    import requests
+
+    url = "https://ai.kaiho.cc/v1/viodes"
+
+    payload = {
+        "prompt": "your_prompt",
+        "model": "gpt-5",
+        "seconds": 30,
+        "size": "large",
+        "input_reference": "your_input_reference",
+        "callback_url": "your_callback_url"
+    }
+
+    headers = {
+        "Authorization": "Bearer <token>",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(url, data=payload, headers=headers)
+
+    print(response.json())
+
+    ```
+
+    ```javascript JavaScript theme={null}
+    const url = "https://ai.kaiho.cc/v1/viodes";
+
+    const formData = new FormData();
+    formData.append("prompt", "your_prompt");
+    formData.append("model", "gpt-5");
+    formData.append("seconds", 30);
+    formData.append("size", "large");
+    formData.append("input_reference", "your_input_reference");
+    formData.append("callback_url", "your_callback_url");
+
+    const headers = {
+        "Authorization": "Bearer <token>",
+        "Content-Type": "application/json"
     };
 
-    final response = await http.post(
-      url,
-      headers: {
-        'Authorization': 'Bearer <token>',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(payload),
-    );
+    fetch(url, {
+        method: "POST",
+        headers: headers,
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch(error => console.error('Error:', error));
 
-    print(response.body);
-  }
+    ```
 
-  ```
+    ```go Go theme={null}
+    package main
 
-  ```r R theme={null}
- library(httr)
- library(jsonlite)
+    import (
+    "bytes"
+    "fmt"
+    "net/http"
+    "mime/multipart"
+    "os"
+    )
 
- url <- "https://ai.kaiho.cc/v1/viodes"
+    func main() {
+        url := "https://ai.kaiho.cc/v1/viodes"
 
- payload <- list(
-   prompt = "your_prompt",
-   model = "gpt-5",
-   seconds = 30,
-   size = "large",
-   input_reference = "your_input_reference",
-   callback_url = "your_callback_url"
- )
+        var b bytes.Buffer
+        writer := multipart.NewWriter(&b)
+        writer.WriteField("prompt", "your_prompt")
+        writer.WriteField("model", "gpt-5")
+        writer.WriteField("seconds", "30")
+        writer.WriteField("size", "large")
+        writer.WriteField("input_reference", "your_input_reference")
+        writer.WriteField("callback_url", "your_callback_url")
 
- response <- POST(
-   url,
-   add_headers(
-     Authorization = "Bearer <token>",
-     `Content-Type` = "application/json"
-   ),
-   body = toJSON(payload, auto_unbox = TRUE),
-   encode = "raw"
- )
+        req, err := http.NewRequest("POST", url, &b)
+        if err != nil {
+        fmt.Println("Error creating request:", err)
+        return
+    }
 
- cat(content(response, "text"))
+        req.Header.Add("Authorization", "Bearer <token>")
+        req.Header.Add("Content-Type", writer.FormDataContentType())
 
-  ```
+        client := &http.Client{}
+        resp, err := client.Do(req)
+        if err != nil {
+        fmt.Println("Error sending request:", err)
+        return
+    }
+        defer resp.Body.Close()
+
+        fmt.Println("Response status:", resp.Status)
+    }
+
+    ```
+
+    ```java Java theme={null}
+    import java.net.URI;
+    import java.net.http.HttpClient;
+    import java.net.http.HttpRequest;
+    import java.net.http.HttpResponse;
+    import java.net.http.HttpHeaders;
+    import java.nio.file.Files;
+    import java.nio.file.Paths;
+    import java.util.Map;
+
+    public class Main {
+        public static void main(String[] args) throws Exception {
+        String url = "https://ai.kaiho.cc/v1/viodes";
+        String payload = "prompt=your_prompt&model=gpt-5&seconds=30&size=large&input_reference=your_input_reference&callback_url=your_callback_url";
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create(url))
+        .header("Authorization", "Bearer <token>")
+        .header("Content-Type", "application/json")
+        .POST(HttpRequest.BodyPublishers.ofString(payload))
+        .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        System.out.println(response.body());
+    }
+    }
+
+    ```
+
+    ```php PHP theme={null}
+    <?php
+
+    $url = "https://ai.kaiho.cc/v1/viodes";
+
+    $payload = [
+        "prompt" => "your_prompt",
+        "model" => "gpt-5",
+        "seconds" => 30,
+        "size" => "large",
+        "input_reference" => "your_input_reference",
+        "callback_url" => "your_callback_url"
+    ];
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "Authorization: Bearer <token>",
+        "Content-Type: application/json"
+    ]);
+
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    echo $response;
+    ?>
+
+    ```
+
+    ```swift Swift theme={null}
+    import Foundation
+
+    let url = URL(string: "https://ai.kaiho.cc/v1/viodes")!
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("Bearer <token>", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Any] = [
+        "prompt": "your_prompt",
+        "model": "gpt-5",
+        "seconds": 30,
+        "size": "large",
+        "input_reference": "your_input_reference",
+        "callback_url": "your_callback_url"
+        ]
+
+        let data = try? JSONSerialization.data(withJSONObject: body)
+        request.httpBody = data
+
+        let task = URLSession.shared.dataTask(with: request) {data, response, error in
+            if let error = error {
+            print("Error: \(error)")
+            return
+        }
+
+            if let data = data, let responseString = String(data: data, encoding: .utf8) {
+            print(responseString)
+        }
+        }
+
+        task.resume()
+
+        ```
+
+        ```csharp C# theme={null}
+        using System;
+        using System.Net.Http;
+        using System.Text;
+        using System.Threading.Tasks;
+
+        class Program
+        {
+            static async Task Main(string[] args)
+        {
+            var url = "https://ai.kaiho.cc/v1/viodes";
+
+            var payload = @"{
+            ""prompt"": ""your_prompt"",
+            ""model"": ""gpt-5"",
+            ""seconds"": 30,
+            ""size"": ""large"",
+            ""input_reference"": ""your_input_reference"",
+            ""callback_url"": ""your_callback_url""
+        }";
+
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Authorization", "Bearer <token>");
+
+            var content = new StringContent(payload, Encoding.UTF8, "application/json");
+            var response = await client.PostAsync(url, content);
+            var result = await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine(result);
+        }
+        }
+
+        ```
+
+        ```c C theme={null}
+        #include <stdio.h>
+            #include <curl/curl.h>
+
+            int main(void) {
+            CURL * curl;
+            CURLcode res;
+
+            curl_global_init(CURL_GLOBAL_DEFAULT);
+            curl = curl_easy_init();
+
+            if(curl) {
+            const char *url = "https://ai.kaiho.cc/v1/viodes";
+            const char *payload = "{"
+            "\"prompt\":\"your_prompt\","
+            "\"model\":\"gpt-5\","
+            "\"seconds\":\"30\","
+            "\"size\":\"large\","
+            "\"input_reference\":\"your_input_reference\","
+            "\"callback_url\":\"your_callback_url\""
+            "}";
+
+            struct curl_slist *headers = NULL;
+            headers = curl_slist_append(headers, "Authorization: Bearer <token>");
+            headers = curl_slist_append(headers, "Content-Type: application/json");
+
+            curl_easy_setopt(curl, CURLOPT_URL, url);
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+            res = curl_easy_perform(curl);
+
+            if(res != CURLE_OK) {
+            fprintf(stderr, "curl_easy_perform() failed: %s\n",
+            curl_easy_strerror(res));
+        }
+
+            curl_slist_free_all(headers);
+            curl_easy_cleanup(curl);
+        }
+
+            curl_global_cleanup();
+            return 0;
+        }
+
+            ```
+
+            ```objectivec Objective-C theme={null}
+            #import <Foundation/Foundation.h>
+
+            int main(int argc, const char * argv[]) {
+        @autoreleasepool {
+            NSURL *url = [NSURL URLWithString:@"https://ai.kaiho.cc/v1/viodes"];
+
+            NSDictionary *payload = @{
+            @"prompt": @"your_prompt",
+            @"model": @"gpt-5",
+            @"seconds": @30,
+            @"size": @"large",
+            @"input_reference": @"your_input_reference",
+            @"callback_url": @"your_callback_url"
+        };
+
+            NSError *error;
+            NSData *jsonData = [NSJSONSerialization dataWithJSONObject:payload
+            options:0
+            error:&error];
+
+            NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+            [request setHTTPMethod:@"POST"];
+            [request setValue:@"Bearer <token>" forHTTPHeaderField:@"Authorization"];
+            [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+            [request setHTTPBody:jsonData];
+
+            NSURLSessionDataTask *task = [[NSURLSession sharedSession]
+            dataTaskWithRequest:request
+            completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+            if (error) {
+            NSLog(@"Error: %@", error);
+            return;
+        }
+            NSString *result = [[NSString alloc] initWithData:data
+            encoding:NSUTF8StringEncoding];
+            NSLog(@"%@", result);
+        }];
+
+            [task resume];
+            [[NSRunLoop mainRunLoop] run];
+        }
+            return 0;
+        }
+
+            ```
+
+            ```ocaml OCaml theme={null}
+            (* Requires cohttp and yojson libraries *)
+            open Lwt
+            open Cohttp
+            open Cohttp_lwt_unix
+
+            let url = "https://ai.kaiho.cc/v1/viodes"
+
+            let payload = {|{
+            "prompt": "your_prompt",
+            "model": "gpt-5",
+            "seconds": 30,
+            "size": "large",
+            "input_reference": "your_input_reference",
+            "callback_url": "your_callback_url"
+        }|}
+
+            let () =
+            let headers = Header.init ()
+            |> fun h -> Header.add h "Authorization" "Bearer <token>"
+            |> fun h -> Header.add h "Content-Type" "application/json"
+            in
+            let body = Cohttp_lwt.Body.of_string payload in
+
+            let response = Client.post ~headers ~body (Uri.of_string url) >>= fun (resp, body) ->
+            body |> Cohttp_lwt.Body.to_string >|= fun body_str ->
+            print_endline body_str
+            in
+            Lwt_main.run response
+
+            ```
+
+            ```dart Dart theme={null}
+            import 'dart:convert';
+            import 'package:http/http.dart' as http;
+
+            void main() async {
+                final url = Uri.parse('https://ai.kaiho.cc/v1/viodes');
+
+                final payload = {
+                'prompt': 'your_prompt',
+                'model': 'gpt-5',
+                'seconds': 30,
+                'size': 'large',
+                'input_reference': 'your_input_reference',
+                'callback_url': 'your_callback_url'
+            };
+
+                final response = await http.post(
+                url,
+                headers: {
+                'Authorization': 'Bearer <token>',
+                'Content-Type': 'application/json',
+            },
+                body: jsonEncode(payload),
+                );
+
+                print(response.body);
+            }
+
+            ```
+
+            ```r R theme={null}
+            library(httr)
+            library(jsonlite)
+
+            url <- "https://ai.kaiho.cc/v1/viodes"
+
+            payload <- list(
+            prompt = "your_prompt",
+            model = "gpt-5",
+            seconds = 30,
+            size = "large",
+            input_reference = "your_input_reference",
+            callback_url = "your_callback_url"
+            )
+
+            response <- POST(
+            url,
+            add_headers(
+            Authorization = "Bearer <token>",
+                `Content-Type` = "application/json"
+                ),
+                body = toJSON(payload, auto_unbox = TRUE),
+                encode = "raw"
+                )
+
+                cat(content(response, "text"))
+
+                ```
 </RequestExample>
 
 <ResponseExample>
-  ```json 200 theme={null}
-  {
-      "id": "video_6d50e771-5c01-407c-943d-3db0c2d572f2",
-      "object": "video",
-      "model": "sora-2",
-      "status": "queued",
-      "created_at": 1763455696,
-      "size": "720x1280",
-      "seconds": "4"
-  }
-  ```
-
-  ```json 400 theme={null}
-  {
-    "error": {
-      "code": 400,
-      "message": "请求参数无效",
-      "type": "invalid_request_error"
+    ```json 200 theme={null}
+    {
+        "id": "video_6d50e771-5c01-407c-943d-3db0c2d572f2",
+        "object": "video",
+        "model": "sora-2",
+        "status": "queued",
+        "created_at": 1763455696,
+        "size": "720x1280",
+        "seconds": "4"
     }
-  }
-  ```
+    ```
 
-  ```json 401 theme={null}
-  {
-    "error": {
-      "code": 401,
-      "message": "身份验证失败，请检查您的API密钥",
-      "type": "authentication_error"
+    ```json 400 theme={null}
+    {
+        "error": {
+        "code": 400,
+        "message": "请求参数无效",
+        "type": "invalid_request_error"
     }
-  }
-  ```
+    }
+    ```
 
-  ```json 402 theme={null}
-  {
-    "error": {
-      "code": 402,
-      "message": "账户余额不足，请充值后再试",
-      "type": "payment_required"
+    ```json 401 theme={null}
+    {
+        "error": {
+        "code": 401,
+        "message": "身份验证失败，请检查您的API密钥",
+        "type": "authentication_error"
     }
-  }
-  ```
+    }
+    ```
 
-  ```json 403 theme={null}
-  {
-    "error": {
-      "code": 403,
-      "message": "访问被禁止，您没有权限访问此资源",
-      "type": "permission_error"
+    ```json 402 theme={null}
+    {
+        "error": {
+        "code": 402,
+        "message": "账户余额不足，请充值后再试",
+        "type": "payment_required"
     }
-  }
-  ```
+    }
+    ```
 
-  ```json 429 theme={null}
-  {
-    "error": {
-      "code": 429,
-      "message": "请求过于频繁，请稍后再试",
-      "type": "rate_limit_error"
+    ```json 403 theme={null}
+    {
+        "error": {
+        "code": 403,
+        "message": "访问被禁止，您没有权限访问此资源",
+        "type": "permission_error"
     }
-  }
-  ```
+    }
+    ```
 
-  ```json 500 theme={null}
-  {
-    "error": {
-      "code": 500,
-      "message": "服务器内部错误，请稍后重试",
-      "type": "server_error"
+    ```json 429 theme={null}
+    {
+        "error": {
+        "code": 429,
+        "message": "请求过于频繁，请稍后再试",
+        "type": "rate_limit_error"
     }
-  }
-  ```
+    }
+    ```
 
-  ```json 502 theme={null}
-  {
-    "error": {
-      "code": 502,
-      "message": "网关错误，服务器暂时不可用",
-      "type": "bad_gateway"
+    ```json 500 theme={null}
+    {
+        "error": {
+        "code": 500,
+        "message": "服务器内部错误，请稍后重试",
+        "type": "server_error"
     }
-  }
-  ```
+    }
+    ```
+
+    ```json 502 theme={null}
+    {
+        "error": {
+        "code": 502,
+        "message": "网关错误，服务器暂时不可用",
+        "type": "bad_gateway"
+    }
+    }
+    ```
 </ResponseExample>
 
 ## Authorizations
 
 <ParamField header="Authorization" type="string" required>
-  所有接口均需要使用Bearer Token进行认证
+    所有接口均需要使用Bearer Token进行认证
 
-  获取 API Key：
+    获取 API Key：
 
-  访问 [API Key 管理页面](https://ai.kaiho.cc/token) 获取您的 API Key
+    访问 [API Key 管理页面](https://ai.kaiho.cc/token) 获取您的 API Key
 
-  使用时在请求头中添加：
+    使用时在请求头中添加：
 
-  ```
-  Authorization: Bearer YOUR_API_KEY
-  ```
+    ```
+    Authorization: Bearer YOUR_API_KEY
+    ```
 </ParamField>
 
 ## Body
 
 <ParamField body="model" type="string" required>
-  模型名称  sora视频生成
+    模型名称 sora视频生成
 
-  支持的模型包括：
-  * **OpenAI**: `sora-2`, `sora-2-pro`
-  * 更多模型持续更新中...
+    支持的模型包括：
+    * **OpenAI**: `sora-2`, `sora-2-pro`
+    * 更多模型持续更新中...
 </ParamField>
 
 <ParamField body="prompt" type="String" required>
-  提示词
+    提示词
 
-  * `prompt`:
+    * `prompt`:
 </ParamField>
 
 <ParamField body="size" type="enum<string>
 ">
-  视频输出的分辨率
- *`size`: `720x1280`,
-          `1280x720`,
-          `1024x1792`,
-          `1792x1024`
+    视频输出的分辨率
+    *`size`: `720x1280`,
+    `1280x720`,
+    `1024x1792`,
+    `1792x1024`
 </ParamField>
 
 <ParamField body="input_reference" type="file">
-  视频输出的参考文件
+    视频输出的参考文件
 </ParamField>
 
 <ParamField body="callback_url" type="stirng">
-  回调地址
+    回调地址
 </ParamField>
 
 ## Response
 
 <ResponseField name="id" type="string">
-  响应的唯一标识符以及视频任务的id
+    响应的唯一标识符以及视频任务的id
 </ResponseField>
 
 <ResponseField name="object" type="string">
-  对象类型，固定为 `video`
+    对象类型，固定为 `video`
 </ResponseField>
 
 <ResponseField name="size" type="enum<string>">
-  视频输出的分辨率
+    视频输出的分辨率
 </ResponseField>
 
 <ResponseField name="model" type="string">
-  实际使用的模型名称
+    实际使用的模型名称
 </ResponseField>
 
 <ResponseField name="seconds" type="视频时长">
-  生成的视频的总时长
+    生成的视频的总时长
 </ResponseField>
 
 <ResponseField name="created_at" type="long">
-  生成视频任务开始的时间戳
+    生成视频任务开始的时间戳
 </ResponseField>
 
 ## 支持的模型列表
@@ -608,10 +608,10 @@ api: "POST https://ai.kaiho.cc/v1/videos"
 
 ```json  theme={null}
 {
-  "model": "gpt-5",
-  "messages": [
+"model": "gpt-5",
+    "messages": [
     {"role": "user", "content": "你好"}
-  ]
+]
 }
 ```
 
@@ -619,11 +619,11 @@ api: "POST https://ai.kaiho.cc/v1/videos"
 
 ```json  theme={null}
 {
-  "model": "claude-3-5-sonnet",
-  "messages": [
+"model": "claude-3-5-sonnet",
+    "messages": [
     {"role": "system", "content": "你是一位专业的Python编程导师"},
     {"role": "user", "content": "如何使用列表推导式？"}
-  ]
+]
 }
 ```
 

@@ -73,7 +73,9 @@
               {
                 "group": "图像系列",
                 "pages": [
-                  "cn/api-manual/image/gpt4o-image"
+                  "cn/api-manual/image/gpt4o-image",
+                  "cn/api-manual/image/nano-banana"
+
                 ]
               },
               {
@@ -134,7 +136,9 @@
               {
                 "group": "Image Series",
                 "pages": [
-                  "en/api-manual/image/gpt4o-image"
+                  "en/api-manual/image/gpt4o-image",
+                  "cn/api-manual/image/nano-banana"
+
                 ]
               },
               {
@@ -195,7 +199,9 @@
               {
                 "group": "圖像系列",
                 "pages": [
-                  "zh-Hant/api-manual/image/gpt4o-image"
+                  "zh-Hant/api-manual/image/gpt4o-image",
+                  "cn/api-manual/image/nano-banana"
+
                 ]
               },
               {
@@ -256,7 +262,9 @@
               {
                 "group": "画像シリーズ",
                 "pages": [
-                  "jp/api-manual/image/gpt4o-image"
+                  "jp/api-manual/image/gpt4o-image",
+                  "cn/api-manual/image/nano-banana"
+
                 ]
               },
               {
