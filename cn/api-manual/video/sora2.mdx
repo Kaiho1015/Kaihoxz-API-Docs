@@ -1,349 +1,630 @@
 ---
-title: "Sora2 视频生成"
-description: "使用 Sora2 AI 模型生成高质量视频内容"
-api: "POST https://ai.kaiho.cc/v1/videos/generations"
+title: "视频生成接口"
+api: "POST https://ai.kaiho.cc/v1/videos"
 ---
 
-## 概述
 
-Sora2 是 OpenAI 的最新视频生成模型，能够根据文本描述创建逼真的视频内容，支持多种分辨率和时长。
 
-<Warning>
-  **异步任务：** 视频生成是异步操作，需要使用[任务管理 API](/cn/api-manual/task/get-status) 查询生成状态。
-</Warning>
+<RequestExample>
+    ```bash cURL theme={null}
 
-## 支持的模型
+    curl --request POST \
+    --url https://ai.kaiho.cc/v1/viodes \
+    --header 'Authorization: Bearer <token>' \
+    --header 'Content-Type: application/json' \
+    --form 'prompt=your_prompt' \
+    --form 'model=gpt-5' \
+    --form 'seconds=30' \
+    --form 'size=large' \
+    --form 'input_reference=your_input_reference' \
+    --form 'callback_url=your_callback_url'
 
-<CardGroup cols={2}>
-  <Card title="Sora2" icon="video">
-    OpenAI 最新视频生成模型
-  </Card>
-  <Card title="Sora Turbo" icon="gauge-high">
-    更快的生成速度
-  </Card>
-  <Card title="Runway Gen-3" icon="film">
-    高质量视频生成
-  </Card>
-  <Card title="Pika 1.5" icon="sparkles">
-    创意视频生成
-  </Card>
-</CardGroup>
+    ```
 
-## 请求参数
+    ```python Python theme={null}
+    import requests
 
-<ParamField body="prompt" type="string" required>
-  视频描述文本，最多 500 个字符。详细描述场景、动作、镜头运动等。
-</ParamField>
+    url = "https://ai.kaiho.cc/v1/viodes"
 
-<ParamField body="model" type="string" default="sora-2">
-  使用的模型：
-  - `sora-2` - 最新最强大
-  - `sora-turbo` - 快速生成
-  - `runway-gen3` - 高质量
-  - `pika-1.5` - 创意风格
-</ParamField>
-
-<ParamField body="duration" type="integer" default={5}>
-  视频时长（秒），范围 2-20 秒。
-</ParamField>
-
-<ParamField body="resolution" type="string" default="1280x720">
-  视频分辨率：
-  - `1920x1080` - Full HD
-  - `1280x720` - HD
-  - `640x360` - SD
-  - `1024x1024` - 方形（社交媒体）
-</ParamField>
-
-<ParamField body="fps" type="integer" default={24}>
-  帧率，可选值：24, 30, 60
-</ParamField>
-
-<ParamField body="style" type="string">
-  视频风格：
-  - `realistic` - 写实风格
-  - `cinematic` - 电影风格
-  - `animated` - 动画风格
-  - `artistic` - 艺术风格
-</ParamField>
-
-<ParamField body="webhook_url" type="string">
-  任务完成时的回调 URL（可选）。
-</ParamField>
-
-## 请求示例
-
-<CodeGroup>
-
-```bash cURL
-curl https://ai.kaiho.cc/v1/videos/generations \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -d '{
-    "model": "sora-2",
-    "prompt": "一只金毛犬在秋天的公园里追逐飘落的树叶，阳光透过树叶洒下，慢镜头，电影级画质",
-    "duration": 10,
-    "resolution": "1920x1080",
-    "fps": 30,
-    "style": "cinematic"
-  }'
-```
-
-```python Python
-import requests
-import time
-
-# 创建视频生成任务
-response = requests.post(
-    "https://ai.kaiho.cc/v1/videos/generations",
-    headers={
-        "Content-Type": "application/json",
-        "Authorization": "Bearer YOUR_API_KEY"
-    },
-    json={
-        "model": "sora-2",
-        "prompt": "一只金毛犬在秋天的公园里追逐飘落的树叶，阳光透过树叶洒下，慢镜头，电影级画质",
-        "duration": 10,
-        "resolution": "1920x1080",
-        "fps": 30,
-        "style": "cinematic"
+    payload = {
+        "prompt": "your_prompt",
+        "model": "gpt-5",
+        "seconds": 30,
+        "size": "large",
+        "input_reference": "your_input_reference",
+        "callback_url": "your_callback_url"
     }
-)
 
-task = response.json()
-task_id = task["id"]
-print(f"任务ID: {task_id}")
+    headers = {
+        "Authorization": "Bearer <token>",
+        "Content-Type": "application/json"
+    }
 
-# 轮询任务状态
-while True:
-    status_response = requests.get(
-        f"https://ai.kaiho.cc/v1/tasks/{task_id}",
-        headers={"Authorization": "Bearer YOUR_API_KEY"}
+    response = requests.post(url, data=payload, headers=headers)
+
+    print(response.json())
+
+    ```
+
+    ```javascript JavaScript theme={null}
+    const url = "https://ai.kaiho.cc/v1/viodes";
+
+    const formData = new FormData();
+    formData.append("prompt", "your_prompt");
+    formData.append("model", "gpt-5");
+    formData.append("seconds", 30);
+    formData.append("size", "large");
+    formData.append("input_reference", "your_input_reference");
+    formData.append("callback_url", "your_callback_url");
+
+    const headers = {
+        "Authorization": "Bearer <token>",
+        "Content-Type": "application/json"
+    };
+
+    fetch(url, {
+        method: "POST",
+        headers: headers,
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch(error => console.error('Error:', error));
+
+    ```
+
+    ```go Go theme={null}
+    package main
+
+    import (
+    "bytes"
+    "fmt"
+    "net/http"
+    "mime/multipart"
+    "os"
     )
-    
-    status = status_response.json()
-    
-    if status["status"] == "completed":
-        print(f"视频生成完成: {status['result']['video_url']}")
-        break
-    elif status["status"] == "failed":
-        print(f"生成失败: {status['error']}")
-        break
-    
-    print(f"进度: {status['progress']}%")
-    time.sleep(5)
-```
 
-```javascript JavaScript
-import axios from 'axios';
+    func main() {
+        url := "https://ai.kaiho.cc/v1/viodes"
 
-const apiKey = 'YOUR_API_KEY';
-const baseURL = 'https://ai.kaiho.cc/v1';
+        var b bytes.Buffer
+        writer := multipart.NewWriter(&b)
+        writer.WriteField("prompt", "your_prompt")
+        writer.WriteField("model", "gpt-5")
+        writer.WriteField("seconds", "30")
+        writer.WriteField("size", "large")
+        writer.WriteField("input_reference", "your_input_reference")
+        writer.WriteField("callback_url", "your_callback_url")
 
-async function generateVideo() {
-  // 创建视频生成任务
-  const response = await axios.post(
-    `${baseURL}/videos/generations`,
-    {
-      model: 'sora-2',
-      prompt: '一只金毛犬在秋天的公园里追逐飘落的树叶，阳光透过树叶洒下，慢镜头，电影级画质',
-      duration: 10,
-      resolution: '1920x1080',
-      fps: 30,
-      style: 'cinematic'
-    },
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      }
-    }
-  );
-
-  const taskId = response.data.id;
-  console.log('任务ID:', taskId);
-
-  // 轮询任务状态
-  while (true) {
-    const statusResponse = await axios.get(
-      `${baseURL}/tasks/${taskId}`,
-      {
-        headers: { 'Authorization': `Bearer ${apiKey}` }
-      }
-    );
-
-    const status = statusResponse.data;
-
-    if (status.status === 'completed') {
-      console.log('视频生成完成:', status.result.video_url);
-      break;
-    } else if (status.status === 'failed') {
-      console.log('生成失败:', status.error);
-      break;
+        req, err := http.NewRequest("POST", url, &b)
+        if err != nil {
+        fmt.Println("Error creating request:", err)
+        return
     }
 
-    console.log('进度:', status.progress + '%');
-    await new Promise(resolve => setTimeout(resolve, 5000));
-  }
-}
+        req.Header.Add("Authorization", "Bearer <token>")
+        req.Header.Add("Content-Type", writer.FormDataContentType())
 
-generateVideo();
-```
+        client := &http.Client{}
+        resp, err := client.Do(req)
+        if err != nil {
+        fmt.Println("Error sending request:", err)
+        return
+    }
+        defer resp.Body.Close()
 
-</CodeGroup>
+        fmt.Println("Response status:", resp.Status)
+    }
 
-## 响应格式
+    ```
 
-创建任务时的响应：
+    ```java Java theme={null}
+    import java.net.URI;
+    import java.net.http.HttpClient;
+    import java.net.http.HttpRequest;
+    import java.net.http.HttpResponse;
+    import java.net.http.HttpHeaders;
+    import java.nio.file.Files;
+    import java.nio.file.Paths;
+    import java.util.Map;
 
-```json
-{
-  "id": "task_abc123",
-  "status": "pending",
-  "created_at": "2024-01-15T10:30:00Z",
-  "estimated_time": 120
-}
-```
+    public class Main {
+        public static void main(String[] args) throws Exception {
+        String url = "https://ai.kaiho.cc/v1/viodes";
+        String payload = "prompt=your_prompt&model=gpt-5&seconds=30&size=large&input_reference=your_input_reference&callback_url=your_callback_url";
 
-任务完成后的状态：
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create(url))
+        .header("Authorization", "Bearer <token>")
+        .header("Content-Type", "application/json")
+        .POST(HttpRequest.BodyPublishers.ofString(payload))
+        .build();
 
-```json
-{
-  "id": "task_abc123",
-  "status": "completed",
-  "progress": 100,
-  "result": {
-    "video_url": "https://storage.kaiho.cc/videos/video-123.mp4",
-    "thumbnail_url": "https://storage.kaiho.cc/videos/thumb-123.jpg",
-    "duration": 10,
-    "resolution": "1920x1080",
-    "size_bytes": 15728640
-  },
-  "created_at": "2024-01-15T10:30:00Z",
-  "completed_at": "2024-01-15T10:32:30Z"
-}
-```
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        System.out.println(response.body());
+    }
+    }
 
-## 使用 Webhook
+    ```
 
-配置 webhook 以自动接收完成通知：
+    ```php PHP theme={null}
+    <?php
 
-```python
-response = requests.post(
-    "https://ai.kaiho.cc/v1/videos/generations",
-    headers={"Authorization": "Bearer YOUR_API_KEY"},
-    json={
+    $url = "https://ai.kaiho.cc/v1/viodes";
+
+    $payload = [
+        "prompt" => "your_prompt",
+        "model" => "gpt-5",
+        "seconds" => 30,
+        "size" => "large",
+        "input_reference" => "your_input_reference",
+        "callback_url" => "your_callback_url"
+    ];
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "Authorization: Bearer <token>",
+        "Content-Type: application/json"
+    ]);
+
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    echo $response;
+    ?>
+
+    ```
+
+    ```swift Swift theme={null}
+    import Foundation
+
+    let url = URL(string: "https://ai.kaiho.cc/v1/viodes")!
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("Bearer <token>", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Any] = [
+        "prompt": "your_prompt",
+        "model": "gpt-5",
+        "seconds": 30,
+        "size": "large",
+        "input_reference": "your_input_reference",
+        "callback_url": "your_callback_url"
+        ]
+
+        let data = try? JSONSerialization.data(withJSONObject: body)
+        request.httpBody = data
+
+        let task = URLSession.shared.dataTask(with: request) {data, response, error in
+            if let error = error {
+            print("Error: \(error)")
+            return
+        }
+
+            if let data = data, let responseString = String(data: data, encoding: .utf8) {
+            print(responseString)
+        }
+        }
+
+        task.resume()
+
+        ```
+
+        ```csharp C# theme={null}
+        using System;
+        using System.Net.Http;
+        using System.Text;
+        using System.Threading.Tasks;
+
+        class Program
+        {
+            static async Task Main(string[] args)
+        {
+            var url = "https://ai.kaiho.cc/v1/viodes";
+
+            var payload = @"{
+            ""prompt"": ""your_prompt"",
+            ""model"": ""gpt-5"",
+            ""seconds"": 30,
+            ""size"": ""large"",
+            ""input_reference"": ""your_input_reference"",
+            ""callback_url"": ""your_callback_url""
+        }";
+
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Authorization", "Bearer <token>");
+
+            var content = new StringContent(payload, Encoding.UTF8, "application/json");
+            var response = await client.PostAsync(url, content);
+            var result = await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine(result);
+        }
+        }
+
+        ```
+
+        ```c C theme={null}
+        #include <stdio.h>
+            #include <curl/curl.h>
+
+            int main(void) {
+            CURL * curl;
+            CURLcode res;
+
+            curl_global_init(CURL_GLOBAL_DEFAULT);
+            curl = curl_easy_init();
+
+            if(curl) {
+            const char *url = "https://ai.kaiho.cc/v1/viodes";
+            const char *payload = "{"
+            "\"prompt\":\"your_prompt\","
+            "\"model\":\"gpt-5\","
+            "\"seconds\":\"30\","
+            "\"size\":\"large\","
+            "\"input_reference\":\"your_input_reference\","
+            "\"callback_url\":\"your_callback_url\""
+            "}";
+
+            struct curl_slist *headers = NULL;
+            headers = curl_slist_append(headers, "Authorization: Bearer <token>");
+            headers = curl_slist_append(headers, "Content-Type: application/json");
+
+            curl_easy_setopt(curl, CURLOPT_URL, url);
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+            res = curl_easy_perform(curl);
+
+            if(res != CURLE_OK) {
+            fprintf(stderr, "curl_easy_perform() failed: %s\n",
+            curl_easy_strerror(res));
+        }
+
+            curl_slist_free_all(headers);
+            curl_easy_cleanup(curl);
+        }
+
+            curl_global_cleanup();
+            return 0;
+        }
+
+            ```
+
+            ```objectivec Objective-C theme={null}
+            #import <Foundation/Foundation.h>
+
+            int main(int argc, const char * argv[]) {
+        @autoreleasepool {
+            NSURL *url = [NSURL URLWithString:@"https://ai.kaiho.cc/v1/viodes"];
+
+            NSDictionary *payload = @{
+            @"prompt": @"your_prompt",
+            @"model": @"gpt-5",
+            @"seconds": @30,
+            @"size": @"large",
+            @"input_reference": @"your_input_reference",
+            @"callback_url": @"your_callback_url"
+        };
+
+            NSError *error;
+            NSData *jsonData = [NSJSONSerialization dataWithJSONObject:payload
+            options:0
+            error:&error];
+
+            NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+            [request setHTTPMethod:@"POST"];
+            [request setValue:@"Bearer <token>" forHTTPHeaderField:@"Authorization"];
+            [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+            [request setHTTPBody:jsonData];
+
+            NSURLSessionDataTask *task = [[NSURLSession sharedSession]
+            dataTaskWithRequest:request
+            completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+            if (error) {
+            NSLog(@"Error: %@", error);
+            return;
+        }
+            NSString *result = [[NSString alloc] initWithData:data
+            encoding:NSUTF8StringEncoding];
+            NSLog(@"%@", result);
+        }];
+
+            [task resume];
+            [[NSRunLoop mainRunLoop] run];
+        }
+            return 0;
+        }
+
+            ```
+
+            ```ocaml OCaml theme={null}
+            (* Requires cohttp and yojson libraries *)
+            open Lwt
+            open Cohttp
+            open Cohttp_lwt_unix
+
+            let url = "https://ai.kaiho.cc/v1/viodes"
+
+            let payload = {|{
+            "prompt": "your_prompt",
+            "model": "gpt-5",
+            "seconds": 30,
+            "size": "large",
+            "input_reference": "your_input_reference",
+            "callback_url": "your_callback_url"
+        }|}
+
+            let () =
+            let headers = Header.init ()
+            |> fun h -> Header.add h "Authorization" "Bearer <token>"
+            |> fun h -> Header.add h "Content-Type" "application/json"
+            in
+            let body = Cohttp_lwt.Body.of_string payload in
+
+            let response = Client.post ~headers ~body (Uri.of_string url) >>= fun (resp, body) ->
+            body |> Cohttp_lwt.Body.to_string >|= fun body_str ->
+            print_endline body_str
+            in
+            Lwt_main.run response
+
+            ```
+
+            ```dart Dart theme={null}
+            import 'dart:convert';
+            import 'package:http/http.dart' as http;
+
+            void main() async {
+                final url = Uri.parse('https://ai.kaiho.cc/v1/viodes');
+
+                final payload = {
+                'prompt': 'your_prompt',
+                'model': 'gpt-5',
+                'seconds': 30,
+                'size': 'large',
+                'input_reference': 'your_input_reference',
+                'callback_url': 'your_callback_url'
+            };
+
+                final response = await http.post(
+                url,
+                headers: {
+                'Authorization': 'Bearer <token>',
+                'Content-Type': 'application/json',
+            },
+                body: jsonEncode(payload),
+                );
+
+                print(response.body);
+            }
+
+            ```
+
+            ```r R theme={null}
+            library(httr)
+            library(jsonlite)
+
+            url <- "https://ai.kaiho.cc/v1/viodes"
+
+            payload <- list(
+            prompt = "your_prompt",
+            model = "gpt-5",
+            seconds = 30,
+            size = "large",
+            input_reference = "your_input_reference",
+            callback_url = "your_callback_url"
+            )
+
+            response <- POST(
+            url,
+            add_headers(
+            Authorization = "Bearer <token>",
+                `Content-Type` = "application/json"
+                ),
+                body = toJSON(payload, auto_unbox = TRUE),
+                encode = "raw"
+                )
+
+                cat(content(response, "text"))
+
+                ```
+</RequestExample>
+
+<ResponseExample>
+    ```json 200 theme={null}
+    {
+        "id": "video_6d50e771-5c01-407c-943d-3db0c2d572f2",
+        "object": "video",
         "model": "sora-2",
-        "prompt": "视频描述...",
-        "webhook_url": "https://your-server.com/webhook",
-        "webhook_secret": "your_secret_key"  # 用于验证请求
+        "status": "queued",
+        "created_at": 1763455696,
+        "size": "720x1280",
+        "seconds": "4"
     }
-)
-```
+    ```
 
-Webhook 回调格式：
+    ```json 400 theme={null}
+    {
+        "error": {
+        "code": 400,
+        "message": "请求参数无效",
+        "type": "invalid_request_error"
+    }
+    }
+    ```
 
-```json
+    ```json 401 theme={null}
+    {
+        "error": {
+        "code": 401,
+        "message": "身份验证失败，请检查您的API密钥",
+        "type": "authentication_error"
+    }
+    }
+    ```
+
+    ```json 402 theme={null}
+    {
+        "error": {
+        "code": 402,
+        "message": "账户余额不足，请充值后再试",
+        "type": "payment_required"
+    }
+    }
+    ```
+
+    ```json 403 theme={null}
+    {
+        "error": {
+        "code": 403,
+        "message": "访问被禁止，您没有权限访问此资源",
+        "type": "permission_error"
+    }
+    }
+    ```
+
+    ```json 429 theme={null}
+    {
+        "error": {
+        "code": 429,
+        "message": "请求过于频繁，请稍后再试",
+        "type": "rate_limit_error"
+    }
+    }
+    ```
+
+    ```json 500 theme={null}
+    {
+        "error": {
+        "code": 500,
+        "message": "服务器内部错误，请稍后重试",
+        "type": "server_error"
+    }
+    }
+    ```
+
+    ```json 502 theme={null}
+    {
+        "error": {
+        "code": 502,
+        "message": "网关错误，服务器暂时不可用",
+        "type": "bad_gateway"
+    }
+    }
+    ```
+</ResponseExample>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+    所有接口均需要使用Bearer Token进行认证
+
+    获取 API Key：
+
+    访问 [API Key 管理页面](https://ai.kaiho.cc/token) 获取您的 API Key
+
+    使用时在请求头中添加：
+
+    ```
+    Authorization: Bearer YOUR_API_KEY
+    ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" required>
+    模型名称 sora视频生成
+
+    支持的模型包括：
+    * **OpenAI**: `sora-2`, `sora-2-pro`
+    * 更多模型持续更新中...
+</ParamField>
+
+<ParamField body="prompt" type="String" required>
+    提示词
+
+    * `prompt`:
+</ParamField>
+
+<ParamField body="size" type="enum<string>
+">
+    视频输出的分辨率
+    *`size`: `720x1280`,
+    `1280x720`,
+    `1024x1792`,
+    `1792x1024`
+</ParamField>
+
+<ParamField body="input_reference" type="file">
+    视频输出的参考文件
+</ParamField>
+
+<ParamField body="callback_url" type="stirng">
+    回调地址
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+    响应的唯一标识符以及视频任务的id
+</ResponseField>
+
+<ResponseField name="object" type="string">
+    对象类型，固定为 `video`
+</ResponseField>
+
+<ResponseField name="size" type="enum<string>">
+    视频输出的分辨率
+</ResponseField>
+
+<ResponseField name="model" type="string">
+    实际使用的模型名称
+</ResponseField>
+
+<ResponseField name="seconds" type="视频时长">
+    生成的视频的总时长
+</ResponseField>
+
+<ResponseField name="created_at" type="long">
+    生成视频任务开始的时间戳
+</ResponseField>
+
+## 支持的模型列表
+
+### OpenAI 系列
+
+* `sora-2` - 视频生成模型
+* `sora-2-pro` - 视频生成模型
+
+## 使用示例
+
+### 基础对话
+
+```json  theme={null}
 {
-  "event": "video.completed",
-  "task_id": "task_abc123",
-  "status": "completed",
-  "result": {
-    "video_url": "https://storage.kaiho.cc/videos/video-123.mp4",
-    "duration": 10
-  }
+"model": "gpt-5",
+    "messages": [
+    {"role": "user", "content": "你好"}
+]
 }
 ```
 
-## 提示词最佳实践
+### 系统提示词
 
-<AccordionGroup>
-  <Accordion title="描述场景细节" icon="eye">
-    包含环境、光线、天气、时间等细节描述。
-    
-    示例：*"日落时分的海滩，金色的阳光洒在波光粼粼的海面上"*
-  </Accordion>
-  
-  <Accordion title="指定镜头运动" icon="video">
-    描述相机运动方式以获得更好的效果。
-    
-    示例：*"缓慢推进镜头"*、*"环绕拍摄"*、*"鸟瞰视角"*
-  </Accordion>
-  
-  <Accordion title="明确主体动作" icon="person-running">
-    清楚描述主体的动作和表情。
-    
-    示例：*"一个小女孩开心地奔跑，笑容灿烂"*
-  </Accordion>
-  
-  <Accordion title="参考电影风格" icon="film">
-    引用知名导演或电影风格。
-    
-    示例：*"韦斯·安德森对称构图风格"*、*"诺兰式的史诗感"*
-  </Accordion>
-</AccordionGroup>
-
-## 提示词模板
-
-<Tabs>
-  <Tab title="自然风光">
-    ```
-    [场景]: 壮丽的山景
-    [时间]: 日出时分
-    [光线]: 金色晨光穿透云层
-    [镜头]: 无人机缓慢上升拍摄
-    [风格]: 纪录片级别，BBC地球脉动风格
-    ```
-  </Tab>
-  
-  <Tab title="人物特写">
-    ```
-    [主体]: 一位老人
-    [动作]: 专注地制作陶器
-    [环境]: 传统工作室，温暖的灯光
-    [镜头]: 特写镜头，浅景深
-    [风格]: 纪实摄影，感人的人文故事
-    ```
-  </Tab>
-  
-  <Tab title="产品展示">
-    ```
-    [产品]: iPhone 最新款
-    [动作]: 360度旋转展示
-    [环境]: 简约白色背景
-    [光线]: 专业产品摄影光线
-    [风格]: Apple产品广告风格
-    ```
-  </Tab>
-</Tabs>
-
-## 生成时间估算
-
-| 时长 | 分辨率 | 预计时间 |
-|------|--------|---------|
-| 5秒 | 720p | 1-2 分钟 |
-| 5秒 | 1080p | 2-3 分钟 |
-| 10秒 | 720p | 3-5 分钟 |
-| 10秒 | 1080p | 5-8 分钟 |
-| 20秒 | 1080p | 10-15 分钟 |
-
-<Tip>
-  **节省时间：** 在测试提示词时，先使用较低分辨率和较短时长，确定效果后再生成高质量版本。
-</Tip>
-
-## 内容限制
-
-- ❌ 暴力血腥内容
-- ❌ 成人内容
-- ❌ 侵权内容
-- ❌ 误导性深度伪造
-- ✅ 创意内容
-- ✅ 教育内容
-- ✅ 营销视频
-
-<Note>
-  **存储时间：** 生成的视频保存 7 天，请及时下载。
-</Note>
-
+```json  theme={null}
+{
+"model": "claude-3-5-sonnet",
+    "messages": [
+    {"role": "system", "content": "你是一位专业的Python编程导师"},
+    {"role": "user", "content": "如何使用列表推导式？"}
+]
+}
+```
 
 
