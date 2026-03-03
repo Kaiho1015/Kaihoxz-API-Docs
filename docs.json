@@ -74,14 +74,28 @@
                 "group": "图像系列",
                 "pages": [
                   "cn/api-manual/image/gpt4o-image",
-                  "cn/api-manual/image/nano-banana"
-
+                  "cn/api-manual/image/nano-banana",
+                  "cn/api-manual/image/nano-banana-pro",
+                  "cn/api-manual/image/gemini-3-1-flash",
+                  "cn/api-manual/image/flux-kontext",
+                  "cn/api-manual/image/flux-2",
+                  "cn/api-manual/image/seedream-4",
+                  "cn/api-manual/image/seedream-4-5",
+                  "cn/api-manual/image/seedream-5-lite"
                 ]
               },
               {
                 "group": "视频系列",
                 "pages": [
-                  "cn/api-manual/video/sora2"
+                  "cn/api-manual/video/veo3",
+                  "cn/api-manual/video/sora2",
+                  "cn/api-manual/video/kling-v2-6",
+                  "cn/api-manual/video/hailuo-2-3",
+                  "cn/api-manual/video/hailuo-02",
+                  "cn/api-manual/video/doubao-seedance-1-5",
+                  "cn/api-manual/video/doubao-seedance-1-0",
+                  "cn/api-manual/video/vidu-q3-pro",
+                  "cn/api-manual/video/wan2-6"
                 ]
               },
               {
@@ -136,15 +150,29 @@
               {
                 "group": "Image Series",
                 "pages": [
-                  "en/api-manual/image/gpt4o-image",
-                  "cn/api-manual/image/nano-banana"
-
+                  "cn/api-manual/image/gpt4o-image",
+                  "cn/api-manual/image/nano-banana",
+                  "cn/api-manual/image/nano-banana-pro",
+                  "cn/api-manual/image/gemini-3-1-flash",
+                  "cn/api-manual/image/flux-kontext",
+                  "cn/api-manual/image/flux-2",
+                  "cn/api-manual/image/seedream-4",
+                  "cn/api-manual/image/seedream-4-5",
+                  "cn/api-manual/image/seedream-5-lite"
                 ]
               },
               {
                 "group": "Video Series",
                 "pages": [
-                  "en/api-manual/video/sora2"
+                  "cn/api-manual/video/veo3",
+                  "cn/api-manual/video/sora2",
+                  "cn/api-manual/video/kling-v2-6",
+                  "cn/api-manual/video/hailuo-2-3",
+                  "cn/api-manual/video/hailuo-02",
+                  "cn/api-manual/video/doubao-seedance-1-5",
+                  "cn/api-manual/video/doubao-seedance-1-0",
+                  "cn/api-manual/video/vidu-q3-pro",
+                  "cn/api-manual/video/wan2-6"
                 ]
               },
               {
@@ -199,15 +227,29 @@
               {
                 "group": "圖像系列",
                 "pages": [
-                  "zh-Hant/api-manual/image/gpt4o-image",
-                  "cn/api-manual/image/nano-banana"
-
+                  "cn/api-manual/image/gpt4o-image",
+                  "cn/api-manual/image/nano-banana",
+                  "cn/api-manual/image/nano-banana-pro",
+                  "cn/api-manual/image/gemini-3-1-flash",
+                  "cn/api-manual/image/flux-kontext",
+                  "cn/api-manual/image/flux-2",
+                  "cn/api-manual/image/seedream-4",
+                  "cn/api-manual/image/seedream-4-5",
+                  "cn/api-manual/image/seedream-5-lite"
                 ]
               },
               {
                 "group": "影片系列",
                 "pages": [
-                  "zh-Hant/api-manual/video/sora2"
+                  "cn/api-manual/video/veo3",
+                  "cn/api-manual/video/sora2",
+                  "cn/api-manual/video/kling-v2-6",
+                  "cn/api-manual/video/hailuo-2-3",
+                  "cn/api-manual/video/hailuo-02",
+                  "cn/api-manual/video/doubao-seedance-1-5",
+                  "cn/api-manual/video/doubao-seedance-1-0",
+                  "cn/api-manual/video/vidu-q3-pro",
+                  "cn/api-manual/video/wan2-6"
                 ]
               },
               {
@@ -262,15 +304,29 @@
               {
                 "group": "画像シリーズ",
                 "pages": [
-                  "jp/api-manual/image/gpt4o-image",
-                  "cn/api-manual/image/nano-banana"
-
+                  "cn/api-manual/image/gpt4o-image",
+                  "cn/api-manual/image/nano-banana",
+                  "cn/api-manual/image/nano-banana-pro",
+                  "cn/api-manual/image/gemini-3-1-flash",
+                  "cn/api-manual/image/flux-kontext",
+                  "cn/api-manual/image/flux-2",
+                  "cn/api-manual/image/seedream-4",
+                  "cn/api-manual/image/seedream-4-5",
+                  "cn/api-manual/image/seedream-5-lite"
                 ]
               },
               {
                 "group": "動画シリーズ",
                 "pages": [
-                  "jp/api-manual/video/sora2"
+                  "cn/api-manual/video/veo3",
+                  "cn/api-manual/video/sora2",
+                  "cn/api-manual/video/kling-v2-6",
+                  "cn/api-manual/video/hailuo-2-3",
+                  "cn/api-manual/video/hailuo-02",
+                  "cn/api-manual/video/doubao-seedance-1-5",
+                  "cn/api-manual/video/doubao-seedance-1-0",
+                  "cn/api-manual/video/vidu-q3-pro",
+                  "cn/api-manual/video/wan2-6"
                 ]
               },
               {
