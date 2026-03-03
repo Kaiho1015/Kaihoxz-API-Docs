@@ -1,20 +1,28 @@
 ---
-title: "nano-banana 图像生成"
+title: "Nano Banana 图像生成"
+description: "使用 Gemini-2.5-Flash-Image-preview (Nano Banana) 快速生成高质量图像"
 api: "POST https://ai.kaiho.cc/v1/images/generations"
 ---
 
+<Note>
+  **异步处理模式：** 提交请求后返回任务 ID，请通过 [查询任务状态](/cn/api-manual/task/get-status) 接口获取生成结果。生成的图片链接有效期为 24 小时，请及时保存。
+</Note>
+
 <RequestExample>
   ```bash cURL theme={null}
-
- curl --request POST \
-   --url https://ai.kaiho.cc/v1/images/generations \
-     --header 'Authorization: Bearer <token>' \
-     --header 'Content-Type: application/json' \
-     --data '{
-         "model": "gemini-3-pro-image-preview",
-         "prompt": "https://oss.ffire.cc/files/kling_watermark.png 让这个女人带上墨镜，衣服换个颜色",
-         "size": "1x1"
-     }'
+  curl --request POST \
+    --url https://ai.kaiho.cc/v1/images/generations \
+    --header 'Authorization: Bearer <token>' \
+    --header 'Content-Type: application/json' \
+    --data '{
+      "model": "gemini-2.5-flash-image-preview",
+      "prompt": "月光下的竹林小径，水墨画风格",
+      "size": "1:1",
+      "n": 1,
+      "image_urls": [
+        "https://example.com/reference.png"
+      ]
+    }'
   ```
 
   ```python Python theme={null}
@@ -23,14 +31,18 @@ api: "POST https://ai.kaiho.cc/v1/images/generations"
   url = "https://ai.kaiho.cc/v1/images/generations"
 
   payload = {
-  "model": "gemini-3-pro-image-preview",
-  "prompt": "https://oss.ffire.cc/files/kling_watermark.png 让这个女人带上墨镜，衣服换个颜色",
-  "size": "1x1"
+      "model": "gemini-2.5-flash-image-preview",
+      "prompt": "月光下的竹林小径，水墨画风格",
+      "size": "1:1",
+      "n": 1,
+      "image_urls": [
+          "https://example.com/reference.png"
+      ]
   }
 
   headers = {
-  "Authorization": "Bearer ",
-  "Content-Type": "application/json"
+      "Authorization": "Bearer <token>",
+      "Content-Type": "application/json"
   }
 
   response = requests.post(url, json=payload, headers=headers)
@@ -42,450 +54,134 @@ api: "POST https://ai.kaiho.cc/v1/images/generations"
   const url = "https://ai.kaiho.cc/v1/images/generations";
 
   const payload = {
-  model: "gemini-3-pro-image-preview",
-  prompt: "[https://oss.ffire.cc/files/kling_watermark.png](https://oss.ffire.cc/files/kling_watermark.png) 让这个女人带上墨镜，衣服换个颜色",
-  size: "1x1"
+    model: "gemini-2.5-flash-image-preview",
+    prompt: "月光下的竹林小径，水墨画风格",
+    size: "1:1",
+    n: 1,
+    image_urls: [
+      "https://example.com/reference.png"
+    ]
   };
 
   const headers = {
-  "Authorization": "Bearer <token>",
-  "Content-Type": "application/json"
+    "Authorization": "Bearer <token>",
+    "Content-Type": "application/json"
   };
 
   fetch(url, {
-  method: "POST",
-  headers: headers,
-  body: JSON.stringify(payload)
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(payload)
   })
-  .then(response => response.json())
-  .then(data => console.log(data))
-  .catch(error => console.error('Error:', error));
-
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch(error => console.error('Error:', error));
   ```
 
   ```go Go theme={null}
- package main
+  package main
 
- import (
- "bytes"
- "fmt"
- "net/http"
- "encoding/json"
- )
+  import (
+      "bytes"
+      "encoding/json"
+      "fmt"
+      "io/ioutil"
+      "net/http"
+  )
 
- func main() {
- url := "[https://ai.kaiho.cc/v1/images/generations](https://ai.kaiho.cc/v1/images/generations)"
- payload := map[string]interface{}{
-     "model":  "gemini-3-pro-image-preview",
-     "prompt": "https://oss.ffire.cc/files/kling_watermark.png 让这个女人带上墨镜，衣服换个颜色",
-     "size":   "1x1",
- }
+  func main() {
+      url := "https://ai.kaiho.cc/v1/images/generations"
 
- jsonData, _ := json.Marshal(payload)
-
- req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
- if err != nil {
-     fmt.Println("Error creating request:", err)
-     return
- }
-
- req.Header.Add("Authorization", "Bearer <token>")
- req.Header.Add("Content-Type", "application/json")
-
- client := &http.Client{}
- resp, err := client.Do(req)
- if err != nil {
-     fmt.Println("Error sending request:", err)
-     return
- }
- defer resp.Body.Close()
-
- fmt.Println("Response status:", resp.Status)
-
- }
-  ```
-
-  ```java Java theme={null}
- import java.net.URI;
- import java.net.http.HttpClient;
- import java.net.http.HttpRequest;
- import java.net.http.HttpResponse;
- import java.net.http.HttpHeaders;
- import java.nio.file.Files;
- import java.nio.file.Paths;
- import java.util.Map;
-
- public class Main {
- public static void main(String[] args) throws Exception {
- String url = "[https://ai.kaiho.cc/v1/images/generations](https://ai.kaiho.cc/v1/images/generations)";
- String payload = "{" +
- ""model": "gemini-3-pro-image-preview"," +
- ""prompt": "[https://oss.ffire.cc/files/kling_watermark.png](https://oss.ffire.cc/files/kling_watermark.png) 让这个女人带上墨镜，衣服换个颜色"," +
- ""size": "1x1"" +
- "}";
-     HttpClient client = HttpClient.newHttpClient();
-     HttpRequest request = HttpRequest.newBuilder()
-             .uri(URI.create(url))
-             .header("Authorization", "Bearer <token>")
-             .header("Content-Type", "application/json")
-             .POST(HttpRequest.BodyPublishers.ofString(payload))
-             .build();
-
-     HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-     System.out.println(response.body());
- }
- }
-  ```
-
-  ```php PHP theme={null}
-  <?php
-
-  $url = "https://ai.kaiho.cc/v1/images/generations";
-
-  $payload = [
-      "model" => "gemini-3-pro-image-preview",
-      "prompt" => "https://oss.ffire.cc/files/kling_watermark.png 让这个女人带上墨镜，衣服换个颜色",
-      "size" => "1x1"
-  ];
-
-  $ch = curl_init($url);
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($ch, CURLOPT_POST, true);
-  curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-  curl_setopt($ch, CURLOPT_HTTPHEADER, [
-      "Authorization: Bearer <token>",
-      "Content-Type: application/json"
-  ]);
-
-  $response = curl_exec($ch);
-  curl_close($ch);
-
-  echo $response;
-  ?>
-  ```
-
-  ```swift Swift theme={null}
-import Foundation
-
-let url = URL(string: "https://ai.kaiho.cc/v1/images/generations")!
-
-var request = URLRequest(url: url)
-request.httpMethod = "POST"
-request.setValue("Bearer ", forHTTPHeaderField: "Authorization")
-request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-let body: [String: Any] = [
-"model": "gemini-3-pro-image-preview",
-"prompt": "https://oss.ffire.cc/files/kling_watermark.png 让这个女人带上墨镜，衣服换个颜色",
-"size": "1x1"
-]
-
-let data = try? JSONSerialization.data(withJSONObject: body)
-request.httpBody = data
-
-let task = URLSession.shared.dataTask(with: request) { data, response, error in
-if let error = error {
-print("Error: (error)")
-return
-}
-
-if let data = data, let responseString = String(data: data, encoding: .utf8) {
-    print(responseString)
-}
-
-}
-
-task.resume()
-  ```
-
-  ```csharp C# theme={null}
- using System;
- using System.Net.Http;
- using System.Text;
- using System.Threading.Tasks;
-
- class Program
- {
- static async Task Main(string[] args)
- {
- var url = "https://ai.kaiho.cc/v1/images/generations";
-
-     var payload = @"{
-         ""model"": ""gemini-3-pro-image-preview"",
-         ""prompt"": ""https://oss.ffire.cc/files/kling_watermark.png 让这个女人带上墨镜，衣服换个颜色"",
-         ""size"": ""1x1""
-     }";
-
-     using var client = new HttpClient();
-     client.DefaultRequestHeaders.Add("Authorization", "Bearer <token>");
-
-     var content = new StringContent(payload, Encoding.UTF8, "application/json");
-     var response = await client.PostAsync(url, content);
-     var result = await response.Content.ReadAsStringAsync();
-
-     Console.WriteLine(result);
- }
-
- }
-
-  ```
-
-  ```c C theme={null}
-  #include <stdio.h>
-  #include <curl/curl.h>
-
-  int main(void) {
-  CURL *curl;
-  CURLcode res;
-
-  curl_global_init(CURL_GLOBAL_DEFAULT);
-  curl = curl_easy_init();
-
-  if(curl) {
-      const char *url = "https://ai.kaiho.cc/v1/images/generations";
-      const char *payload = "{"
-          "\"model\":\"gemini-3-pro-image-preview\","
-          "\"prompt\":\"https://oss.ffire.cc/files/kling_watermark.png 让这个女人带上墨镜，衣服换个颜色\","
-          "\"size\":\"1x1\""
-      "}";
-
-      struct curl_slist *headers = NULL;
-      headers = curl_slist_append(headers, "Authorization: Bearer <token>");
-      headers = curl_slist_append(headers, "Content-Type: application/json");
-
-      curl_easy_setopt(curl, CURLOPT_URL, url);
-      curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
-      curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-
-      res = curl_easy_perform(curl);
-
-      if(res != CURLE_OK) {
-          fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                  curl_easy_strerror(res));
+      payload := map[string]interface{}{
+          "model":  "gemini-2.5-flash-image-preview",
+          "prompt": "月光下的竹林小径，水墨画风格",
+          "size":   "1:1",
+          "n":      1,
+          "image_urls": []string{
+              "https://example.com/reference.png",
+          },
       }
 
-      curl_slist_free_all(headers);
-      curl_easy_cleanup(curl);
+      jsonData, _ := json.Marshal(payload)
+
+      req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+      req.Header.Set("Authorization", "Bearer <token>")
+      req.Header.Set("Content-Type", "application/json")
+
+      client := &http.Client{}
+      resp, err := client.Do(req)
+      if err != nil {
+          panic(err)
+      }
+      defer resp.Body.Close()
+
+      body, _ := ioutil.ReadAll(resp.Body)
+      fmt.Println(string(body))
   }
-    curl_global_cleanup();
-  return 0;
-  }
-
   ```
-
-  ```objective Objective-C theme={null}
-  #import <Foundation/Foundation.h>
-
-  int main(int argc, const char * argv[]) {
-  @autoreleasepool {
-  NSURL *url = [NSURL URLWithString:@"https://ai.kaiho.cc/v1/images/generations"];
-
-      NSDictionary *payload = @{
-          @"model": @"gemini-3-pro-image-preview",
-          @"prompt": @"https://oss.ffire.cc/files/kling_watermark.png 让这个女人带上墨镜，衣服换个颜色",
-          @"size": @"1024x1024"
-      };
-
-      NSError *error;
-      NSData *jsonData = [NSJSONSerialization dataWithJSONObject:payload
-                                                        options:0
-                                                          error:&error];
-
-      NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
-      [request setHTTPMethod:@"POST"];
-      [request setValue:@"Bearer <token>" forHTTPHeaderField:@"Authorization"];
-      [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-      [request setHTTPBody:jsonData];
-
-      NSURLSessionDataTask *task = [[NSURLSession sharedSession]
-          dataTaskWithRequest:request
-          completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-              if (error) {
-                  NSLog(@"Error: %@", error);
-                  return;
-              }
-              NSString *result = [[NSString alloc] initWithData:data
-                                                      encoding:NSUTF8StringEncoding];
-              NSLog(@"%@", result);
-          }];
-
-      [task resume];
-      [[NSRunLoop mainRunLoop] run];
-  }
-  return 0;
-  }
-
-  ```
-
-  ```ocaml OCaml theme={null}
-  (* Requires cohttp and yojson libraries *)
-  open Lwt
-  open Cohttp
-  open Cohttp_lwt_unix
-
-  let url = "https://ai.kaiho.cc/v1/images/generations"
-
-  let payload = {|{
-  "model": "gemini-3-pro-image-preview",
-  "prompt": "https://oss.ffire.cc/files/kling_watermark.png 让这个女人带上墨镜，衣服换个颜色",
-  "size": "1x1"
-  }|}
-
-  let () =
-  let headers = Header.init ()
-  |> fun h -> Header.add h "Authorization" "Bearer "
-  |> fun h -> Header.add h "Content-Type" "application/json"
-  in
-  let body = Cohttp_lwt.Body.of_string payload in
-
-  let response = Client.post ~headers ~body (Uri.of_string url) >>= fun (resp, body) ->
-  body |> Cohttp_lwt.Body.to_string >|= fun body_str ->
-  print_endline body_str
-  in
-  Lwt_main.run response
-
-  ```
-
-  ```dart Dart theme={null}
- import 'dart';
- import 'package/http.dart' as http;
-
- void main() async {
- final url = Uri.parse('https://ai.kaiho.cc/v1/images/generations');
-
- final payload = {
- 'model': 'gemini-3-pro-image-preview',
- 'prompt': 'https://oss.ffire.cc/files/kling_watermark.png 让这个女人带上墨镜，衣服换个颜色',
- 'size': '1x1'
- };
-
- final response = await http.post(
- url,
- headers: {
- 'Authorization': 'Bearer ',
- 'Content-Type': 'application/json',
- },
- body: jsonEncode(payload),
- );
-
- print(response.body);
- }
-  ```
-
-  ```r R theme={null}
- library(httr)
- library(jsonlite)
-
- url <- "https://ai.kaiho.cc/v1/images/generations"
-
- payload <- list(
- model = "gemini-3-pro-image-preview",
- prompt = "https://oss.ffire.cc/files/kling_watermark.png 让这个女人带上墨镜，衣服换个颜色",
- size = "1x1"
- )
-
- response <- POST(
- url,
- add_headers(
- Authorization = "Bearer ",
- Content-Type = "application/json"
- ),
- body = toJSON(payload, auto_unbox = TRUE),
- encode = "raw"
- )
-
- cat(content(response, "text"))
-```
 </RequestExample>
 
 <ResponseExample>
   ```json 200 theme={null}
- {
- "data": [
- {
- "url": "https://minio.kaiho.cc/rixapi/f/9998236220593244-6483b395-3d41-412a-852f-44b94e340671.png",
- "revised_prompt": " 让这个女人带上墨镜，衣服换个颜色: "
- }
- ],
- "created": 1763779406
- }
+  {
+    "code": "success",
+    "data": "task-wave17486161910001884721"
+  }
   ```
 
   ```json 400 theme={null}
   {
-    "error": {
-      "code": 400,
-      "message": "请求参数无效",
-      "type": "invalid_request_error"
-    }
+    "code": "invalid_request",
+    "message": "请求参数无效",
+    "data": null
   }
   ```
 
   ```json 401 theme={null}
   {
-    "error": {
-      "code": 401,
-      "message": "身份验证失败，请检查您的API密钥",
-      "type": "authentication_error"
-    }
+    "code": "authentication_error",
+    "message": "身份验证失败，请检查您的API密钥",
+    "data": null
   }
   ```
 
   ```json 402 theme={null}
   {
-    "error": {
-      "code": 402,
-      "message": "账户余额不足，请充值后再试",
-      "type": "payment_required"
-    }
+    "code": "payment_required",
+    "message": "账户余额不足，请充值后再试",
+    "data": null
   }
   ```
 
   ```json 403 theme={null}
   {
-    "error": {
-      "code": 403,
-      "message": "访问被禁止，您没有权限访问此资源",
-      "type": "permission_error"
-    }
+    "code": "quota_not_enough",
+    "message": "用户额度不足",
+    "data": null
   }
   ```
 
   ```json 429 theme={null}
   {
-    "error": {
-      "code": 429,
-      "message": "请求过于频繁，请稍后再试",
-      "type": "rate_limit_error"
-    }
+    "code": "rate_limit_error",
+    "message": "请求过于频繁，请稍后再试",
+    "data": null
   }
   ```
 
   ```json 500 theme={null}
   {
-    "error": {
-      "code": 500,
-      "message": "服务器内部错误，请稍后重试",
-      "type": "server_error"
-    }
-  }
-  ```
-
-  ```json 502 theme={null}
-  {
-    "error": {
-      "code": 502,
-      "message": "网关错误，服务器暂时不可用",
-      "type": "bad_gateway"
-    }
+    "code": "server_error",
+    "message": "服务器内部错误，请稍后重试",
+    "data": null
   }
   ```
 </ResponseExample>
 
-## Authorizations
+## 认证方式
 
 <ParamField header="Authorization" type="string" required>
-  所有接口均需要使用Bearer Token进行认证
+  所有接口均需要使用 Bearer Token 进行认证
 
   获取 API Key：
 
@@ -498,54 +194,78 @@ task.resume()
   ```
 </ParamField>
 
-## Body
+## 请求参数
 
-<ParamField body="model" type="string" required>
-  模型名称  sora视频生成
+<ParamField body="model" type="string" default="gemini-2.5-flash-image-preview" required>
+  图像生成模型名称
 
-  支持的模型包括：
-  * **Gemini**: `gemini-3-pro-image-preview`, `gemini-2.5-flash-image-preview`
-  * 更多模型持续更新中...
+  示例：`"gemini-2.5-flash-image-preview"`
 </ParamField>
 
-<ParamField body="prompt" type="String" required>
-  提示词
+<ParamField body="prompt" type="string" required>
+  图像生成的文字描述
 
-  * `prompt`: 让这个女人带上墨镜，衣服换个颜色
+  最大 1000 个字符
 </ParamField>
-<ParamField body="size" type="enum<string>" required>
-图片尺寸
-* `1024x1024`
+
+<ParamField body="size" type="string">
+  图像生成尺寸
+
+  支持的比例：
+
+  * `1:1` - 正方形
+  * `2:3` - 竖版
+  * `3:2` - 横版
+  * `3:4` - 竖版 3:4
+  * `4:3` - 横版 4:3
+  * `4:5` - 竖版 4:5
+  * `5:4` - 横版 5:4
+  * `9:16` - 竖版全屏
+  * `16:9` - 横版宽屏
+  * `21:9` - 超宽屏
 </ParamField>
-## Response
 
-<ResponseField name="data" type="Object">
-  数据集
+<ParamField body="resolution" type="string" default="1K">
+  输出图像分辨率
+
+  支持的值：
+
+  * `1K` - 1K 分辨率（默认）
+</ParamField>
+
+<ParamField body="n" type="integer">
+  生成图像的数量
+
+  固定为 1
+
+  **⚠️ 注意：** 必须输入纯数字（如 `1`），不要使用引号包裹
+</ParamField>
+
+<ParamField body="image_urls" type="array<url>">
+  参考图像 URL 列表，用于图生图或图片编辑
+
+  * 最多 14 张图片
+  * 每张图片不超过 10MB
+  * 支持格式：.jpeg、.jpg、.png、.webp
+</ParamField>
+
+## 响应参数
+
+<ResponseField name="code" type="string">
+  响应状态码
+
+  * `success` - 请求成功，任务已提交
 </ResponseField>
-<ResponseField name="created" type="long">
-  创建的时间戳
-</ResponseField>
-## data
-<ResponseField name="url" type="string">
-  图片链接
-</ResponseField>
 
-<ResponseField name="size" type="enum<string>">
-  视频输出的分辨率
+<ResponseField name="data" type="string">
+  任务 ID，格式为 `task-wave{timestamp}{userId}{random}`
+
+  用于通过 [查询任务状态](/cn/api-manual/task/get-status) 接口获取生成结果
 </ResponseField>
 
-<ResponseField name="revised_prompt" type="string">
-  处理后的提示词
-</ResponseField>
+## 注意事项
 
-
-## 支持的模型列表
-
-### Gemini 系列
-
-* `gemini-3-pro-image-preview`,  - 图片处理模型
-* `gemini-2.5-flash-image-preview` - 图片处理模型
-
-
-
-
+1. **异步处理：** 任务提交后异步处理，请通过 [查询任务状态](/cn/api-manual/task/get-status) 获取生成结果
+2. **链接有效期：** 生成的图片链接有效期为 24 小时，请及时下载保存
+3. **生成速度：** Nano Banana 针对快速生成进行了优化，适合快速迭代和预览
+4. **参考图片：** 支持最多 14 张参考图片，可用于风格/角色一致性控制
