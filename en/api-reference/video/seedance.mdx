@@ -56,6 +56,15 @@ The whole series shares a field-routing convention — the backend automatically
 | `+ audio_urls` (2.0) | **reference_audio** | Audio-driven (2.0 only) |
 
 <Warning>
+**`image_urls` semantics change (upstream, effective 2026-07-09)** — for `doubao-seedance-2.0`, `doubao-seedance-2.0-fast` and `doubao-seedance-2.0-mini`:
+
+- **Before** — the 1st image in `image_urls` acted as the first frame, the 2nd as the last frame, the rest as references.
+- **After** — **all** images in `image_urls` are treated as reference images only; they no longer carry first/last-frame meaning.
+
+To constrain first / last frames, use **`image_with_roles`** (unaffected by this change), or `first_frame_image` / `last_frame_image`. `doubao-seedance-1.5-pro` and the `face` variants are unaffected.
+</Warning>
+
+<Warning>
 **2.0 multi-asset reference syntax** — inside `prompt` you can use placeholders like `@image1` / `@video2` / `@audio3` to reference `image_urls[0]` / `video_urls[1]` / `audio_urls[2]`; indices are 1-based.
 </Warning>
 
@@ -144,8 +153,9 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 |---|---|---|---|---|
 | `doubao-seedance-2.0-fast-face` | 2.0 | Same as 2.0 | 480p / 720p | 4-15 |
 | `doubao-seedance-2.0-fast` | 2.0 | Same as 2.0 | 480p / 720p | 4-15 |
+| `doubao-seedance-2.0-mini` | 2.0 | Same as 2.0 | 480p / 720p | 4-15 |
 | `doubao-seedance-2.0-face` | 2.0 | Same as 2.0 | 480p / 720p / 1080p | 4-15 |
-| `doubao-seedance-2.0` | 2.0 | generate / image2video / first_last_frame / reference / reference_video / reference_audio | 480p / 720p / 1080p | 4-15 |
+| `doubao-seedance-2.0` | 2.0 | generate / image2video / first_last_frame / reference / reference_video / reference_audio | 480p / 720p / 1080p / 4K | 4-15 |
 | `doubao-seedance-1.5-pro` | 1.5 | generate / image2video / first_last_frame | 480p / 720p / 1080p | 4-12 |
 | `doubao-seedance-1.0-pro-quality` | 1.0 Pro | generate / image2video / first_last_frame / reference | 480p / 720p / 1080p | 2-12 |
 | `doubao-seedance-1.0-pro-fast` | 1.0 Pro | generate / image2video / reference | 480p / 720p / 1080p | 2-12 |

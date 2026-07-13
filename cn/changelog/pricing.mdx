@@ -6,6 +6,22 @@ title: "价格调整"
 价格调整仅对**调整生效后**的调用计费，历史调用不受影响。各模型实时单价以 [模型总览](/cn/docs/models) 与控制台「模型市场」为准；每次费用以接口返回的 `cost` / `usage.cost` 为准。
 </Note>
 
+<Update label="2026-07-11" description="价格调整">
+**部分图像 / 视频模型价格同步官方**
+
+因上游官方价调整,以下模型单价已同步:
+
+| 模型 | 变化 |
+|---|---|
+| `gpt-image-2` | 1K / 2K / 4K 各档单价上调 |
+| `gemini-3-pro-image-preview` | 4K 档单价上调 |
+| `veo3.1-fast` / `veo3.1-lite` / `veo3.1-quality` | 各分辨率档单价同步官方(含上调与下调) |
+| `veo3.1-fast-official` | 各档单价下调 |
+| `omni-flash-ext` | 改为按 **分辨率 × 时长** 分档计价,详见下方「模型动态」 |
+
+调整**即日生效**,仅对生效后的调用计费。各档实时单价以 [模型总览](/cn/docs/models) 与控制台「模型市场」为准。
+</Update>
+
 <Update label="2026-06-24" description="价格调整">
 **Seedance 2.0 价格同步官方**
 

@@ -2,6 +2,38 @@
 title: "模型动态"
 ---
 
+<Update label="2026-07-11" description="模型上架">
+**Claude Sonnet 5 · 对话**
+
+- **模型 ID**:`claude-sonnet-5`
+
+**GPT-5.6 系列 · 对话**
+
+- **模型 ID**:`gpt-5.6-luna`(轻量)　·　`gpt-5.6-terra`(标准)　·　`gpt-5.6-sol`(旗舰)
+- 三档按能力与价格递增,可按场景选择。
+</Update>
+
+<Update label="2026-07-11" description="能力更新">
+**Omni Flash Ext · 计价改为按分辨率 × 时长**
+
+- `omni-flash-ext` 由单一价改为**按分辨率 × 时长**分档计价:分辨率 720p / 1080p / 4k,时长 **4 / 6 / 8 / 10 秒**(仅支持这四个值)。
+- 传参考视频(`video_urls`)时无需传 `duration`,二者不可同时传入。
+- 具体单价以 [模型总览](/cn/docs/models) 与控制台「模型市场」为准。
+</Update>
+
+<Update label="2026-07-11" description="重要变更">
+**Seedance 2.0 系列 · `image_urls` 语义调整**
+
+自 **2026-07-09** 起(上游生效),`doubao-seedance-2.0`、`doubao-seedance-2.0-fast`、`doubao-seedance-2.0-mini` 三个模型:
+
+- **变更前** — `image_urls` 第 1 张作首帧、第 2 张作尾帧,其余作参考图。
+- **变更后** — `image_urls` 中**所有图片一律作为参考图**,不再有首帧 / 尾帧含义。
+
+如需继续指定首尾帧,请改用 **`image_with_roles`** 字段(不受此次变更影响)。`doubao-seedance-1.5-pro` 与 `face` 系列不受影响。
+
+- **文档**:[Seedance 视频生成 API](/cn/api-reference/video/seedance)
+</Update>
+
 <Update label="2026-06-24" description="能力更新">
 **Seedance 2.0 · 新增 4K**
 

@@ -164,16 +164,28 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 ## 媒体字段路由
 
-Seedance 全系仅支持 `generate` 一种 action,后端按 `image_urls` 数量自动决定生成模式,**无需显式传 `action`**。
+Seedance 全系仅支持 `generate` 一种 action,后端按传入的媒体字段自动决定生成模式,**无需显式传 `action`**。
 
-| `image_urls` 数量 | 用途 | 计费档 |
+<Warning>
+**`image_urls` 语义变更(2026-07-09 起,上游生效)**
+
+`doubao-seedance-2.0`、`doubao-seedance-2.0-fast`、`doubao-seedance-2.0-mini` 三个模型:
+
+- **变更前** — `image_urls` 的第 1 张作首帧、第 2 张作尾帧,其余作参考图。
+- **变更后** — `image_urls` 中的**所有图片一律作为参考图**,不再有首帧 / 尾帧含义。
+
+如果你依赖首尾帧约束,请改用 **`image_with_roles`** 字段显式指定(该字段不受此次变更影响)。`doubao-seedance-1.5-pro` 与 `face` 系列不受影响。
+</Warning>
+
+| 传入字段 | 用途 | 计费档 |
 |---|---|---|
-| `0` 张(或不传) | 文生视频,画面比例由 `aspect_ratio` 控制 | 文生档 |
-| `1` 张 | 图生视频,该图作首帧 | 图生档 |
-| `2` 张 | 首尾帧(1.5 Pro / 2.0 标准档),跟随首帧比例 | 图生档 |
+| 不传媒体字段 | 文生视频,画面比例由 `aspect_ratio` 控制 | 文生档 |
+| `image_urls` | 图生视频。**2.0 / fast / mini**:全部作参考图(2026-07-09 起);**1.5 Pro / face 系列**:1 张作首帧、2 张作首尾帧 | 图生档 |
+| `image_with_roles` | 显式指定首帧 / 尾帧,不受上述语义变更影响。**推荐用于首尾帧约束** | 图生档 |
+| `video_urls` | 参考视频(仅 `doubao-seedance-2.0`) | 图生档 |
 
 <Note>
-`doubao-seedance-2.0` 标准档另支持 `video_urls`(参考视频);`fast` / `face` / `fast-face` 仅支持 `image_urls`。
+`video_urls`(参考视频)仅 `doubao-seedance-2.0` 标准档支持;`fast` / `face` / `fast-face` 仅支持图像输入。
 </Note>
 
 ## 可用模型
@@ -181,8 +193,9 @@ Seedance 全系仅支持 `generate` 一种 action,后端按 `image_urls` 数量�
 | 模型 ID | 分辨率 | 时长(秒) | 备注 |
 |---|---|---|---|
 | `doubao-seedance-1.5-pro` | 480p / 720p / 1080p | 5 / 10 | 音视频联合生成,口型同步,多语言对白 |
-| `doubao-seedance-2.0` | 480p / 720p / 1080p | 4-15 任意整数 | 2.0 标准档,文生 / 图生,支持参考视频 |
+| `doubao-seedance-2.0` | 480p / 720p / 1080p / 4K | 4-15 任意整数 | 2.0 标准档,文生 / 图生,支持参考视频 |
 | `doubao-seedance-2.0-fast` | 480p / 720p | 4-15 任意整数 | 加速档,更快更便宜 |
+| `doubao-seedance-2.0-mini` | 480p / 720p | 4-15 任意整数 | 迷你档,成本最低,能力与标准版一致 |
 | `doubao-seedance-2.0-face` | 480p / 720p / 1080p | 4-15 任意整数 | 人脸 / 数字人场景 |
 | `doubao-seedance-2.0-fast-face` | 480p / 720p | 4-15 任意整数 | 人脸场景的快速 / 低价版 |
 

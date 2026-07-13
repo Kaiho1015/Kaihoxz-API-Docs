@@ -2,6 +2,38 @@
 title: "Model Updates"
 ---
 
+<Update label="2026-07-11" description="Model launch">
+**Claude Sonnet 5 · Chat**
+
+- **Model ID**: `claude-sonnet-5`
+
+**GPT-5.6 series · Chat**
+
+- **Model IDs**: `gpt-5.6-luna` (light) · `gpt-5.6-terra` (standard) · `gpt-5.6-sol` (flagship)
+- Three tiers with increasing capability and price — pick the one that fits your workload.
+</Update>
+
+<Update label="2026-07-11" description="Capability update">
+**Omni Flash Ext · Now billed by resolution × duration**
+
+- `omni-flash-ext` moves from a single flat rate to **resolution × duration** tiers: resolution 720p / 1080p / 4k, duration **4 / 6 / 8 / 10 seconds** (only these four values are accepted).
+- When passing a reference video (`video_urls`), do not pass `duration` — the two are mutually exclusive.
+- Current unit prices are shown in the [Models overview](/en/docs/models) and the console "Model Market".
+</Update>
+
+<Update label="2026-07-11" description="Breaking change">
+**Seedance 2.0 series · `image_urls` semantics change**
+
+Effective **2026-07-09** (upstream), for `doubao-seedance-2.0`, `doubao-seedance-2.0-fast` and `doubao-seedance-2.0-mini`:
+
+- **Before** — the 1st image in `image_urls` acted as the first frame, the 2nd as the last frame, the rest as references.
+- **After** — **all** images in `image_urls` are treated as reference images only; they no longer carry first/last-frame meaning.
+
+To keep constraining first / last frames, use **`image_with_roles`** (unaffected by this change). `doubao-seedance-1.5-pro` and the `face` variants are unaffected.
+
+- **Docs**: [Seedance video API](/en/api-reference/video/seedance)
+</Update>
+
 <Update label="2026-06-24" description="Capability update">
 **Seedance 2.0 · 4K added**
 
