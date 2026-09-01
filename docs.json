@@ -149,8 +149,7 @@
                 "group": "工具与嵌入",
                 "pages": [
                   "cn/api-reference/tools/embeddings",
-                  "cn/api-reference/tools/moderations",
-                  "cn/api-reference/tools/rerank"
+                  "cn/api-reference/tools/moderations"
                 ]
               },
               {
@@ -271,8 +270,7 @@
                 "group": "Tools & Embeddings",
                 "pages": [
                   "en/api-reference/tools/embeddings",
-                  "en/api-reference/tools/moderations",
-                  "en/api-reference/tools/rerank"
+                  "en/api-reference/tools/moderations"
                 ]
               },
               {
