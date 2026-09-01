@@ -17,12 +17,12 @@ Billed by **resolution × duration**, **per-second pricing**, any integer 1-16 s
 
 ## Pricing
 
-| Model | 540P | 720P | 1080P |
-|---|---|---|---|
-| `viduq3-pro` | `$0.0595` / sec | `$0.1275` / sec | `$0.136` / sec |
-| `viduq3-mix` | — | `$0.10625` / sec | `$0.1275` / sec |
-| `viduq3` | `$0.0425` / sec | `$0.085` / sec | `$0.10625` / sec |
-| `viduq3-turbo` | `$0.034` / sec | `$0.051` / sec | `$0.0595` / sec |
+<Note>
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+</Note>
 
 ## Examples
 
@@ -60,7 +60,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "viduq3-pro",
-    "action": "first_last_frame",
     "prompt": "Smooth transition from day to night with natural lighting changes",
     "first_frame_image": "https://cdn.example.com/day.jpg",
     "last_frame_image": "https://cdn.example.com/night.jpg",
@@ -75,7 +74,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "viduq3",
-    "action": "reference",
     "prompt": "Keep the character look, run through the forest, camera follows",
     "image_urls": [
       "https://cdn.example.com/char-1.jpg",
@@ -120,12 +118,10 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
   Model ID; see the [Available Models](#available-models) table
 </ParamField>
 
-<ParamField body="action" type="string">
-  Operation type. Pro tier **may be omitted** (auto-routed by `image_urls` count); other tiers should specify it explicitly. Allowed values:
-  - `generate` — text-to-video (Pro only)
-  - `image2video` — image-to-video
-  - `reference` — reference-to-video (default for standard / Mix / Turbo)
-  - `first_last_frame` — first/last frame (Pro only)
+<ParamField body="action" type="string" default="generate">
+  `generate` — the only action this model takes.
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-video; `image_urls` is image-to-video; `first_frame_image` + `last_frame_image` is a first/last-frame transition; `video_urls` / `audio_urls` is reference-to-video.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>

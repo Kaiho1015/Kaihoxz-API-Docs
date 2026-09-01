@@ -16,12 +16,12 @@ Other tiers in the Wan 2.7 family (T2V / I2V / R2V) are not yet available; pleas
 
 ## Pricing
 
-| Resolution | Unit price |
-|---|---|
-| 720P | `$0.07055` / sec |
-| 1080P | `$0.11645` / sec |
+<Note>
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
 
-VideoEdit is billed by output-video duration; when `duration=0` follows the source video, billing is based on the source-video duration.
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+</Note>
 
 ## Examples
 
@@ -33,7 +33,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "wan2.7-videoedit",
-    "action": "edit",
     "prompt": "Change the scene to a snowy day, keep the character motion",
     "video_urls": ["https://cdn.example.com/source.mp4"],
     "duration": 0,
@@ -47,7 +46,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "wan2.7-videoedit",
-    "action": "style_transfer",
     "prompt": "Transfer the entire video to ink-wash painting style",
     "video_urls": ["https://cdn.example.com/source.mp4"],
     "image_urls": [
@@ -66,7 +64,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "wan2.7-videoedit",
-    "action": "video_edit",
     "prompt": "Replace the background with a neon-lit city street",
     "video_urls": ["https://cdn.example.com/source.mp4"],
     "metadata": {"audio_setting": "origin"},
@@ -82,7 +79,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 {
   "task_id": "task-wave1775285160b950328499",
   "model": "wan2.7-videoedit",
-  "action": "edit",
   "status": "queued",
   "created_at": 1775285160040,
   "progress": 0
@@ -104,11 +100,10 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
   Fixed to `wan2.7-videoedit`
 </ParamField>
 
-<ParamField body="action" type="string" default="edit">
-  Operation type. Allowed values:
-  - `edit` — video edit (default)
-  - `video_edit` — equivalent to `edit`
-  - `style_transfer` — style transfer
+<ParamField body="action" type="string" default="generate">
+  `generate` — the only action this model takes.
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-video; `image_urls` is image-to-video; `first_frame_image` + `last_frame_image` is a first/last-frame transition; `video_urls` / `audio_urls` is reference-to-video.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
@@ -163,17 +158,6 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 <ParamField body="prompt_extend" type="boolean" default="true">
   Smart prompt rewriting — the backend auto-expands the edit instruction toward the target style
-</ParamField>
-
-<ParamField body="metadata" type="object">
-  Additional parameter object. Commonly used `audio_setting` controls the output audio-track strategy:
-  - `auto` — auto-generate audio matching the edited video (default)
-  - `origin` — keep the source video's original audio track
-
-  Example:
-  ```json
-  {"metadata": {"audio_setting": "origin"}}
-  ```
 </ParamField>
 
 ## Resource Limits

@@ -17,29 +17,11 @@ ByteDance Doubao Seedance video generation series, covering the full range from 
 
 ## Pricing
 
-Billed by **resolution × duration**, in `$/sec`.
-
-| Model | 480P | 720P | 1080P |
-|---|---|---|---|
-| `doubao-seedance-2.0-fast-face` | `$0.085` | `$0.18275` | — |
-| `doubao-seedance-2.0-fast` | `$0.06205` | `$0.13345` | — |
-| `doubao-seedance-2.0-face` | `$0.1054` | `$0.22695` | `$0.53125` |
-| `doubao-seedance-2.0` | `$0.077095` | `$0.16592` | `$0.374` |
-| `doubao-seedance-1.5-pro` | `$0.021675` | `$0.04675` | `$0.11475` |
-| `doubao-seedance-1.0-pro-quality` | `$0.021675` | `$0.04675` | `$0.1105` |
-| `doubao-seedance-1.0-pro-fast` | `$0.00935` | `$0.02125` | `$0.0442` |
-
-**2.0 series video-reference subprice** (when `video_urls` is present and triggers `reference_video` / `reference`, **the table below replaces the base price above**, in `$/sec`):
-
-| Model | 480P | 720P | 1080P |
-|---|---|---|---|
-| `doubao-seedance-2.0-fast-face` | `$0.051` | `$0.10965` | — |
-| `doubao-seedance-2.0-fast` | `$0.036975` | `$0.0799` | — |
-| `doubao-seedance-2.0-face` | `$0.06375` | `$0.13685` | `$0.31875` |
-| `doubao-seedance-2.0` | `$0.04675` | `$0.1003` | `$0.22695` |
-
 <Note>
-**Video reference is actually cheaper** — generations with `video_urls` are easier because they have a motion-rhythm reference, so the **subprice is significantly lower than the pure-generation base price** (e.g. 2.0 720P base `$0.16592` vs video reference `$0.1003`, about 60% of the base). Do not interpret it as a markup.
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
 </Note>
 
 ## Mode Routing
@@ -77,7 +59,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedance-1.0-pro-fast",
+    "model": "doubao-seedance-2.0-fast",
     "prompt": "A Shiba Inu in a spacesuit walking on the moon, cinematic lighting",
     "duration": 5,
     "resolution": "720p",
@@ -90,7 +72,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedance-1.0-pro-quality",
+    "model": "doubao-seedance-2.0",
     "prompt": "The person slowly walks toward the camera, the camera gently pushes in",
     "first_frame_image": "https://cdn.example.com/portrait.jpg",
     "duration": 8,
@@ -137,7 +119,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 {
   "task_id": "task-wave1775285160b950328499",
   "model": "doubao-seedance-2.0",
-  "action": "reference",
   "status": "queued",
   "created_at": 1775285160040,
   "progress": 0
@@ -157,8 +138,6 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 | `doubao-seedance-2.0-face` | 2.0 | Same as 2.0 | 480p / 720p / 1080p | 4-15 |
 | `doubao-seedance-2.0` | 2.0 | generate / image2video / first_last_frame / reference / reference_video / reference_audio | 480p / 720p / 1080p / 4K | 4-15 |
 | `doubao-seedance-1.5-pro` | 1.5 | generate / image2video / first_last_frame | 480p / 720p / 1080p | 4-12 |
-| `doubao-seedance-1.0-pro-quality` | 1.0 Pro | generate / image2video / first_last_frame / reference | 480p / 720p / 1080p | 2-12 |
-| `doubao-seedance-1.0-pro-fast` | 1.0 Pro | generate / image2video / reference | 480p / 720p / 1080p | 2-12 |
 
 ## Common Parameters
 
@@ -167,13 +146,9 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  Operation type; **usually no need to pass explicitly** — the backend routes automatically based on media fields. Valid values:
-  - `generate` — text-to-video (T2V)
-  - `image2video` — image-to-video (I2V); requires `first_frame_image`
-  - `first_last_frame` — first/last-frame constraint; requires `first_frame_image` + `last_frame_image`
-  - `reference` — reference-image driven; requires `image_urls`
-  - `reference_video` — video clip reference (2.0 series only); requires `video_urls`
-  - `reference_audio` — audio-driven (2.0 series only); requires `audio_urls`
+  `generate` — the only action this model takes.
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-video; `image_urls` is image-to-video; `first_frame_image` + `last_frame_image` is a first/last-frame transition; `video_urls` / `audio_urls` is reference-to-video.
 </ParamField>
 
 <ParamField body="prompt" type="string">
@@ -258,10 +233,6 @@ Parameters identical to 2.0 / 2.0 Face (`generate_audio` / `tools` / `image_with
 
 <ParamField body="generate_audio" type="boolean" default="false">
   Whether to generate audio (audio-enabled video). The 2.0 series uses the field name `generate_audio`
-</ParamField>
-
-<ParamField body="tools" type="array">
-  Tool list; e.g. `[{"type": "web_search"}]` enables web-search augmentation
 </ParamField>
 
 <ParamField body="image_with_roles" type="array">

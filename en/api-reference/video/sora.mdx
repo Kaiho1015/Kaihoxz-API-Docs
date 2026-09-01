@@ -1,0 +1,155 @@
+---
+title: "Sora 2 Series"
+description: "OpenAI Sora 2 — text-to-video and image-to-video. Strong physical consistency, native audio-video sync, 1080p on the Pro tier"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+The OpenAI Sora 2 video models are strongest at **physical consistency, native audio-video sync and camera language**, which makes them a good fit for **cinematic shorts, creative ads and concept demos**. Both text-to-video and image-to-video (a single image as the opening frame) are supported; generation is async.
+
+Three tiers:
+
+- **`sora-2`** — standard tier, the everyday default. 720p only, handles both text-to-video and image-to-video, best value
+- **`sora-2-pro`** — flagship tier, three resolutions (**720p / 1024p / 1080p**). Best image quality, highest unit price
+- **`sora-2-preview`** — preview tier, same capability and price as the standard `sora-2`. For early access and staged rollout
+
+Billed by **resolution × duration** at a **per-second rate**. Duration is limited to the fixed steps `4` / `8` / `12` / `16` / `20` seconds.
+
+## Pricing
+
+<Note>
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+</Note>
+
+## Examples
+
+<CodeGroup>
+
+```bash Text to video (standard tier)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "sora-2",
+    "prompt": "a waterfall crashing down, a rainbow rising out of the spray, cinematic light",
+    "duration": 8,
+    "resolution": "720p",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```bash Image to video (standard tier, single image)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "sora-2",
+    "prompt": "slow push in, the subject turns into the wind",
+    "image_urls": ["https://cdn.example.com/portrait.jpg"],
+    "duration": 8,
+    "resolution": "720p"
+  }'
+```
+
+```bash High-resolution output (Pro tier, 1080p)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "sora-2-pro",
+    "prompt": "a beach at dusk, a girl running toward the setting sun, long hair streaming, waves and footsteps in sync",
+    "duration": 12,
+    "resolution": "1080p",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+</CodeGroup>
+
+<ResponseExample>
+```json Submission accepted
+{
+  "task_id": "task-wave1775285160b950328499",
+  "model": "sora-2",
+  "action": "generate",
+  "status": "queued",
+  "created_at": 1775285160040,
+  "progress": 0
+}
+```
+</ResponseExample>
+
+After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status); see [Task System](/en/docs/task-system) for details.
+
+## Available Models
+
+| Model ID | Resolution | Duration | Supported action | Notes |
+|---|---|---|---|---|
+| `sora-2` | 720p | 4 / 8 / 12 / 16 / 20 sec | generate | Standard tier, the everyday default |
+| `sora-2-pro` | 720p / 1024p / 1080p | 4 / 8 / 12 / 16 / 20 sec | generate | Flagship tier, best image quality |
+| `sora-2-preview` | 720p | 4 / 8 / 12 / 16 / 20 sec | generate | Preview tier, priced like the standard tier |
+
+## Common Parameters
+
+<ParamField body="model" type="string" required>
+  Model ID; see the [Available Models](#available-models) table
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Video description text. Describe the **scene / subject / action / camera / mood**
+</ParamField>
+
+<ParamField body="duration" type="integer" default="4">
+  Video duration in seconds. Fixed steps only: `4` / `8` / `12` / `16` / `20`
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  Output resolution. `sora-2` / `sora-2-preview` support `720p` only; `sora-2-pro` supports `720p` / `1024p` / `1080p`
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Frame aspect ratio. Allowed values:
+  - `16:9` — landscape widescreen
+  - `9:16` — portrait
+  - `1:1` — square
+
+  Ignored when `image_urls` is set (image to video) — the reference image decides orientation.
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  Random seed. The same prompt + seed reproduces a similar result
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Reference image URL array, for image to video. **At most 1 image**; omit it for text to video. Must be a publicly downloadable link
+</ParamField>
+
+<ParamField body="callback_url" type="string">
+  Webhook callback URL, invoked when the task reaches a terminal state. See [Callback Mechanism](/en/docs/sync-async#async-task-webhook)
+</ParamField>
+
+<ParamField body="callback_events" type="string[]">
+  Subscribed callback events; defaults to the terminal states (`succeeded` / `failed` / `cancelled`)
+</ParamField>
+
+## Model-specific Parameters
+
+The Sora 2 series has no model-specific parameters; every option lives in [Common Parameters](#common-parameters).
+
+## Resource Limits
+
+| Item | Limit |
+|---|---|
+| Reference image | Up to 1, ≤ 10MB each, JPG / PNG / WEBP |
+| Prompt length | ≤ 2000 characters recommended |
+| Video duration | Fixed steps: 4 / 8 / 12 / 16 / 20 sec |
+| Resolution | `sora-2` / `preview` 720p only; `pro` supports 720p / 1024p / 1080p |
+| Output | MP4, link valid for 24 hours |
+
+## Related Docs
+
+- [Task System Reference](/en/docs/task-system) — task state machine / polling cadence / async push
+- [Request & Response Format](/en/docs/request-response) — common error codes / headers / rate limits
+- [Authentication](/en/docs/authentication) — API key signup and usage

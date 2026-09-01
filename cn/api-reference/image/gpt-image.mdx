@@ -15,47 +15,24 @@ OpenAI GPT-Image 图像生成模型系列,涵盖加速渠道与官方渠道四�
 
 ## 定价
 
-售价单位为美元 / 张。
+<Note>
+本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
 
-### GPT-Image-2(按分辨率档)
-
-| 分辨率 | 单价(每张) |
-|---|---|
-| `1k` | `$0.00675` |
-| `2k` | `$0.0135` |
-| `4k` | `$0.02025` |
-
-### GPT-Image-2-Official(按 比例 + 分辨率)
-
-官方渠道按 **每个比例在不同分辨率档** 精细计价,共 15 种比例 × 3 档 = 45 个价位。下表为常用比例示例,其余比例(`4:3` / `3:4` / `5:4` / `4:5` / `2:1` / `1:2` / `3:1` / `1:3` / `9:21`)同样遵循 比例 + 分辨率 的组合定价。
-
-| 比例 | `1k` | `2k` | `4k` |
-|---|---|---|---|
-| `1:1` | `$0.00549` | `$0.01089` | `$0.01791` |
-| `16:9` | `$0.00342` | `$0.00441` | `$0.01017` |
-| `9:16` | `$0.00342` | `$0.00441` | `$0.01017` |
-| `2:3` | `$0.00441` | `$0.00585` | `$0.01224` |
-| `3:2` | `$0.00441` | `$0.00585` | `$0.01224` |
-
-### GPT-Image-1.5-Official / GPT-Image-1-Official(按比例)
-
-| 比例 | `gpt-image-1.5-official` | `gpt-image-1-official` |
-|---|---|---|
-| `1:1` | `$0.09576` | `$0.12024` |
-| `2:3` | `$0.144` | `$0.18` |
-| `3:2` | `$0.144` | `$0.18` |
+**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
+**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
+</Note>
 
 ## 模式速查
 
 | 模式 | 触发字段 | 支持模型 |
 |---|---|---|
 | **文生图** | 仅 `prompt`,`action: "generate"`(默认) | 全部 |
-| **图像编辑 / 图生图** | `+ image_urls` + `action: "edit"` | `gpt-image-2-official` / `gpt-image-1.5-official` / `gpt-image-1-official` |
+| **图像编辑 / 图生图** | `+ image_urls` + `action: "edit"` | `gpt-image-2` / `gpt-image-1` |
 | **多图参考** | `+ image_urls`(多张) | 支持 edit 的官方模型(最多 16 张) |
-| **局部重绘(mask)** | `+ image_urls` + `mask_url` | `gpt-image-2-official` |
+| **局部重绘(mask)** | `+ image_urls` + `mask_url` | `gpt-image-2` |
 
 <Note>
-`gpt-image-2`(加速渠道)仅支持 `generate` 文生图;若需要图像编辑、多图融合或遮罩重绘,请使用 `gpt-image-2-official`,或在 `gpt-image-2` 上设 `official_fallback: true` 回退官方渠道。
+`gpt-image-2-rev`(加速渠道)仅支持 `generate` 文生图;若需要图像编辑、多图融合或遮罩重绘,请使用 `gpt-image-2`,或在 `gpt-image-2-rev` 上设 `official_fallback: true` 回退官方渠道。
 </Note>
 
 ## 调用示例
@@ -67,7 +44,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-image-2",
+    "model": "gpt-image-2-rev",
     "prompt": "未来主义城市夜景,霓虹灯映在湿润街面,电影感构图",
     "aspect_ratio": "16:9",
     "resolution": "2k"
@@ -79,7 +56,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-image-2",
+    "model": "gpt-image-2-rev",
     "prompt": "雪山日出全景,自然光,超高清",
     "aspect_ratio": "16:9",
     "resolution": "4k"
@@ -91,7 +68,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-image-2-official",
+    "model": "gpt-image-2",
     "action": "edit",
     "prompt": "把背景换成黄昏天空,人物保持不变",
     "image_urls": ["https://cdn.example.com/portrait.jpg"],
@@ -106,7 +83,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-image-2-official",
+    "model": "gpt-image-2",
     "action": "edit",
     "prompt": "把遮罩区域替换为蓝色花朵",
     "image_urls": ["https://cdn.example.com/scene.jpg"],
@@ -121,7 +98,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-image-2",
+    "model": "gpt-image-2-rev",
     "prompt": "悬浮的水晶球,产品级摄影,无背景",
     "aspect_ratio": "1:1",
     "resolution": "2k"
@@ -131,14 +108,14 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </CodeGroup>
 
 <Note>
-透明背景:`gpt-image-2-official` / `gpt-image-1.5-official` / `gpt-image-1-official` 官方渠道均不支持 `background: transparent`,设置后系统会静默降级为 `auto`。
+透明背景:`gpt-image-2` / `gpt-image-1` 官方渠道均不支持 `background: transparent`,设置后系统会静默降级为 `auto`。
 </Note>
 
 <ResponseExample>
 ```json 提交成功
 {
   "task_id": "task-wave1775285160b950328499",
-  "model": "gpt-image-2",
+  "model": "gpt-image-2-rev",
   "action": "generate",
   "status": "queued",
   "created_at": 1775285160040,
@@ -153,10 +130,9 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 | 模型 ID | 渠道 | action | 说明 |
 |---|---|---|---|
-| `gpt-image-2` | 加速 | `generate` | 15 种比例 × 1K/2K/4K 三档,按分辨率计费,性价比最高;可 `official_fallback` 回退官方 |
-| `gpt-image-2-official` | 官方 | `generate` / `edit` | 15 种比例 × 1K/2K/4K,按比例+分辨率精细计价,支持遮罩重绘 |
-| `gpt-image-1.5-official` | 官方 | `generate` / `edit` | GPT-Image-1 升级版,画质与指令理解显著提升,按比例计费 |
-| `gpt-image-1-official` | 官方 | `generate` / `edit` | 多模态文本+图像理解,适合高质量生成与编辑,按比例计费 |
+| `gpt-image-2-rev` | 加速 | `generate` | 15 种比例 × 1K/2K/4K 三档,按分辨率计费,性价比最高;可 `official_fallback` 回退官方 |
+| `gpt-image-2` | 官方 | `generate` / `edit` | 15 种比例 × 1K/2K/4K,按比例+分辨率精细计价,支持遮罩重绘 |
+| `gpt-image-1` | 官方 | `generate` / `edit` | 多模态文本+图像理解,适合高质量生成与编辑,按比例计费 |
 
 ## 通用参数
 
@@ -165,11 +141,10 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  操作类型:
-  - `generate` — 文生图(默认,全部模型支持)
-  - `edit` — 图像编辑 / 图生图 / 多图参考(需配合 `image_urls`,仅官方渠道模型支持)
+  - `generate` — 文生图(默认)
+  - `edit` — 图像编辑,配合 `image_urls` 使用
 
-  `gpt-image-2` 加速渠道仅支持 `generate`。
+  **模式不靠 action 区分,靠传什么:** 只给 `prompt` 是文生图;带一张 `image_urls` 是图生图;带多张是多图参考融合;再带 `mask_url` 就是局部重绘。
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
@@ -181,7 +156,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="seed" type="integer">
-  随机种子,固定值可复现相似结果(仅 `gpt-image-2` / `gpt-image-2-official` 支持)
+  随机种子,固定值可复现相似结果(仅 `gpt-image-2-rev` / `gpt-image-2` 支持)
 </ParamField>
 
 <ParamField body="aspect_ratio" type="string" default="1:1">
@@ -224,7 +199,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
     **核心特性**:加速渠道,按分辨率档计费,性价比最高;参考图最多 16 张(URL / base64)
 
     <ParamField body="official_fallback" type="boolean" default="false">
-      置为 `true` 时回退到 `gpt-image-2-official` 官方渠道(可获得编辑 / 遮罩等官方能力)
+      置为 `true` 时回退到 `gpt-image-2` 官方渠道(可获得编辑 / 遮罩等官方能力)
     </ParamField>
   </Tab>
 
@@ -346,7 +321,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 | 单图大小 | ≤ 20MB / 张,总计 ≤ 256MB |
 | 输出分辨率 | GPT-Image-2 / 2-Official 最高 4K;1.5 / 1 official 沿用默认 |
 | 输出格式 | PNG(默认)/ JPEG / WEBP(仅 GPT-Image-2-Official),链接 24 小时有效 |
-| 透明背景 | 仅 `gpt-image-2` 加速渠道支持;官方渠道静默降级为 `auto` |
+| 透明背景 | 仅 `gpt-image-2-rev` 加速渠道支持;官方渠道静默降级为 `auto` |
 
 ## 相关文档
 

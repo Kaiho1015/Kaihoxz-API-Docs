@@ -63,13 +63,9 @@ POST https://www.qingbo.dev/v1/tasks
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  操作类型,可选值取决于模型,常见:
-  - `generate` — 文生视频(T2V)
-  - `image2video` — 图生视频(I2V)
-  - `first_last_frame` — 首尾帧
-  - `reference` / `reference_video` — 参考生视频(R2V)
-  - `edit` / `video_edit` / `style_transfer` — 视频编辑
-  - `video_continuation` / `extend` — 视频续写
+  `generate` — 本模型唯一动作。
+
+  **模式不靠 action 区分,靠传什么:** 只给 `prompt` 是文生视频;带 `image_urls` 是图生视频;带 `first_frame_image` + `last_frame_image` 是首尾帧;带 `video_urls` / `audio_urls` 是参考生视频。
 </ParamField>
 
 <ParamField body="prompt" type="string">
@@ -117,7 +113,7 @@ POST https://www.qingbo.dev/v1/tasks
 ```json
 {
   "task_id": "task-wave1775285160b950328499",
-  "model": "veo3.1-quality-official",
+  "model": "veo3.1-quality",
   "action": "generate",
   "status": "queued",
   "created_at": 1775285160040,

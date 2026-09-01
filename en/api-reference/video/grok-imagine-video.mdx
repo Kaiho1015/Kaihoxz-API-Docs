@@ -14,13 +14,12 @@ The Grok Imagine series has two lines: an **image tier** and a **video tier**. F
 
 ## Pricing
 
-Billed per second by **video duration**, **flat unit price across all resolutions**: `$0.0074375` / sec.
+<Note>
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
 
-| Duration | Cost |
-|---|---|
-| 5 sec | `$0.037` |
-| 10 sec | `$0.074` |
-| 30 sec (max) | `$0.223` |
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+</Note>
 
 ## Examples
 
@@ -45,7 +44,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "grok-imagine-1.0-video",
-    "action": "image2video",
     "prompt": "Character slowly turns to look at the camera",
     "image_urls": ["https://cdn.example.com/portrait.jpg"],
     "duration": 10,
@@ -59,7 +57,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "grok-imagine-1.0-video",
-    "action": "image2video",
     "prompt": "Keep the character consistent, running through a forest",
     "image_urls": [
       "https://cdn.example.com/ref-1.jpg",
@@ -105,9 +102,9 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  Operation type. Allowed values:
-  - `generate` — text-to-video (T2V)
-  - `image2video` — image-to-video (I2V), used with `image_urls`
+  `generate` — the only action this model takes.
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-video; `image_urls` is image-to-video; `first_frame_image` + `last_frame_image` is a first/last-frame transition; `video_urls` / `audio_urls` is reference-to-video.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>

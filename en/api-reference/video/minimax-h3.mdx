@@ -1,0 +1,151 @@
+---
+title: "MiniMax H3"
+description: "MiniMax H3 — omni-modal video generation. Text, image and reference inputs in one endpoint, native audio, 4–15 seconds."
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+MiniMax H3 is MiniMax's omni-modal video model, released July 2026. One endpoint takes **text, images, video and audio** as input and renders a finished clip **with its own audio track** in a single pass — no separate scoring step.
+
+Three modes share the endpoint; what you send decides which one runs:
+
+- **Text to video** — `prompt` only
+- **Image to video** — `image_urls`, or `first_frame_image` / `last_frame_image` for an explicit first/last frame
+- **Reference to video** — `video_urls` (camera work and style) or `audio_urls` (rhythm and score)
+
+Async: the request returns a `task_id`; poll [task status](/en/api-reference/task/status) until `completed`.
+
+## Pricing
+
+<Note>
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+</Note>
+
+## Available models
+
+| Model ID | Resolution | Duration (sec) | Audio | Notes |
+|---|---|---|---|---|
+| `minimax-h3` | `768p` / `2k` | any integer 4–15 | ✅ native | Omni-modal input, finished clip with sound in one pass |
+
+Billed by **resolution × duration**; `2k` costs more.
+
+## Examples
+
+<CodeGroup>
+
+```bash Text to video
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "minimax-h3",
+    "prompt": "a mountain town at dawn, mist lifting, camera pushing from the rooftops toward the ridge",
+    "resolution": "2k",
+    "duration": 8
+  }'
+```
+
+```bash Image to video
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "minimax-h3",
+    "prompt": "she slowly lifts her head, wind moves her hair, slight push in",
+    "image_urls": ["https://cdn.example.com/portrait.jpg"],
+    "resolution": "768p",
+    "duration": 6
+  }'
+```
+
+```bash First and last frame
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "minimax-h3",
+    "prompt": "day turns to night, the lights come on one by one",
+    "first_frame_image": "https://cdn.example.com/day.jpg",
+    "last_frame_image": "https://cdn.example.com/night.jpg",
+    "duration": 10
+  }'
+```
+
+```bash Reference to video
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "minimax-h3",
+    "prompt": "same camera rhythm, snowy mountains instead",
+    "video_urls": ["https://cdn.example.com/reference.mp4"],
+    "audio_urls": ["https://cdn.example.com/bgm.mp3"],
+    "resolution": "2k",
+    "duration": 12
+  }'
+```
+
+</CodeGroup>
+
+## Parameters
+
+<ParamField body="model" type="string" required>
+  Always `minimax-h3`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  What the shot should show. Write it even when you supply references — the references say what it looks like, the prompt says what happens
+</ParamField>
+
+<ParamField body="resolution" type="string" default="768p">
+  `768p` / `2k`
+</ParamField>
+
+<ParamField body="duration" type="integer" default="5">
+  Any integer from 4 to 15 seconds
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Reference images, or the opening frame. Publicly reachable image URLs
+</ParamField>
+
+<ParamField body="first_frame_image" type="string">
+  First-frame image URL
+</ParamField>
+
+<ParamField body="last_frame_image" type="string">
+  Last-frame image URL; pair with `first_frame_image` for an A-to-B transition
+</ParamField>
+
+<ParamField body="video_urls" type="string[]">
+  Reference video — supplies camera movement, pacing and style
+</ParamField>
+
+<ParamField body="audio_urls" type="string[]">
+  Reference audio — shapes the rhythm and score of the result
+</ParamField>
+
+<ParamField body="callback_url" type="string">
+  Called when the task reaches a terminal state; see [callbacks](/en/docs/sync-async#async-task-webhook)
+</ParamField>
+
+<Note>
+**Image mode and reference mode are mutually exclusive.** First/last frames (`first_frame_image` / `last_frame_image`) cannot be combined with reference media (`video_urls` / `audio_urls`) in one request — upstream treats them as two different generation modes.
+</Note>
+
+## Limits
+
+| Item | Limit |
+|---|---|
+| Reference images | up to 9 |
+| Reference videos | up to 3, each 2–15 sec |
+| Reference audio | up to 3, each 2–15 sec |
+| Total reference duration | ≤ 15 sec |
+| Prompt | ≤ 7000 characters |
+
+## Related
+
+- [Task system](/en/docs/task-system) — submit, poll, callbacks
+- [Models](/en/docs/models) — list available models and live prices

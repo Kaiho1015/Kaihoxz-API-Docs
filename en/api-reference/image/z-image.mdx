@@ -10,9 +10,12 @@ Per-image pricing. Pure text-to-image (no reference images), fixed at 1 image pe
 
 ## Pricing
 
-| Model | Price (per image) |
-|---|---|
-| `z-image-turbo` | `$0.010625` |
+<Note>
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+</Note>
 
 ## Examples
 
@@ -73,7 +76,10 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  Operation type. `z-image-turbo` only supports `generate` (text-to-image)
+  - `generate` — text to image (default)
+  - `edit` — image editing; pair with `image_urls`
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-image; one `image_urls` entry is image-to-image; several are multi-image reference; add `mask_url` for inpainting.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>

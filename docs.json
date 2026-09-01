@@ -126,6 +126,7 @@
                   "cn/api-reference/video/seedance",
                   "cn/api-reference/video/kling",
                   "cn/api-reference/video/hailuo",
+                  "cn/api-reference/video/minimax-h3",
                   "cn/api-reference/video/vidu",
                   "cn/api-reference/video/wan",
                   "cn/api-reference/video/happyhorse",
@@ -140,6 +141,7 @@
                 "group": "音频处理",
                 "pages": [
                   "cn/api-reference/audio/tts",
+                  "cn/api-reference/audio/suno",
                   "cn/api-reference/audio/whisper-transcription"
                 ]
               },
@@ -232,7 +234,10 @@
                   "en/api-reference/image/imagen",
                   "en/api-reference/image/qwen-image",
                   "en/api-reference/image/wan-image",
-                  "en/api-reference/image/z-image"
+                  "en/api-reference/image/z-image",
+                  "en/api-reference/image/flux",
+                  "en/api-reference/image/grok-imagine",
+                  "en/api-reference/image/midjourney"
                 ]
               },
               {
@@ -243,17 +248,22 @@
                   "en/api-reference/video/seedance",
                   "en/api-reference/video/kling",
                   "en/api-reference/video/hailuo",
+                  "en/api-reference/video/minimax-h3",
                   "en/api-reference/video/vidu",
                   "en/api-reference/video/wan",
                   "en/api-reference/video/happyhorse",
                   "en/api-reference/video/skyreels",
-                  "en/api-reference/video/grok-imagine-video"
+                  "en/api-reference/video/grok-imagine-video",
+                  "en/api-reference/video/sora",
+                  "en/api-reference/video/pixverse",
+                  "en/api-reference/video/omni"
                 ]
               },
               {
                 "group": "Audio",
                 "pages": [
                   "en/api-reference/audio/tts",
+                  "en/api-reference/audio/suno",
                   "en/api-reference/audio/whisper-transcription"
                 ]
               },

@@ -49,6 +49,16 @@ current state is returned and you continue polling.
 See [Submit Task](/en/api-reference/task/submit#in-request-waiting-prefer-wait).
 </Note>
 
+### Async Task Webhook
+
+If you would rather not poll, pass `callback_url` when submitting the task. When the task reaches a terminal state (`completed` / `failed` / `cancelled`) we POST to that URL once, with the same body `GET /v1/tasks/{task_id}` would return.
+
+Use `callback_events` to subscribe to only some terminal states; omit it and all three are delivered.
+
+<Note>
+Delivery is **best-effort** — a network hiccup or a moment of downtime on your side can drop it. For anything critical, treat the callback as the fast path and keep a low-frequency poll as the safety net.
+</Note>
+
 ## Choosing the Right Pattern
 
 - **Text chat** → Use synchronous endpoints with SSE streaming

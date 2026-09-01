@@ -16,13 +16,12 @@ Grok Imagine 系列分**图像档**与**视频档**两条线。图像生成请�
 
 ## 定价
 
-按**视频时长**计费,**全分辨率统一单价**:`$0.007875` / 秒(两档同价)。实际费用 = `$0.007875 × duration`。
+<Note>
+本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
 
-| 时长 | 单次费用 |
-|---|---|
-| 6 秒 | `$0.04725` |
-| 10 秒 | `$0.07875` |
-| 30 秒(上限) | `$0.23625` |
+**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
+**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
+</Note>
 
 ## 调用示例
 
@@ -121,7 +120,9 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  操作类型,固定为 `generate`。传入 `image_urls` 即自动走 **图生视频(I2V)**,否则为文生视频(T2V)
+  `generate` — 本模型唯一动作。
+
+  **模式不靠 action 区分,靠传什么:** 只给 `prompt` 是文生视频;带 `image_urls` 是图生视频;带 `first_frame_image` + `last_frame_image` 是首尾帧;带 `video_urls` / `audio_urls` 是参考生视频。
 </ParamField>
 
 <ParamField body="prompt" type="string" required>

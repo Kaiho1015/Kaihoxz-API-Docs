@@ -9,16 +9,16 @@ xAI Grok Imagine 图像生成与编辑系列。包含两代模型,每代各拆�
 - **grok-imagine-1.0** / **grok-imagine-1.5** — 文生图(`generate`),纯文本提示出图
 - **grok-imagine-1.0-edit** / **grok-imagine-1.5-edit** — 图像编辑(需传 `image_urls` 参考图)
 
-四个 model 统一按张计费,均为 **`$0.016875`** / 张。
+四个 model 均按张计费,同价。
 
 ## 定价
 
-| 模型 ID | 类型 | 单价(每张) |
-|---|---|---|
-| `grok-imagine-1.0` | 文生图 | `$0.016875` |
-| `grok-imagine-1.5` | 文生图 | `$0.016875` |
-| `grok-imagine-1.0-edit` | 图像编辑 | `$0.016875` |
-| `grok-imagine-1.5-edit` | 图像编辑 | `$0.016875` |
+<Note>
+本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
+
+**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
+**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
+</Note>
 
 ## 调用示例
 

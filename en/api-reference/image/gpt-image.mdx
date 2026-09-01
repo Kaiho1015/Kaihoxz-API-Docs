@@ -14,11 +14,12 @@ Per-image billing. Supports text-to-image / image-to-image / editing / mask inpa
 
 ## Pricing
 
-| Model | Price (per image) |
-|---|---|
-| `gpt-image-2` | `$0.006375` |
-| `gpt-image-1.5-official` | `$0.09044` |
-| `gpt-image-1-official` | `$0.11356` |
+<Note>
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+</Note>
 
 ## Mode Quick Reference
 
@@ -39,7 +40,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-image-2",
+    "model": "gpt-image-2-rev",
     "prompt": "未来主义城市夜景,霓虹灯映在湿润街面,电影感构图",
     "aspect_ratio": "16:9",
     "resolution": "2k"
@@ -51,7 +52,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-image-2",
+    "model": "gpt-image-2-rev",
     "action": "edit",
     "prompt": "把背景换成黄昏天空,人物保持不变",
     "image_urls": ["https://cdn.example.com/portrait.jpg"],
@@ -65,8 +66,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-image-2",
-    "action": "inpaint",
+    "model": "gpt-image-2-rev",
     "prompt": "把遮罩区域替换为蓝色花朵",
     "image_urls": ["https://cdn.example.com/scene.jpg"],
     "mask_url": "https://cdn.example.com/mask.png",
@@ -80,7 +80,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-image-2",
+    "model": "gpt-image-2-rev",
     "prompt": "悬浮的水晶球,产品级摄影,无背景",
     "background": "transparent",
     "output_format": "png",
@@ -95,7 +95,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 ```json Submitted
 {
   "task_id": "task-wave1775285160b950328499",
-  "model": "gpt-image-2",
+  "model": "gpt-image-2-rev",
   "action": "generate",
   "status": "queued",
   "created_at": 1775285160040,
@@ -110,9 +110,8 @@ After submitting, poll task status with [`GET /v1/tasks/{task_id}`](/en/api-refe
 
 | Model ID | Description |
 |---|---|
-| `gpt-image-2` | Flagship new release, 13 ratios × 1K/2K/4K, up to 16 reference images |
-| `gpt-image-1.5-official` | Upgraded GPT-Image-1 with significantly improved visual quality and instruction following |
-| `gpt-image-1-official` | Multimodal text + image understanding, suited for high-quality generation and editing |
+| `gpt-image-2-rev` | Flagship new release, 13 ratios × 1K/2K/4K, up to 16 reference images |
+| `gpt-image-1` | Multimodal text + image understanding, suited for high-quality generation and editing |
 
 ## Common Parameters
 
@@ -121,12 +120,10 @@ After submitting, poll task status with [`GET /v1/tasks/{task_id}`](/en/api-refe
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  Operation type, allowed values:
-  - `generate` — text-to-image (default)
-  - `image2image` — image-to-image (requires `image_urls`)
-  - `edit` — image editing
-  - `reference` — multi-image reference fusion
-  - `inpaint` — inpainting (requires `mask_url`)
+  - `generate` — text to image (default)
+  - `edit` — image editing; pair with `image_urls`
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-image; one `image_urls` entry is image-to-image; several are multi-image reference; add `mask_url` for inpainting.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
@@ -216,12 +213,8 @@ After submitting, poll task status with [`GET /v1/tasks/{task_id}`](/en/api-refe
       Output compression rate, range 0-100. **Effective only for `jpeg` / `webp`**.
     </ParamField>
 
-    <ParamField body="style" type="string">
-      Style preset
-    </ParamField>
-
-    <ParamField body="official_fallback" type="boolean" default="false">
-      Switch to the `gpt-image-2-official` channel
+        <ParamField body="official_fallback" type="boolean" default="false">
+      Switch to the `gpt-image-2` channel
     </ParamField>
   </Tab>
 
@@ -260,10 +253,7 @@ After submitting, poll task status with [`GET /v1/tasks/{task_id}`](/en/api-refe
       Output compression rate, range 0-100. **Effective only for `jpeg`**.
     </ParamField>
 
-    <ParamField body="style" type="string">
-      Style preset
-    </ParamField>
-  </Tab>
+      </Tab>
 
   <Tab title="GPT-Image-1 Official">
     **Supported actions**: `generate` / `image2image` / `edit` / `reference` / `inpaint`
@@ -300,10 +290,7 @@ After submitting, poll task status with [`GET /v1/tasks/{task_id}`](/en/api-refe
       Output compression rate, range 0-100. **Effective only for `jpeg`**.
     </ParamField>
 
-    <ParamField body="style" type="string">
-      Style preset
-    </ParamField>
-  </Tab>
+      </Tab>
 </Tabs>
 
 ## Resource Limits

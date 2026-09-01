@@ -15,13 +15,16 @@ Alibaba Tongyi Wanxiang 2.7 unified interface for image generation and editing. 
 - **Image group (group)** — `enable_sequential` for comic strips / storyboards, max n = 12
 - **Interactive editing (interactive_edit)** — `bbox_list` targeted region editing (exclusive)
 
-Per-image pricing, unified at `$0.02295` per image.
+Billed per image.
 
 ## Pricing
 
-| Model | Price (per image) |
-|---|---|
-| `wan2.7-image` | `$0.02295` |
+<Note>
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+</Note>
 
 ## Mode Quick Reference
 
@@ -43,7 +46,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "wan2.7-image",
+    "model": "wan2.7-image-pro",
     "prompt": "Classical Chinese landscape scroll, ink-wash mood, distant mountains in dark green, near water in mist",
     "resolution": "4K",
     "aspect_ratio": "16:9",
@@ -56,8 +59,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "wan2.7-image",
-    "action": "reference",
+    "model": "wan2.7-image-pro",
     "prompt": "Place the character from the first image into the scene from the second, with outfit inspired by the third",
     "image_urls": [
       "https://cdn.example.com/character.jpg",
@@ -74,8 +76,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "wan2.7-image",
-    "action": "group",
+    "model": "wan2.7-image-pro",
     "prompt": "A day in the life of a little fox: morning / foraging / playing / sleeping, 4-panel comic strip",
     "enable_sequential": true,
     "n": 4,
@@ -89,8 +90,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "wan2.7-image",
-    "action": "interactive_edit",
+    "model": "wan2.7-image-pro",
     "prompt": "Replace the cat in the box with a Shiba Inu, keep pose and lighting",
     "image_urls": ["https://cdn.example.com/cat.jpg"],
     "bbox_list": [[[120, 80, 540, 460]]],
@@ -103,7 +103,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "wan2.7-image",
+    "model": "wan2.7-image-pro",
     "prompt": "Minimalist poster, geometric composition, restrained whitespace",
     "color_palette": [
       {"hex": "#0A2540", "ratio": 50},
@@ -145,13 +145,10 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  Operation type. Options:
-  - `generate` — Text-to-image (default)
-  - `image2image` — Image-to-image (use with single `image_urls`)
-  - `edit` — Image editing (inpainting / style transfer)
-  - `reference` — Multi-image reference fusion (up to 9)
-  - `group` — Image group generation (use with `enable_sequential`)
-  - `interactive_edit` — Interactive bbox editing (use with `bbox_list`)
+  - `generate` — text to image (default)
+  - `edit` — image editing; pair with `image_urls`
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-image; one `image_urls` entry is image-to-image; several are multi-image reference; add `mask_url` for inpainting.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>

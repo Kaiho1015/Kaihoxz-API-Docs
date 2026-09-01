@@ -57,14 +57,10 @@ POST https://www.qingbo.dev/v1/tasks
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  操作类型,可选值取决于模型,常见:
   - `generate` — 文生图(默认)
-  - `image2image` — 图生图(需配合 `image_urls`)
-  - `edit` — 图像编辑(局部重绘 / 光影修改)
-  - `reference` — 多图参考融合
-  - `inpaint` — 局部重绘(需配合 `mask_url`,GPT-Image 系列)
-  - `group` — 组图生成(主题相关一组)
-  - `interactive_edit` — 交互式编辑(Wan Image 独家,带 bbox 框选)
+  - `edit` — 图像编辑,配合 `image_urls` 使用
+
+  **模式不靠 action 区分,靠传什么:** 只给 `prompt` 是文生图;带一张 `image_urls` 是图生图;带多张是多图参考融合;再带 `mask_url` 就是局部重绘。
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
@@ -100,7 +96,7 @@ POST https://www.qingbo.dev/v1/tasks
 ```json
 {
   "task_id": "task-wave1775285160b950328499",
-  "model": "doubao-seedream-4.5",
+  "model": "doubao-seedream-5.0-lite",
   "action": "generate",
   "status": "queued",
   "created_at": 1775285160040,

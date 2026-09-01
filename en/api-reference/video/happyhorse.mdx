@@ -12,10 +12,12 @@ Billed by **resolution × duration**, any integer between 3-15 seconds.
 
 ## Pricing
 
-| Resolution | Unit Price | 5-second video |
-|---|---|---|
-| 720P | `$0.138` / sec | `$0.69` |
-| 1080P | `$0.244` / sec | `$1.22` |
+<Note>
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+</Note>
 
 ## Mode Routing
 
@@ -121,12 +123,9 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  Operation type. **Usually no need to pass explicitly** — the backend auto-routes based on media fields. Allowed values:
-  - `generate` — text-to-video (T2V)
-  - `image2video` — image-to-video (I2V), used with `first_frame_image`
-  - `reference` — reference-to-video (R2V), used with `image_urls`
-  - `edit` — video editing, used with `video_url`
-  - `reference_audio` — used with `audio_urls` for audio-driven generation
+  `generate` — the only action this model takes.
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-video; `image_urls` is image-to-video; `first_frame_image` + `last_frame_image` is a first/last-frame transition; `video_urls` / `audio_urls` is reference-to-video.
 </ParamField>
 
 <ParamField body="prompt" type="string">

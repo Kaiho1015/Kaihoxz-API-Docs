@@ -24,28 +24,11 @@ SkyReels V4 支持传入 **参考视频**(`video_urls`)作为运动 / 风格参�
 
 ## 定价
 
-全系 **按秒计费**(`$/秒`),实际费用 = 对应档位单价 × 时长(秒)。售价即结算 USD 价。
-
-### `skyreels-v4-fast`
-
-| 分辨率 | 普通档 | 参考视频档 |
-|---|---|---|
-| 480p | `$0.072` / 秒 | `$0.135` / 秒 |
-| 720p | `$0.099` / 秒 | `$0.18` / 秒 |
-| 1080p | `$0.2475` / 秒 | `$0.45` / 秒 |
-
-### `skyreels-v4-std`
-
-| 分辨率 | 普通档 | 参考视频档 |
-|---|---|---|
-| 480p | `$0.099` / 秒 | `$0.162` / 秒 |
-| 720p | `$0.126` / 秒 | `$0.225` / 秒 |
-| 1080p | `$0.315` / 秒 | `$0.5625` / 秒 |
-
-实际扣费 = 单价 / 秒 × `duration`。例:`skyreels-v4-fast` 720p 普通档 5 秒 = `$0.099 × 5 = $0.495`;同档传参考视频后 = `$0.18 × 5 = $0.9`。
-
 <Note>
-**参考视频加价** — 只要请求带 `video_urls`,即按"参考视频档"列计价;不带则按"普通档"列。传不传 `image_urls`(图生)不影响档位。
+本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
+
+**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
+**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
 </Note>
 
 ## 调用示例
@@ -134,7 +117,9 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  操作类型,固定为 `generate`。生成模式由媒体字段自动路由,见 [媒体字段路由](#媒体字段路由)
+  `generate` — 本模型唯一动作。
+
+  **模式不靠 action 区分,靠传什么:** 只给 `prompt` 是文生视频;带 `image_urls` 是图生视频;带 `first_frame_image` + `last_frame_image` 是首尾帧;带 `video_urls` / `audio_urls` 是参考生视频。
 </ParamField>
 
 <ParamField body="prompt" type="string" required>

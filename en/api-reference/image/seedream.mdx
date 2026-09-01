@@ -14,11 +14,12 @@ Per-image pricing, generates 1K-4K images (range varies by version).
 
 ## Pricing
 
-| Model | Price (per image) |
-|---|---|
-| `doubao-seedream-5.0-lite` | `$0.02975` |
-| `doubao-seedream-4.5` | `$0.02975` |
-| `doubao-seedream-4.0` | `$0.0238` |
+<Note>
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+</Note>
 
 ## Mode Quick Reference
 
@@ -50,7 +51,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedream-4.5",
+    "model": "doubao-seedream-5.0-lite",
     "prompt": "Place the character from the first image into the scene from the second image",
     "image_urls": [
       "https://cdn.example.com/character.jpg",
@@ -66,7 +67,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedream-4.0",
+    "model": "seedream-5.0-pro",
     "action": "edit",
     "prompt": "Replace the background with a sunset sky, keep the subject unchanged",
     "image_urls": ["https://cdn.example.com/portrait.jpg"],
@@ -79,7 +80,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedream-4.5",
+    "model": "doubao-seedream-5.0-lite",
     "prompt": "Four e-commerce hero images: front / side / detail / lifestyle",
     "sequential_image_generation": "auto",
     "sequential_image_generation_options": {"max_images": 4},
@@ -94,7 +95,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 ```json Submission successful
 {
   "task_id": "task-wave1775285160b950328499",
-  "model": "doubao-seedream-4.5",
+  "model": "doubao-seedream-5.0-lite",
   "action": "generate",
   "status": "queued",
   "created_at": 1775285160040,
@@ -110,8 +111,6 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 | Model ID | Description |
 |---|---|
 | `doubao-seedream-5.0-lite` | Visual reasoning + web search, 14 reference images, 2K/3K, strong identity preservation |
-| `doubao-seedream-4.5` | Professional production grade, 4K, 14 reference images, best typography / character consistency |
-| `doubao-seedream-4.0` | Multimodal creation, 2-10 reference images, unified interface for text-to-image / editing / image groups |
 
 ## Common Parameters
 
@@ -120,12 +119,10 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  Operation type. Options:
-  - `generate` — Text-to-image (default)
-  - `image2image` — Image-to-image (use with `image_urls`)
-  - `edit` — Image editing (inpainting / lighting changes, **4.0 / 4.5 only**)
-  - `reference` — Multi-image reference fusion (**4.0 / 4.5 only**)
-  - `group` — Image group generation (all versions)
+  - `generate` — text to image (default)
+  - `edit` — image editing; pair with `image_urls`
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-image; one `image_urls` entry is image-to-image; several are multi-image reference; add `mask_url` for inpainting.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
@@ -183,13 +180,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
       AI-generated watermark
     </ParamField>
 
-    <ParamField body="output_format" type="string" default="jpeg">
-      **5.0-lite only** — Output format. Options:
-      - `jpeg`
-      - `png`
-    </ParamField>
-
-    <ParamField body="sequential_image_generation" type="string" default="disabled">
+        <ParamField body="sequential_image_generation" type="string" default="disabled">
       Image group generation mode. Options:
       - `disabled` — Single image (default)
       - `auto` — Auto group (multiple themed images)

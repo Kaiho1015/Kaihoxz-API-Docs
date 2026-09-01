@@ -8,24 +8,20 @@ Kuaishou Kling video generation series.
 
 **Four-generation lineup**:
 
-- **kling-v2.6** — Classic stable release, 720P silent / 1080P with optional audio, further refined semantic adherence and motion stability
+- **kling-v2-6** — Classic stable release, 720P silent / 1080P with optional audio, further refined semantic adherence and motion stability
 - **kling-v3** — Next-generation base model, adds **4K resolution**, T2V duration extended to **15 seconds**, native audio support
 - **kling-v3-omni** — Unified **multimodal interface** for the v3 family — T2V, I2V, and video reference all share one endpoint, with `<<<image_N>>>` reference syntax in the prompt
 - **kling-video-o1** — First **reasoning-enhanced** video model, performs deep planning over the prompt and reference assets before generation, delivering best-in-class physical consistency, complex motion, and long-form motion semantic adherence
 
-Billed by **resolution**, in `$/second`, with `resolution` selecting 720p / 1080p / 4K.
+Billed in `$/second`. Audio, a video reference and 4K each switch to a higher tier.
 
 ## Pricing
 
-| Model | 720P | 1080P | 4K | Notes |
-|---|---|---|---|---|
-| `kling-v2.6` | `$0.0391` | `$0.06641` | — | 1080P with audio uplifts to `$0.159375` |
-| `kling-v3` | `$0.0714` | `$0.0952` | `$0.455345` | With audio: 720P `$0.1071` / 1080P `$0.1428` / 4K same price |
-| `kling-v3-omni` | `$0.0714` | `$0.0952` | `$0.455345` | With audio: 720P `$0.0952` / 1080P `$0.119`; video reference: 720P `$0.1071` / 1080P `$0.1428` |
-| `kling-video-o1` | `$0.0714` | `$0.0952` | — | Video reference: 720P `$0.1071` / 1080P `$0.1428` |
-
 <Note>
-Prices are **per second**; actual charge = unit price × `duration`. Enabling `audio` or attaching a `video_list` video reference switches to the corresponding higher tier.
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
 </Note>
 
 ## Examples
@@ -42,7 +38,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
     "duration": 5,
     "resolution": "1080p",
     "aspect_ratio": "16:9",
-    "audio": true
+    "generate_audio": true
   }'
 ```
 
@@ -51,8 +47,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "kling-v2.6",
-    "action": "image2video",
+    "model": "kling-v2-6",
     "prompt": "The character walks slowly toward the camera, hair gently moved by the breeze",
     "first_frame_image": "https://cdn.example.com/portrait.jpg",
     "duration": 5,
@@ -66,7 +61,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "kling-v3-omni",
-    "action": "reference",
     "prompt": "Place the character from <<<image_1>>> running through the forest scene from <<<image_2>>>",
     "image_urls": [
       "https://cdn.example.com/char.jpg",
@@ -84,10 +78,9 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "kling-video-o1",
-    "action": "reference_video",
     "prompt": "Keep the character look from <<<image_1>>>, follow the camera movement of the reference video",
     "image_urls": ["https://cdn.example.com/char.jpg"],
-    "video_list": [
+    "video_urls": [
       {
         "video_url": "https://cdn.example.com/ref.mp4",
         "refer_type": "feature",
@@ -123,7 +116,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 | `kling-video-o1` | 720P / 1080P | 5 / 10 sec | `generate` · `image2video` · `first_last_frame` · `reference` · `reference_video` | Reasoning-enhanced, best physical consistency |
 | `kling-v3-omni` | 720P / 1080P / 4K | 3-15 sec | `generate` · `image2video` · `reference` · `reference_video` | Unified multimodal endpoint |
 | `kling-v3` | 720P / 1080P / 4K | 3-15 sec | `generate` · `image2video` · `first_last_frame` | 4K + native audio |
-| `kling-v2.6` | 720P / 1080P | 5 / 10 sec | `generate` · `image2video` · `first_last_frame` | 1080P with optional audio, top stability |
+| `kling-v2-6` | 720P / 1080P | 5 / 10 sec | `generate` · `image2video` · `first_last_frame` | 1080P with optional audio, top stability |
 
 ## Common Parameters
 
@@ -132,12 +125,9 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  Operation type. Allowed values:
-  - `generate` — text-to-video (T2V)
-  - `image2video` — image-to-video; pair with `first_frame_image` or `image_urls`
-  - `first_last_frame` — first/last frame interpolation; requires `first_frame_image` + `last_frame_image` (v2.6 / v3 / o1)
-  - `reference` — multimodal reference-to-video; pair with `image_urls` (omni / o1)
-  - `reference_video` — video reference-to-video; pair with `video_list` (omni / o1)
+  `generate` — the only action this model takes.
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-video; `image_urls` is image-to-video; `first_frame_image` + `last_frame_image` is a first/last-frame transition; `video_urls` / `audio_urls` is reference-to-video.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
@@ -175,7 +165,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="video_urls" type="string[]">
-  Reference video URL array (single element). Simplified form for Omni / O1, equivalent to attaching a `video_list` entry with `refer_type=feature`
+  Reference video URL array (single element). Omni / O1 only — the clip supplies the motion and style reference.
 </ParamField>
 
 <ParamField body="callback_url" type="string">
@@ -192,41 +182,31 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 <Tab title="kling-video-o1">
 
-<ParamField body="video_list" type="object[]">
-  Reference video list, **at most 1 clip**. Same structure as Omni:
-  - `video_url` — video URL
-  - `refer_type` — `base` / `feature`
-  - `keep_original_sound` — `yes` / `no`
-
-  O1 does not support the `audio` field; for audio output use v3 / omni.
+<ParamField body="video_urls" type="string[]">
+  Reference video URL array, **at most 1 clip**. Attaching it switches billing to the "video reference" tier; `generate_audio` cannot be enabled at the same time.
 </ParamField>
 
 </Tab>
 
 <Tab title="kling-v3-omni">
 
-<ParamField body="audio" type="boolean" default="false">
-  Whether to generate audio. **Mutually exclusive with `video_list`** — cannot be enabled when a video reference is attached
+<ParamField body="generate_audio" type="boolean" default="false">
+  Whether to generate audio. **Mutually exclusive with `video_urls`** — cannot be enabled when a video reference is attached
 </ParamField>
 
 <ParamField body="watermark" type="boolean" default="false">
   Whether to add a watermark
 </ParamField>
 
-<ParamField body="video_list" type="object[]">
-  Reference video list, **at most 1 clip**. Each element:
-  - `video_url` — public video URL
-  - `refer_type` — reference type, `base` (overall replication) / `feature` (motion / style features)
-  - `keep_original_sound` — keep original audio track, `yes` / `no`
-
-  Once `video_list` is attached, billing switches to the "video reference" tier and `audio` cannot be enabled.
+<ParamField body="video_urls" type="string[]">
+  Reference video URL array, **at most 1 clip**. Attaching it switches billing to the "video reference" tier; `generate_audio` cannot be enabled at the same time.
 </ParamField>
 
 </Tab>
 
 <Tab title="kling-v3">
 
-<ParamField body="audio" type="boolean" default="false">
+<ParamField body="generate_audio" type="boolean" default="false">
   Whether to generate audio. Native audio is supported across all resolutions
 </ParamField>
 
@@ -236,9 +216,9 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 </Tab>
 
-<Tab title="kling-v2.6">
+<Tab title="kling-v2-6">
 
-<ParamField body="audio" type="boolean" default="false">
+<ParamField body="generate_audio" type="boolean" default="false">
   Whether to auto-generate audio. **Only effective at `resolution=1080p`**; **mutually exclusive with last frame** (cannot enable with `first_last_frame`)
 </ParamField>
 
@@ -283,7 +263,7 @@ Non-Omni / O1 models (v2.6 / v3) do not parse `<<<image_N>>>` placeholders and f
 |---|---|
 | Reference image (per file) | ≤ 30MB, JPG / PNG / WEBP |
 | Reference image (count) | I2V: 1; Omni / O1 multimodal: ≤ 4 recommended |
-| Reference video (`video_list`) | MP4 / MOV, ≤ 100MB, 2-30 sec, **at most 1 clip** |
+| Reference video (`video_urls`) | MP4 / MOV, ≤ 100MB, 2-30 sec, **at most 1 clip** |
 | Prompt | ≤ 2500 characters |
 | Output | MP4, link valid for 24 hours |
 

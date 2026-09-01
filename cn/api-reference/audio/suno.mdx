@@ -1,0 +1,264 @@
+---
+title: "Suno 音乐生成"
+description: "Suno — 一句话出歌,再往下做续写、翻唱、混搭、分轨、母带、音色克隆,31 个动作覆盖音乐全流程"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+Suno 是一个**动作型**模型:同一个 `model: "suno"`,靠 `action` 字段决定这次做什么。从零出一首歌是 `generate`,拿到结果之后可以接着续写、翻唱、换风格、拆轨、导 WAV、生成 MV —— 一共 **31 个动作**。
+
+异步任务:提交返回 `task_id`,轮询 [任务状态](/cn/api-reference/task/status) 直到 `completed`,产物在 `result` 里。
+
+## 动作全表
+
+每个动作单独计价,**版本(v3.5 ~ v5.5)不影响价格**。实时单价见控制台「模型市场」,单次实际花费以响应里的 `cost` 为准。
+
+### 从零创作
+
+| 动作 | 说明 |
+|---|---|
+| `generate` | 出一首完整歌曲。灵感模式给一句描述,自定义模式给歌词 |
+| `inspo` | 拿一段参考音频找灵感成曲(必须传 `audio_urls`) |
+| `lyrics` | 只写词,不出曲 |
+| `sounds` | 生成音效,可指定类型 / BPM / 调性 |
+| `upsample_tags` | 把粗略的风格描述扩写成更好用的标签 |
+| `upload` | 上传自己的音频,拿到 `task_id` 供后续动作使用 |
+
+### 在已有音轨上再创作
+
+这一组都要 `task_id`(源音轨那次任务的 id)+ 可选 `audio_index`(取结果里第几首,从 1 开始)。
+
+| 动作 | 说明 |
+|---|---|
+| `extend` | 从第 `continue_at` 秒开始续写 |
+| `cover` | 换个风格重新演绎 |
+| `remaster` | 母带优化 |
+| `mashup` | 两首混搭(传 `task_ids`,**恰好 2 个**) |
+| `sample` | 截取 `start_s`–`end_s` 一段当采样,发展成新曲 |
+| `midi` | 导出 MIDI |
+| `replace_section` | 替换 `start_s`–`end_s` 这一段,可用 `infill_lyrics` 指定新词 |
+
+### 人声与音轨
+
+| 动作 | 说明 |
+|---|---|
+| `stems` | 抽出单条音轨(`stem_type`,默认 `lead_vocal`) |
+| `stems_all` | 一次拆出全部音轨 |
+| `add_vocals` | 给纯伴奏加人声 |
+| `add_instrumental` | 给清唱加伴奏 |
+| `add_stem` | 叠一条新音轨上去 |
+| `vox` | 提取人声片段(`vocal_start_s` / `vocal_end_s`) |
+| `create_voice` | 用一段音频建一个音色 |
+| `persona` | 建一个歌手 Persona,之后用 `persona_id` 复用同一把嗓子 |
+
+### 音频编辑
+
+| 动作 | 说明 |
+|---|---|
+| `crop` | 裁剪 `start_s`–`end_s` |
+| `remove_section` | 删掉 `start_s`–`end_s` |
+| `fade_in` / `fade_out` | 淡入 / 淡出,时长 `duration_s` 秒 |
+| `adjust_speed` | 变速 `speed` 倍,`keep_pitch` 可保持音高 |
+| `concat` | 把分段拼成完整曲目 |
+
+### 导出与分析
+
+| 动作 | 说明 |
+|---|---|
+| `wav` | 导出无损 WAV |
+| `generate_video` | 生成 MV |
+| `aligned_lyrics` | 输出带时间轴的歌词 |
+| `bpm` | 分析 BPM |
+
+## 快速开始
+
+<CodeGroup>
+
+```bash 灵感模式(一句话出歌)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "suno",
+    "action": "generate",
+    "prompt": "一首温柔的城市民谣,雨夜,女声,吉他与钢琴",
+    "version": "v5.5"
+  }'
+```
+
+```bash 自定义模式(自带歌词)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "suno",
+    "action": "generate",
+    "custom": true,
+    "prompt": "[Verse]\n路灯把雨丝照成金线\n我把伞留给了昨天",
+    "title": "雨夜城南",
+    "style": "indie folk, female vocal, acoustic guitar",
+    "vocal_gender": "Female",
+    "version": "v5.5"
+  }'
+```
+
+```bash 纯音乐
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "suno",
+    "action": "generate",
+    "prompt": "轻快的 lo-fi 学习背景音乐",
+    "instrumental": true
+  }'
+```
+
+</CodeGroup>
+
+## 接着往下做
+
+拿到第一步的 `task_id` 之后,后面的动作都用它串起来。
+
+<CodeGroup>
+
+```bash 续写
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "suno",
+    "action": "extend",
+    "task_id": "task_01H...",
+    "audio_index": 1,
+    "continue_at": 118
+  }'
+```
+
+```bash 换风格翻唱
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "suno",
+    "action": "cover",
+    "task_id": "task_01H...",
+    "tags": "city pop, 80s synth, male vocal"
+  }'
+```
+
+```bash 拆出人声轨
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "suno",
+    "action": "stems",
+    "task_id": "task_01H...",
+    "stem_type": "lead_vocal"
+  }'
+```
+
+```bash 两首混搭
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "suno",
+    "action": "mashup",
+    "task_ids": ["task_01A...", "task_01B..."],
+    "audio_indexes": [1, 1]
+  }'
+```
+
+```bash 导出 WAV
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "suno",
+    "action": "wav",
+    "task_id": "task_01H..."
+  }'
+```
+
+</CodeGroup>
+
+## 参数
+
+### 通用
+
+| 参数 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `model` | string | ✅ | 固定 `suno` |
+| `action` | string | ✅ | 见上方动作全表,不传默认 `generate` |
+| `prompt` | string | — | 灵感模式是描述,自定义模式(`custom: true`)是歌词 |
+| `version` | string | — | `v3.5` `v4` `v4.5` `v4.5+` `v4.5-all` `v5` `v5.5`,默认 `v5.5`。**不影响价格** |
+| `callback_url` | string | — | 任务完成回调 |
+
+### 创作类动作
+
+| 参数 | 类型 | 说明 |
+|---|---|---|
+| `custom` | boolean | `false`(默认)= 灵感模式,`prompt` 当描述;`true` = 自定义模式,`prompt` 当歌词 |
+| `gpt_description` | string | 在 `extend` / `cover` / `mashup` / `sample` / `add_*` 上,灵感模式的描述走这个字段;`custom: false` 时必填 |
+| `title` | string | 歌名 |
+| `style` | string | 风格标签 —— **仅 `generate` 用 `style`** |
+| `tags` | string | 风格标签 —— **其余动作用 `tags`** |
+| `negative_tags` | string | 不想要的风格 |
+| `instrumental` | boolean | 纯音乐,无人声 |
+| `auto_lyrics` | boolean | 自动写词 |
+| `vocal_gender` | string | `Male` / `Female` |
+| `style_weight` | number | 0–1,风格贴合度 |
+| `weirdness_constraint` | number | 0–1,创意度 |
+| `audio_weight` | number | 0–1,参考音频权重 |
+| `persona_id` | string | 复用某个 Persona 的嗓音 |
+
+<Note>
+  `style` 和 `tags` 是同一个东西的两个字段名 —— 这是上游的历史包袱:**基础生成口叫 `style`,其余口叫 `tags`**。传错了不会报错,会被静默忽略,然后你会觉得"风格没生效"。
+</Note>
+
+### 引用源音轨
+
+| 参数 | 类型 | 说明 |
+|---|---|---|
+| `task_id` | string | 源音轨那次任务的 id |
+| `audio_index` | int | 取结果 `music[]` 里第几首,从 `1` 开始,默认 `1` |
+| `task_ids` | string[] | 仅 `mashup`,**恰好 2 个** |
+| `audio_indexes` | int[] | 仅 `mashup`,与 `task_ids` 平行 |
+| `audio_urls` | string[] | 仅 `inspo`,参考音频 |
+| `audio_url` | string | 仅 `create_voice`,建音色用的音频 |
+
+### 动作专属
+
+| 参数 | 类型 | 适用动作 | 说明 |
+|---|---|---|---|
+| `continue_at` | int | `extend` | 从第几秒开始续写,**必填** |
+| `start_s` / `end_s` | number | `crop` `remove_section` `replace_section` `sample` | 区间起止秒,**必填** |
+| `duration_s` | int | `fade_in` `fade_out` | 淡入淡出时长,**必填** |
+| `speed` | number | `adjust_speed` | 变速倍率,**必填** |
+| `keep_pitch` | boolean | `adjust_speed` | 变速时保持音高 |
+| `stem_type` | string | `stems` | 提取哪一轨,默认 `lead_vocal` |
+| `infill_lyrics` | string | `replace_section` | 替换段落填入的新词 |
+| `variation_category` | string | `remaster` | 母带优化方向 |
+| `type` / `bpm` / `key` | string / int / string | `sounds` | 音效类型、BPM、调性 |
+| `lyrics_model` | string | `lyrics` | 写词用的模型 |
+| `name` / `describe` / `styles` | string | `persona` | Persona 名称 / 描述 / 风格,`name` **必填** |
+| `vocal_start_s` / `vocal_end_s` | int | `vox` `persona` | 人声片段起止秒 |
+| `vox_audio_id` | string | `persona` | 用哪段人声建 Persona |
+| `audioFilePath` | string | `upload` | 要上传的音频路径,**必填** |
+
+<Warning>
+  参数是**按动作校验**的 —— 把 `stem_type` 传给 `generate` 会直接被拒,不会静默忽略。这是有意为之:传错参数通常意味着用错了动作,早点报出来比闷着好。
+</Warning>
+
+## 典型工作流
+
+一首歌从生成到交付,常见的串法:
+
+1. `generate` 出歌 → 拿 `task_id`
+2. 不满意就 `cover` 换风格,或 `extend` 把它写长
+3. 满意了 `remaster` 过一遍母带
+4. 要伴奏版就 `stems` 抽 `lead_vocal` 反过来用,或 `stems_all` 一次拆全
+5. `wav` 导无损,`generate_video` 出 MV,`aligned_lyrics` 拿带时间轴的词
+
+每一步的产物都有自己的 `task_id`,可以继续往下接。

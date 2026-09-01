@@ -1,0 +1,155 @@
+---
+title: "Grok Imagine Series"
+description: "xAI Grok Imagine image generation — text-to-image (1.0 / 1.5) and image editing (1.0-edit / 1.5-edit)"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+The xAI Grok Imagine image generation and editing series. Two generations, each split into a **text-to-image** model and an **image editing** model:
+
+- **grok-imagine-1.0** / **grok-imagine-1.5** — Text-to-image (`generate`), from a text prompt alone
+- **grok-imagine-1.0-edit** / **grok-imagine-1.5-edit** — Image editing (requires reference images in `image_urls`)
+
+All four models are billed per image, at the same rate.
+
+## Pricing
+
+<Note>
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+</Note>
+
+## Examples
+
+<CodeGroup>
+
+```bash Text-to-image (grok-imagine-1.5)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "grok-imagine-1.5",
+    "prompt": "Cyberpunk city at night, neon reflecting off rain-soaked streets, cinematic look",
+    "aspect_ratio": "16:9",
+    "n": 1
+  }'
+```
+
+```bash Text-to-image (grok-imagine-1.0)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "grok-imagine-1.0",
+    "prompt": "A Shiba Inu wearing an astronaut helmet floating in space, cartoon style",
+    "aspect_ratio": "1:1"
+  }'
+```
+
+```bash Image editing (grok-imagine-1.5-edit)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "grok-imagine-1.5-edit",
+    "prompt": "Replace the background with a snowy mountain at sunset, keep the subject unchanged",
+    "image_urls": ["https://cdn.example.com/portrait.jpg"],
+    "n": 1
+  }'
+```
+
+```bash Image editing (grok-imagine-1.0-edit)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "grok-imagine-1.0-edit",
+    "prompt": "Add a warm color filter to the image, strengthen the dusk atmosphere",
+    "image_urls": ["https://cdn.example.com/street.jpg"]
+  }'
+```
+
+</CodeGroup>
+
+<ResponseExample>
+```json Submission successful
+{
+  "task_id": "task-wave1775290140a830128812",
+  "model": "grok-imagine-1.5",
+  "action": "generate",
+  "status": "queued",
+  "created_at": 1775290140120,
+  "progress": 0
+}
+```
+</ResponseExample>
+
+After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status). See [Task System](/en/docs/task-system) for details.
+
+## Available Models
+
+| Model ID | Type | Description |
+|---|---|---|
+| `grok-imagine-1.0` | Text-to-image | Grok Imagine 1.0. Generates from a text prompt alone, 5 aspect ratios |
+| `grok-imagine-1.5` | Text-to-image | Grok Imagine 1.5. Next-generation text-to-image, 5 aspect ratios |
+| `grok-imagine-1.0-edit` | Image editing | Grok Imagine 1.0 image editing. Requires reference images in `image_urls` |
+| `grok-imagine-1.5-edit` | Image editing | Grok Imagine 1.5 image editing. Requires reference images in `image_urls` |
+
+## Common Parameters
+
+<ParamField body="model" type="string" required>
+  Choose one from the [Available Models](#available-models) list. Use `grok-imagine-1.0` / `grok-imagine-1.5` for text-to-image, `grok-imagine-1.0-edit` / `grok-imagine-1.5-edit` for image editing
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Prompt text. Supports Chinese and English. For text-to-image it describes the image; for image editing it is the edit instruction applied to the reference image
+</ParamField>
+
+<ParamField body="n" type="integer" default="1">
+  Number of images to generate, up to the upstream service limit
+</ParamField>
+
+<ParamField body="callback_url" type="string">
+  Webhook callback URL, invoked when the task reaches a terminal state. See [Callback Mechanism](/en/docs/sync-async#async-task-webhook)
+</ParamField>
+
+<ParamField body="callback_events" type="string[]">
+  Event types to receive callbacks for. See [Callback Mechanism](/en/docs/sync-async#async-task-webhook)
+</ParamField>
+
+## Model-Specific Parameters
+
+### Text-to-image (grok-imagine-1.0 / grok-imagine-1.5)
+
+<ParamField body="aspect_ratio" type="string" default="1:1">
+  Aspect ratio. 5 options:
+  - `1:1` — Square
+  - `16:9` / `9:16` — Widescreen landscape / portrait
+  - `3:2` / `2:3` — Camera ratio landscape / portrait
+</ParamField>
+
+### Image editing (grok-imagine-1.0-edit / grok-imagine-1.5-edit)
+
+<ParamField body="image_urls" type="string[]" required>
+  URLs of the reference images to edit. The image editing models require this field
+</ParamField>
+
+<Note>
+The image editing models (`*-edit`) do not support `aspect_ratio` — the output ratio follows the reference image.
+</Note>
+
+## Resource Limits
+
+| Item | Limit |
+|---|---|
+| Reference images (`*-edit`) | Supplied via `image_urls` |
+| Size per image | ≤ 30MB, JPG / PNG / WEBP |
+| Aspect ratio (text-to-image) | `1:1` / `16:9` / `9:16` / `3:2` / `2:3` |
+| Output file | Image URL, valid for 24 hours |
+
+## Related Docs
+
+- [Task System](/en/docs/task-system) — Task state machine / polling cadence / async push
+- [Request & Response](/en/docs/request-response) — Common error codes / Headers / rate limits
+- [Authentication](/en/docs/authentication) — API Key application and usage

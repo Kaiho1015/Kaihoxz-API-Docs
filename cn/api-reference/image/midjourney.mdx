@@ -17,15 +17,11 @@ Midjourney 通过统一异步任务接口 `/v1/tasks` 调用,用 `action` 字段
 
 ## 定价
 
-按操作 + 速度档计费(单位 USD)。`speed` 取 `relax`(默认) / `fast` / `turbo`。
-
-| 操作 | relax / 默认 | fast | turbo |
-|---|---|---|---|
-| `imagine` | `$0.05067` | `$0.06192` | `$0.1125` |
-| 其余全部 action | `$0.06192` | `$0.06192` | `$0.1125` |
-
 <Note>
-任务失败自动全额退款。
+本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
+
+**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
+**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
 </Note>
 
 ## Action 速查
@@ -36,15 +32,6 @@ Midjourney 通过统一异步任务接口 `/v1/tasks` 调用,用 `action` 字段
 | `blend` | 生成 | `image_urls`(2-4) | 多图融合,无 prompt |
 | `describe` | 生成 | `image_urls`(1) | 图转文,返回 4 条提示词建议 |
 | `edits` | 生成 | `prompt` + `image_urls`(1) | 全图重写(背景替换 / 风格迁移) |
-| `upscale` | 链式 | `ref_task_id` + `index` | 放大网格中第 `index` 张 |
-| `variation` | 链式 | `ref_task_id` + `index` | 基于某张出新的四宫格变体 |
-| `high-variation` | 链式 | `ref_task_id` + `index` | 强变体(变化幅度大) |
-| `low-variation` | 链式 | `ref_task_id` + `index` | 弱变体(保持主体) |
-| `reroll` | 链式 | `ref_task_id` | 用同 prompt 重出一组四宫格 |
-| `zoom` | 链式 | `ref_task_id` + `zoom_ratio` | 外绘缩放(`<2` 用 1.5x,`≥2` 用 2x) |
-| `pan` | 链式 | `ref_task_id` + `direction` | 向 `left/right/up/down` 平移外绘 |
-| `remix-strong` | 链式 | `ref_task_id` + `index` | v8/v8.1 大幅重塑,可改 prompt |
-| `remix-subtle` | 链式 | `ref_task_id` + `index` | v8/v8.1 保守重塑 |
 
 ## 调用示例
 
@@ -173,8 +160,22 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   固定 `midjourney`
 </ParamField>
 
-<ParamField body="action" type="string" default="generate">
-  操作类型,见 [Action 速查](#action-速查)。生成类传 `imagine`/`blend`/`describe`/`edits`,链式类传对应 action
+<ParamField body="action" type="string" default="imagine">
+  Midjourney 是动作型模型,一次调用做什么由 `action` 决定。库里支持这 15 个:
+
+  **起点(不需要 `task_id`)**
+  - `imagine` — 文生图,出一张 2×2 四格(默认)
+  - `blend` — 多图融合
+  - `describe` — 图生提示词
+
+  **在已有结果上继续(要 `task_id`,多数还要 `index` 指定第几格)**
+  - `upscale` — 放大某一格
+  - `variation` / `high-variation` / `low-variation` — 变体,幅度递增
+  - `reroll` — 同提示词重出一组
+  - `zoom` — 外扩画面 · `pan` — 定向延展
+  - `inpaint` — 局部重绘 · `edit` — 编辑
+  - `remix-strong` / `remix-subtle` — 换提示词重混,强度不同
+  - `modal` — 弹窗二次确认类操作
 </ParamField>
 
 <ParamField body="prompt" type="string">
@@ -203,44 +204,16 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   速度档 `relax` / `fast` / `turbo`,影响出图速度与计费(见 [定价](#定价))
 </ParamField>
 
-<ParamField body="ref_task_id" type="string">
-  **链式操作必填** — 前序任务的 `task_id`(本平台返回的 wave task_id)。见 [链式操作](#链式操作)
-</ParamField>
-
 <ParamField body="index" type="integer">
   选四宫格第几张(1-4)。`upscale`/`variation`/`high-variation`/`low-variation`/`remix-*` 需填
-</ParamField>
-
-<ParamField body="direction" type="string">
-  `pan` 平移方向:`left` / `right` / `up` / `down`
-</ParamField>
-
-<ParamField body="zoom_ratio" type="number">
-  `zoom` 缩放倍数:`<2` 走 Outpaint 1.5x,`≥2` 走 CustomZoom 2x
-</ParamField>
-
-<ParamField body="custom_id" type="string">
-  高级:直接指定 MJ 按钮 ID(给了则忽略 `index`),用于网关未抽象的特殊操作
 </ParamField>
 
 <ParamField body="version" type="string">
   MJ 版本:`8.1` / `7` / `6.1` / `5.2` / `5.1`
 </ParamField>
 
-<ParamField body="niji" type="boolean">
-  切换 Niji(动漫)模式
-</ParamField>
-
 <ParamField body="quality" type="string">
   画质 `--q`:`0.25` / `0.5` / `1` / `2`
-</ParamField>
-
-<ParamField body="stylize" type="integer">
-  风格化强度 `--s`,0-1000
-</ParamField>
-
-<ParamField body="chaos" type="integer">
-  变异度 `--c`,0-100
 </ParamField>
 
 <ParamField body="negative_prompt" type="string">

@@ -1,0 +1,233 @@
+---
+title: "Midjourney"
+description: "Midjourney integration — text-to-image / blend / describe / edit, plus chained upscale / variation / zoom / pan"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+Midjourney runs through the unified async task endpoint `/v1/tasks`. The `action` field selects the operation, so a single model exposes every capability.
+
+**Two kinds of operations:**
+
+- **Standalone generation** — no prior task needed: `imagine` (text-to-image), `blend` (multi-image fusion), `describe` (image-to-text), `edits` (full-image rewrite)
+- **Chained operations** — rework the output of an earlier task; pass `ref_task_id` to reference it: `upscale`, `variation` / `high-variation` / `low-variation`, `reroll` (regenerate the grid), `zoom` (outpaint zoom), `pan` (directional outpaint), `remix-strong` / `remix-subtle` (v8 remix)
+
+<Note>
+`imagine` and the other generation actions return a **2×2 grid** (one image holding 4 frames). To upscale or vary one of those frames, use a chained operation with `ref_task_id` (the grid task's `task_id`) plus `index` (1-4, picking the frame). See [Chained Operations](#chained-operations).
+</Note>
+
+## Pricing
+
+<Note>
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+</Note>
+
+## Action Quick Reference
+
+| action | Type | Required | Description |
+|---|---|---|---|
+| `imagine` | Generation | `prompt` | Text-to-image; add `image_urls` for image guidance. Returns a 2×2 grid |
+| `blend` | Generation | `image_urls` (2-4) | Fuses several images, no prompt |
+| `describe` | Generation | `image_urls` (1) | Image-to-text, returns 4 suggested prompts |
+| `edits` | Generation | `prompt` + `image_urls` (1) | Full-image rewrite (background replacement / style transfer) |
+
+## Examples
+
+<CodeGroup>
+
+```bash Text-to-image (imagine)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "midjourney",
+    "action": "imagine",
+    "prompt": "a majestic eagle soaring over snowy mountains, cinematic",
+    "aspect_ratio": "16:9",
+    "version": "7",
+    "speed": "fast"
+  }'
+```
+
+```bash Upscale frame 2 of the grid (chained upscale)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "midjourney",
+    "action": "upscale",
+    "ref_task_id": "task-wave1781770984b950327128",
+    "index": 2
+  }'
+```
+
+```bash Multi-image fusion (blend)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "midjourney",
+    "action": "blend",
+    "image_urls": [
+      "https://cdn.example.com/a.jpg",
+      "https://cdn.example.com/b.jpg"
+    ],
+    "aspect_ratio": "1:1"
+  }'
+```
+
+```bash Image-to-text (describe)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "midjourney",
+    "action": "describe",
+    "image_urls": ["https://cdn.example.com/photo.jpg"]
+  }'
+```
+
+```bash Outpaint pan (chained pan)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "midjourney",
+    "action": "pan",
+    "ref_task_id": "task-wave...upscale_task",
+    "direction": "right"
+  }'
+```
+
+</CodeGroup>
+
+<ResponseExample>
+```json Submitted
+{
+  "task_id": "task-wave1781770984b950327128",
+  "model": "midjourney",
+  "action": "imagine",
+  "status": "queued",
+  "created_at": 1781770984120,
+  "progress": 0
+}
+```
+</ResponseExample>
+
+After submitting, poll [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status) for status. See [Task System](/en/docs/task-system) for details.
+
+## Available Models
+
+| Model ID | Description |
+|---|---|
+| `midjourney` | Full Midjourney feature set, 15 actions (generation + chained), supports v5.1–v8.1 / niji |
+
+## Chained Operations
+
+Chained actions rework the output of an earlier task. The two fields that matter are `ref_task_id` and `index`.
+
+<Steps>
+  <Step title="Generate a grid first">
+    Call `imagine` and keep the `task_id` from the response (for example `task-wave1781770984b950327128`). It refers to one **2×2 grid**.
+  </Step>
+  <Step title="Reference the grid and pick a frame">
+    Chained operations take `ref_task_id` (the `task_id` from the previous step) plus `index` (1-4: top-left=1, top-right=2, bottom-left=3, bottom-right=4). For example, `upscale` enlarges frame 2.
+  </Step>
+  <Step title="Keep chaining">
+    The single-image task produced by an upscale can itself be the `ref_task_id` for `zoom` or `pan`, stacking step on step.
+  </Step>
+</Steps>
+
+<Warning>
+`ref_task_id` must point at a task that is **your own**, **already succeeded**, and **on the same channel**, otherwise the call fails (`source_task_not_found` / `source_task_not_owned` / `source_task_not_success` / `source_task_channel_mismatch`). It references the **task `task_id`, not the result image URL**.
+</Warning>
+
+What each chained action requires of its source task:
+
+| action | Source task | Frame selection |
+|---|---|---|
+| `upscale` / `variation` | 2×2 grid from imagine / reroll | `index` required |
+| `high-variation` / `low-variation` | Single image from an upscale | `index` required |
+| `reroll` | 2×2 grid from imagine | No index |
+| `zoom` / `pan` | Single image from an upscale | No index |
+| `remix-strong` / `remix-subtle` | v8/v8.1 imagine grid | `index` required |
+
+## Common Parameters
+
+<ParamField body="model" type="string" required>
+  Always `midjourney`
+</ParamField>
+
+<ParamField body="action" type="string" default="imagine">
+  Midjourney is action-driven: `action` decides what a call does. These 15 are supported:
+
+  **Starting points (no `task_id` needed)**
+  - `imagine` — text to image, returns a 2×2 grid (default)
+  - `blend` — blend several images
+  - `describe` — image to prompt
+
+  **Continuing from a result (needs `task_id`; most also need `index` for which frame)**
+  - `upscale` — upscale one frame
+  - `variation` / `high-variation` / `low-variation` — variations, increasing strength
+  - `reroll` — re-run the same prompt for a new grid
+  - `zoom` — expand outward · `pan` — extend in one direction
+  - `inpaint` — repaint a region · `edit` — edit
+  - `remix-strong` / `remix-subtle` — re-mix with a new prompt, two strengths
+  - `modal` — operations that go through a confirmation step
+</ParamField>
+
+<ParamField body="prompt" type="string">
+  Prompt. Required for `imagine`/`edits`; native MJ flags are supported (e.g. `--ar 16:9`). Not used by `blend`/`describe`
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="1:1">
+  Aspect ratio, such as `1:1` / `16:9` / `9:16` / `2:3` / `3:2` / `4:3` / `3:4` / `21:9` / `9:21`
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Reference images. 2-4 for `blend`, 1 for `describe`/`edits`, optional for `imagine` (image guidance)
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  Random seed
+</ParamField>
+
+<ParamField body="callback_url" type="string">
+  Callback URL fired when the task reaches a terminal state (optional, an alternative to polling)
+</ParamField>
+
+## Model-Specific Parameters
+
+<ParamField body="speed" type="string" default="relax">
+  Speed tier `relax` / `fast` / `turbo`. Affects generation speed and billing (see [Pricing](#pricing))
+</ParamField>
+
+<ParamField body="index" type="integer">
+  Which frame of the 2×2 grid to use (1-4). Required for `upscale`/`variation`/`high-variation`/`low-variation`/`remix-*`
+</ParamField>
+
+<ParamField body="version" type="string">
+  MJ version: `8.1` / `7` / `6.1` / `5.2` / `5.1`
+</ParamField>
+
+<ParamField body="quality" type="string">
+  Quality `--q`: `0.25` / `0.5` / `1` / `2`
+</ParamField>
+
+<ParamField body="negative_prompt" type="string">
+  Elements to exclude, `--no`
+</ParamField>
+
+## Resource Limits
+
+- `blend` takes 2-4 reference images, each ≤ 12 MiB
+- `describe` comes back quickly (1-3 seconds); the result is text suggestions
+- `pan` is only supported on v6/v6.1/v7/niji6; removed in v8/v8.1
+- `remix-strong` / `remix-subtle` are v8/v8.1 only
+
+## Related Docs
+
+- [Task System](/en/docs/task-system) — async submission / polling / callbacks
+- [Image Generation Overview](/en/api-reference/image/overview)
