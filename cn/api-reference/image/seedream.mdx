@@ -4,7 +4,7 @@ description: "字节跳动豆包图像生成 — 文生图 / 图像编辑 / 组�
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-字节跳动 Seed 团队的图像生成模型系列。**当前提供 `doubao-seedream-5.0-lite` 版本**(4.0 / 4.5 因按 token 计费暂未接入)。
+字节跳动 Seed 团队的图像生成模型系列。**当前提供 `seedream-5.0-lite` 版本**(4.0 / 4.5 因按 token 计费暂未接入)。
 
 **5.0 Lite** — 视觉推理(CoT)+ 实时联网搜索,强身份保留(眼/下颌/比例/肤色跨风格不变),支持 1K/2K/4K 输出,性价比线。
 
@@ -36,7 +36,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedream-5.0-lite",
+    "model": "seedream-5.0-lite",
     "prompt": "未来主义城市夜景,霓虹灯映在湿润街面,电影感构图",
     "resolution": "2K",
     "aspect_ratio": "16:9"
@@ -48,7 +48,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedream-5.0-lite",
+    "model": "seedream-5.0-lite",
     "action": "edit",
     "prompt": "把背景换成黄昏天空,人物保持不变",
     "image_urls": ["https://cdn.example.com/portrait.jpg"],
@@ -61,7 +61,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedream-5.0-lite",
+    "model": "seedream-5.0-lite",
     "action": "edit",
     "prompt": "把第一张图的角色放进第二张图的场景里",
     "image_urls": [
@@ -78,7 +78,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedream-5.0-lite",
+    "model": "seedream-5.0-lite",
     "prompt": "电商主图四张:正面 / 侧面 / 细节 / 场景应用",
     "sequential_image_generation": "auto",
     "sequential_image_generation_options": {"max_images": 4},
@@ -93,7 +93,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 ```json 提交成功
 {
   "task_id": "task-wave1775285160b950328499",
-  "model": "doubao-seedream-5.0-lite",
+  "model": "seedream-5.0-lite",
   "action": "generate",
   "status": "queued",
   "created_at": 1775285160040,
@@ -108,12 +108,12 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 | 模型 ID | 说明 |
 |---|---|
-| `doubao-seedream-5.0-lite` | 视觉推理 + 联网搜索,身份保留强,支持 1K/2K/4K,文生 / 编辑 / 组图统一接口 |
+| `seedream-5.0-lite` | 视觉推理 + 联网搜索,身份保留强,支持 1K/2K/4K,文生 / 编辑 / 组图统一接口 |
 
 ## 通用参数
 
 <ParamField body="model" type="string" required>
-  目前为 `doubao-seedream-5.0-lite`
+  目前为 `seedream-5.0-lite`
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">

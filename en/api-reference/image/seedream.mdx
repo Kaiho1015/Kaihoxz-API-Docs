@@ -39,7 +39,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedream-5.0-lite",
+    "model": "seedream-5.0-lite",
     "prompt": "Futuristic city night view, neon lights reflected on wet streets, cinematic composition",
     "resolution": "2K",
     "aspect_ratio": "16:9"
@@ -51,7 +51,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedream-5.0-lite",
+    "model": "seedream-5.0-lite",
     "prompt": "Place the character from the first image into the scene from the second image",
     "image_urls": [
       "https://cdn.example.com/character.jpg",
@@ -80,7 +80,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedream-5.0-lite",
+    "model": "seedream-5.0-lite",
     "prompt": "Four e-commerce hero images: front / side / detail / lifestyle",
     "sequential_image_generation": "auto",
     "sequential_image_generation_options": {"max_images": 4},
@@ -95,7 +95,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 ```json Submission successful
 {
   "task_id": "task-wave1775285160b950328499",
-  "model": "doubao-seedream-5.0-lite",
+  "model": "seedream-5.0-lite",
   "action": "generate",
   "status": "queued",
   "created_at": 1775285160040,
@@ -110,7 +110,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 | Model ID | Description |
 |---|---|
-| `doubao-seedream-5.0-lite` | Visual reasoning + web search, 14 reference images, 2K/3K, strong identity preservation |
+| `seedream-5.0-lite` | Visual reasoning + web search, 14 reference images, 2K/3K, strong identity preservation |
 
 ## Common Parameters
 

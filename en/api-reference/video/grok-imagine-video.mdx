@@ -30,7 +30,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.0-video",
+    "model": "grok-imagine-1.0-video-rev",
     "prompt": "A rainy night street under neon lights, cyberpunk vibe, slow camera push-in",
     "duration": 6,
     "aspect_ratio": "16:9",
@@ -43,7 +43,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.0-video",
+    "model": "grok-imagine-1.0-video-rev",
     "prompt": "Character slowly turns to look at the camera",
     "image_urls": ["https://cdn.example.com/portrait.jpg"],
     "duration": 10,
@@ -56,7 +56,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.0-video",
+    "model": "grok-imagine-1.0-video-rev",
     "prompt": "Keep the character consistent, running through a forest",
     "image_urls": [
       "https://cdn.example.com/ref-1.jpg",
@@ -78,7 +78,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 ```json Submitted
 {
   "task_id": "task-wave1775285160b950328499",
-  "model": "grok-imagine-1.0-video",
+  "model": "grok-imagine-1.0-video-rev",
   "action": "generate",
   "status": "queued",
   "created_at": 1775285160040,
@@ -93,12 +93,12 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 | Model ID | Description |
 |---|---|
-| `grok-imagine-1.0-video` | xAI Grok Imagine 1.0 video tier, T2V / I2V, 5 aspect ratios, 480p / 720p, 6-30 seconds |
+| `grok-imagine-1.0-video-rev` | xAI Grok Imagine 1.0 video tier, T2V / I2V, 5 aspect ratios, 480p / 720p, 6-30 seconds |
 
 ## Common Parameters
 
 <ParamField body="model" type="string" required>
-  Fixed value `grok-imagine-1.0-video`
+  Fixed value `grok-imagine-1.0-video-rev`
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">

@@ -2,6 +2,26 @@
 title: "Model Updates"
 ---
 
+<Update label="2026-09-01" description="Breaking change">
+**Seedance / Seedream · `doubao-` prefix dropped from model IDs**
+
+For consistency with the rest of the catalog — most model IDs here carry no vendor prefix, and vendor is shown separately on the model card — these 7 model IDs have been renamed:
+
+| Old ID | New ID |
+|---|---|
+| `doubao-seedance-1.5-pro` | `seedance-1.5-pro` |
+| `doubao-seedance-2.0` | `seedance-2.0` |
+| `doubao-seedance-2.0-fast` | `seedance-2.0-fast` |
+| `doubao-seedance-2.0-face` | `seedance-2.0-face` |
+| `doubao-seedance-2.0-fast-face` | `seedance-2.0-fast-face` |
+| `doubao-seedance-2.0-mini` | `seedance-2.0-mini` |
+| `doubao-seedream-5.0-lite` | `seedream-5.0-lite` |
+
+- **The old IDs no longer resolve.** Please switch to the new IDs.
+- Capabilities, parameters and pricing are **unchanged** — this is a rename only.
+- **Docs**: [Seedance Video API](/en/api-reference/video/seedance) · [Seedream Image API](/en/api-reference/image/seedream)
+</Update>
+
 <Update label="2026-07-11" description="Model launch">
 **Claude Sonnet 5 · Chat**
 
@@ -24,12 +44,12 @@ title: "Model Updates"
 <Update label="2026-07-11" description="Breaking change">
 **Seedance 2.0 series · `image_urls` semantics change**
 
-Effective **2026-07-09** (upstream), for `doubao-seedance-2.0`, `doubao-seedance-2.0-fast` and `doubao-seedance-2.0-mini`:
+Effective **2026-07-09** (upstream), for `seedance-2.0`, `seedance-2.0-fast` and `seedance-2.0-mini`:
 
 - **Before** — the 1st image in `image_urls` acted as the first frame, the 2nd as the last frame, the rest as references.
 - **After** — **all** images in `image_urls` are treated as reference images only; they no longer carry first/last-frame meaning.
 
-To keep constraining first / last frames, use **`image_with_roles`** (unaffected by this change). `doubao-seedance-1.5-pro` and the `face` variants are unaffected.
+To keep constraining first / last frames, use **`image_with_roles`** (unaffected by this change). `seedance-1.5-pro` and the `face` variants are unaffected.
 
 - **Docs**: [Seedance video API](/en/api-reference/video/seedance)
 </Update>
@@ -37,7 +57,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2026-06-24" description="Capability update">
 **Seedance 2.0 · 4K added**
 
-- `doubao-seedance-2.0` now supports **4K** — 480p / 720p / 1080p / 4K; pricing synced to official rates.
+- `seedance-2.0` now supports **4K** — 480p / 720p / 1080p / 4K; pricing synced to official rates.
 - **Docs**: [Seedance video API](/en/api-reference/video/seedance)
 </Update>
 
@@ -60,16 +80,16 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 
 **Grok Imagine 1.5 · Image / edit / video**
 
-- **Image**　`grok-imagine-1.5` — text-to-image, aspect ratios 1:1 / 16:9 / 9:16 / 3:2 / 2:3, batch `n`
-- **Edit**　`grok-imagine-1.5-edit` — generate / edit, pass `image_urls` as references
-- **Video**　`grok-imagine-1.5-video` — text/image-to-video, resolution 480p / 720p, duration 6–30 s, ratios 16:9 / 9:16 / 1:1
+- **Image**　`grok-imagine-1.5-rev` — text-to-image, aspect ratios 1:1 / 16:9 / 9:16 / 3:2 / 2:3, batch `n`
+- **Edit**　`grok-imagine-1.5-edit-rev` — generate / edit, pass `image_urls` as references
+- **Video**　`grok-imagine-1.5-video-rev` — text/image-to-video, resolution 480p / 720p, duration 6–30 s, ratios 16:9 / 9:16 / 1:1
 - **Docs**: [Grok Imagine image API](/en/api-reference/image/grok-imagine)　·　[Grok Imagine video API](/en/api-reference/video/grok-imagine-video)
 </Update>
 
 <Update label="2026-06-15" description="Model launch">
 **Seedance 2.0 Mini · Video generation**
 
-- **Model ID**: `doubao-seedance-2.0-mini`
+- **Model ID**: `seedance-2.0-mini`
 - **Modes**: text-to-video, image-to-video
 - **Resolution**: 480p / 720p　·　**Duration**: 4–15 s　·　**Aspect ratios**: 16:9 / 9:16 / 1:1
 - **Docs**: [Seedance video API](/en/api-reference/video/seedance)
@@ -129,7 +149,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2026-04-21" description="Model launch">
 **GPT Image 2 series**
 
-- **Model ID**: `gpt-image-2` · `gpt-image-2-official`
+- **Model ID**: `gpt-image-2` · `gpt-image-2`
 - Resolution 1K / 2K / 4K　·　Aspect ratios 15 ratios　·　generate / edit
 - **Docs**: [GPT Image API](/en/api-reference/image/gpt-image)
 </Update>
@@ -202,7 +222,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2026-02-26" description="Model launch">
 **Gemini 3.1 Flash Image Preview**
 
-- **Model ID**: `gemini-3.1-flash-image-preview` · `gemini-3.1-flash-image-preview-official`
+- **Model ID**: `gemini-3.1-flash-image-preview` · `gemini-3.1-flash-image-preview`
 - Resolution 0.5K / 1K / 2K / 4K　·　Aspect ratios 11 ratios　·　generate / edit
 - **Docs**: [Gemini image API](/en/api-reference/image/gemini)
 </Update>
@@ -244,7 +264,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2026-02-13" description="Model launch">
 **Seedream 5.0 Lite**
 
-- **Model ID**: `doubao-seedream-5.0-lite`
+- **Model ID**: `seedream-5.0-lite`
 - Resolution 2K / 3K / 4K　·　Aspect ratios 9 ratios　·　generate / edit
 - **Docs**: [Seedream image API](/en/api-reference/image/seedream)
 </Update>
@@ -257,7 +277,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 
 **Seedance 2.0 series**
 
-- **Model ID**: `doubao-seedance-2.0` · `doubao-seedance-2.0-fast` · `doubao-seedance-2.0-face` · `doubao-seedance-2.0-fast-face`
+- **Model ID**: `seedance-2.0` · `seedance-2.0-fast` · `seedance-2.0-face` · `seedance-2.0-fast-face`
 - Resolution 480p / 720p / 1080p　·　Duration 4–15 s　·　Aspect ratios 16:9 / 9:16 / 1:1
 - **Docs**: [Seedance video API](/en/api-reference/video/seedance)
 </Update>
@@ -293,13 +313,13 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2026-02-02" description="Model launch">
 **Grok Imagine 1.0 · Image**
 
-- **Model ID**: `grok-imagine-1.0` · `grok-imagine-1.0-edit`
+- **Model ID**: `grok-imagine-1.0-rev` · `grok-imagine-1.0-edit-rev`
 - Aspect ratios 1:1 / 16:9 / 9:16 / 3:2 / 2:3　·　generate / edit
 - **Docs**: [Grok Imagine image API](/en/api-reference/image/grok-imagine)
 
 **Grok Imagine 1.0 · Video**
 
-- **Model ID**: `grok-imagine-1.0-video`
+- **Model ID**: `grok-imagine-1.0-video-rev`
 - Resolution 480p / 720p　·　Duration 6–30 s　·　Aspect ratios 16:9 / 9:16 / 1:1
 - **Docs**: [Grok Imagine video API](/en/api-reference/video/grok-imagine-video)
 </Update>
@@ -342,7 +362,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2025-12-16" description="Model launch">
 **Seedance 1.5 Pro**
 
-- **Model ID**: `doubao-seedance-1.5-pro`
+- **Model ID**: `seedance-1.5-pro`
 - Resolution 480p / 720p / 1080p　·　Duration 5 / 10 s　·　Aspect ratios 16:9 / 9:16 / 1:1
 - **Docs**: [Seedance video API](/en/api-reference/video/seedance)
 
@@ -407,7 +427,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2025-11-20" description="Model launch">
 **Gemini 3 Pro Image Preview**
 
-- **Model ID**: `gemini-3-pro-image-preview` · `gemini-3-pro-image-preview-official`
+- **Model ID**: `gemini-3-pro-image-preview` · `gemini-3-pro-image-preview`
 - Resolution 1K / 2K / 4K　·　Aspect ratios 11 ratios　·　generate / edit
 - **Docs**: [Gemini image API](/en/api-reference/image/gemini)
 </Update>
@@ -451,7 +471,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2025-10-14" description="Model launch">
 **Veo 3.1 series**
 
-- **Model ID**: `veo3.1-quality` · `veo3.1-fast` · `veo3.1-lite` · `veo3.1-quality-official` · `veo3.1-fast-official`
+- **Model ID**: `veo3.1-quality` · `veo3.1-fast` · `veo3.1-lite` · `veo3.1-quality` · `veo3.1-fast`
 - Resolution 720p / 1080p / 4K　·　Duration 8 s　·　Aspect ratios 16:9 / 9:16 / 1:1
 - **Docs**: [Veo video API](/en/api-reference/video/veo)
 
@@ -523,7 +543,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2025-08-26" description="Model launch">
 **Gemini 2.5 Flash Image Preview**
 
-- **Model ID**: `gemini-2.5-flash-image-preview` · `gemini-2.5-flash-image-preview-official`
+- **Model ID**: `gemini-2.5-flash-image-preview` · `gemini-2.5-flash-image-preview`
 - Resolution 1K　·　Aspect ratios 11 ratios　·　generate / edit
 - **Docs**: [Gemini image API](/en/api-reference/image/gemini)
 </Update>
@@ -574,7 +594,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2025-04-23" description="Model launch">
 **GPT Image 1 (official)**
 
-- **Model ID**: `gpt-image-1-official`
+- **Model ID**: `gpt-image-1`
 - Aspect ratios 1:1 / 3:2 / 2:3　·　generate / edit
 - **Docs**: [GPT Image API](/en/api-reference/image/gpt-image)
 </Update>

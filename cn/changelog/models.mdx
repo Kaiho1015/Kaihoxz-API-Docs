@@ -2,6 +2,26 @@
 title: "模型动态"
 ---
 
+<Update label="2026-09-01" description="重要变更">
+**Seedance / Seedream 系列 · 模型 ID 去掉 `doubao-` 前缀**
+
+为与站内其余模型保持一致 —— 平台上绝大多数模型 ID 不带厂商前缀,厂商信息在模型卡片上单独标注 —— 以下 7 个模型 ID 已更名:
+
+| 原 ID | 新 ID |
+|---|---|
+| `doubao-seedance-1.5-pro` | `seedance-1.5-pro` |
+| `doubao-seedance-2.0` | `seedance-2.0` |
+| `doubao-seedance-2.0-fast` | `seedance-2.0-fast` |
+| `doubao-seedance-2.0-face` | `seedance-2.0-face` |
+| `doubao-seedance-2.0-fast-face` | `seedance-2.0-fast-face` |
+| `doubao-seedance-2.0-mini` | `seedance-2.0-mini` |
+| `doubao-seedream-5.0-lite` | `seedream-5.0-lite` |
+
+- **旧 ID 已停止解析**,请改用新 ID。
+- 模型能力、可调参数、价格**均未变化**,只改了名字。
+- **文档**:[Seedance 视频生成 API](/cn/api-reference/video/seedance) · [Seedream 图像生成 API](/cn/api-reference/image/seedream)
+</Update>
+
 <Update label="2026-07-11" description="模型上架">
 **Claude Sonnet 5 · 对话**
 
@@ -24,12 +44,12 @@ title: "模型动态"
 <Update label="2026-07-11" description="重要变更">
 **Seedance 2.0 系列 · `image_urls` 语义调整**
 
-自 **2026-07-09** 起(上游生效),`doubao-seedance-2.0`、`doubao-seedance-2.0-fast`、`doubao-seedance-2.0-mini` 三个模型:
+自 **2026-07-09** 起(上游生效),`seedance-2.0`、`seedance-2.0-fast`、`seedance-2.0-mini` 三个模型:
 
 - **变更前** — `image_urls` 第 1 张作首帧、第 2 张作尾帧,其余作参考图。
 - **变更后** — `image_urls` 中**所有图片一律作为参考图**,不再有首帧 / 尾帧含义。
 
-如需继续指定首尾帧,请改用 **`image_with_roles`** 字段(不受此次变更影响)。`doubao-seedance-1.5-pro` 与 `face` 系列不受影响。
+如需继续指定首尾帧,请改用 **`image_with_roles`** 字段(不受此次变更影响)。`seedance-1.5-pro` 与 `face` 系列不受影响。
 
 - **文档**:[Seedance 视频生成 API](/cn/api-reference/video/seedance)
 </Update>
@@ -37,7 +57,7 @@ title: "模型动态"
 <Update label="2026-06-24" description="能力更新">
 **Seedance 2.0 · 新增 4K**
 
-- `doubao-seedance-2.0` 新增 **4K** 分辨率，现支持 480p / 720p / 1080p / 4K；价格已同步官方价。
+- `seedance-2.0` 新增 **4K** 分辨率，现支持 480p / 720p / 1080p / 4K；价格已同步官方价。
 - **文档**：[Seedance 视频生成 API](/cn/api-reference/video/seedance)
 </Update>
 
@@ -60,16 +80,16 @@ title: "模型动态"
 
 **Grok Imagine 1.5 · 图像生成 / 编辑 / 视频**
 
-- **图像**　`grok-imagine-1.5` — 文生图，画面比例 1:1 / 16:9 / 9:16 / 3:2 / 2:3，支持批量 `n`
-- **编辑**　`grok-imagine-1.5-edit` — 生成 / 编辑，传 `image_urls` 作参考图
-- **视频**　`grok-imagine-1.5-video` — 文生视频 / 图生视频，分辨率 480p / 720p，时长 6–30 秒，比例 16:9 / 9:16 / 1:1
+- **图像**　`grok-imagine-1.5-rev` — 文生图，画面比例 1:1 / 16:9 / 9:16 / 3:2 / 2:3，支持批量 `n`
+- **编辑**　`grok-imagine-1.5-edit-rev` — 生成 / 编辑，传 `image_urls` 作参考图
+- **视频**　`grok-imagine-1.5-video-rev` — 文生视频 / 图生视频，分辨率 480p / 720p，时长 6–30 秒，比例 16:9 / 9:16 / 1:1
 - **文档**：[Grok Imagine 图像 API](/cn/api-reference/image/grok-imagine)　·　[Grok Imagine 视频 API](/cn/api-reference/video/grok-imagine-video)
 </Update>
 
 <Update label="2026-06-15" description="模型上架">
 **Seedance 2.0 Mini · 视频生成**
 
-- **模型 ID**：`doubao-seedance-2.0-mini`
+- **模型 ID**：`seedance-2.0-mini`
 - **生成方式**：文生视频、图生视频
 - **分辨率**：480p / 720p　·　**时长**：4–15 秒　·　**画面比例**：16:9 / 9:16 / 1:1
 - **文档**：[Seedance 视频生成 API](/cn/api-reference/video/seedance)
@@ -129,7 +149,7 @@ title: "模型动态"
 <Update label="2026-04-21" description="模型上架">
 **GPT Image 2 系列**
 
-- **模型 ID**：`gpt-image-2` · `gpt-image-2-official`
+- **模型 ID**：`gpt-image-2` · `gpt-image-2`
 - 分辨率 1K / 2K / 4K　·　画面比例 15 种比例　·　支持生成 / 编辑
 - **文档**：[GPT Image API](/cn/api-reference/image/gpt-image)
 </Update>
@@ -202,7 +222,7 @@ title: "模型动态"
 <Update label="2026-02-26" description="模型上架">
 **Gemini 3.1 Flash Image Preview**
 
-- **模型 ID**：`gemini-3.1-flash-image-preview` · `gemini-3.1-flash-image-preview-official`
+- **模型 ID**：`gemini-3.1-flash-image-preview` · `gemini-3.1-flash-image-preview`
 - 分辨率 0.5K / 1K / 2K / 4K　·　画面比例 11 种比例　·　支持生成 / 编辑
 - **文档**：[Gemini 图像 API](/cn/api-reference/image/gemini)
 </Update>
@@ -244,7 +264,7 @@ title: "模型动态"
 <Update label="2026-02-13" description="模型上架">
 **Seedream 5.0 Lite**
 
-- **模型 ID**：`doubao-seedream-5.0-lite`
+- **模型 ID**：`seedream-5.0-lite`
 - 分辨率 2K / 3K / 4K　·　画面比例 9 种比例　·　支持生成 / 编辑
 - **文档**：[Seedream 图像 API](/cn/api-reference/image/seedream)
 </Update>
@@ -257,7 +277,7 @@ title: "模型动态"
 
 **Seedance 2.0 系列**
 
-- **模型 ID**：`doubao-seedance-2.0` · `doubao-seedance-2.0-fast` · `doubao-seedance-2.0-face` · `doubao-seedance-2.0-fast-face`
+- **模型 ID**：`seedance-2.0` · `seedance-2.0-fast` · `seedance-2.0-face` · `seedance-2.0-fast-face`
 - 分辨率 480p / 720p / 1080p　·　时长 4–15 秒　·　画面比例 16:9 / 9:16 / 1:1
 - **文档**：[Seedance 视频 API](/cn/api-reference/video/seedance)
 </Update>
@@ -293,13 +313,13 @@ title: "模型动态"
 <Update label="2026-02-02" description="模型上架">
 **Grok Imagine 1.0 · 图像**
 
-- **模型 ID**：`grok-imagine-1.0` · `grok-imagine-1.0-edit`
+- **模型 ID**：`grok-imagine-1.0-rev` · `grok-imagine-1.0-edit-rev`
 - 画面比例 1:1 / 16:9 / 9:16 / 3:2 / 2:3　·　支持生成 / 编辑
 - **文档**：[Grok Imagine 图像 API](/cn/api-reference/image/grok-imagine)
 
 **Grok Imagine 1.0 · 视频**
 
-- **模型 ID**：`grok-imagine-1.0-video`
+- **模型 ID**：`grok-imagine-1.0-video-rev`
 - 分辨率 480p / 720p　·　时长 6–30 秒　·　画面比例 16:9 / 9:16 / 1:1
 - **文档**：[Grok Imagine 视频 API](/cn/api-reference/video/grok-imagine-video)
 </Update>
@@ -342,7 +362,7 @@ title: "模型动态"
 <Update label="2025-12-16" description="模型上架">
 **Seedance 1.5 Pro**
 
-- **模型 ID**：`doubao-seedance-1.5-pro`
+- **模型 ID**：`seedance-1.5-pro`
 - 分辨率 480p / 720p / 1080p　·　时长 5 / 10 秒　·　画面比例 16:9 / 9:16 / 1:1
 - **文档**：[Seedance 视频 API](/cn/api-reference/video/seedance)
 
@@ -407,7 +427,7 @@ title: "模型动态"
 <Update label="2025-11-20" description="模型上架">
 **Gemini 3 Pro Image Preview**
 
-- **模型 ID**：`gemini-3-pro-image-preview` · `gemini-3-pro-image-preview-official`
+- **模型 ID**：`gemini-3-pro-image-preview` · `gemini-3-pro-image-preview`
 - 分辨率 1K / 2K / 4K　·　画面比例 11 种比例　·　支持生成 / 编辑
 - **文档**：[Gemini 图像 API](/cn/api-reference/image/gemini)
 </Update>
@@ -451,7 +471,7 @@ title: "模型动态"
 <Update label="2025-10-14" description="模型上架">
 **Veo 3.1 系列**
 
-- **模型 ID**：`veo3.1-quality` · `veo3.1-fast` · `veo3.1-lite` · `veo3.1-quality-official` · `veo3.1-fast-official`
+- **模型 ID**：`veo3.1-quality` · `veo3.1-fast` · `veo3.1-lite` · `veo3.1-quality` · `veo3.1-fast`
 - 分辨率 720p / 1080p / 4K　·　时长 8 秒　·　画面比例 16:9 / 9:16 / 1:1
 - **文档**：[Veo 视频 API](/cn/api-reference/video/veo)
 
@@ -523,7 +543,7 @@ title: "模型动态"
 <Update label="2025-08-26" description="模型上架">
 **Gemini 2.5 Flash Image Preview**
 
-- **模型 ID**：`gemini-2.5-flash-image-preview` · `gemini-2.5-flash-image-preview-official`
+- **模型 ID**：`gemini-2.5-flash-image-preview` · `gemini-2.5-flash-image-preview`
 - 分辨率 1K　·　画面比例 11 种比例　·　支持生成 / 编辑
 - **文档**：[Gemini 图像 API](/cn/api-reference/image/gemini)
 </Update>
@@ -574,7 +594,7 @@ title: "模型动态"
 <Update label="2025-04-23" description="模型上架">
 **GPT Image 1 (official)**
 
-- **模型 ID**：`gpt-image-1-official`
+- **模型 ID**：`gpt-image-1`
 - 画面比例 1:1 / 3:2 / 2:3　·　支持生成 / 编辑
 - **文档**：[GPT Image API](/cn/api-reference/image/gpt-image)
 </Update>

@@ -38,12 +38,12 @@ The whole series shares a field-routing convention — the backend automatically
 | `+ audio_urls` (2.0) | **reference_audio** | Audio-driven (2.0 only) |
 
 <Warning>
-**`image_urls` semantics change (upstream, effective 2026-07-09)** — for `doubao-seedance-2.0`, `doubao-seedance-2.0-fast` and `doubao-seedance-2.0-mini`:
+**`image_urls` semantics change (upstream, effective 2026-07-09)** — for `seedance-2.0`, `seedance-2.0-fast` and `seedance-2.0-mini`:
 
 - **Before** — the 1st image in `image_urls` acted as the first frame, the 2nd as the last frame, the rest as references.
 - **After** — **all** images in `image_urls` are treated as reference images only; they no longer carry first/last-frame meaning.
 
-To constrain first / last frames, use **`image_with_roles`** (unaffected by this change), or `first_frame_image` / `last_frame_image`. `doubao-seedance-1.5-pro` and the `face` variants are unaffected.
+To constrain first / last frames, use **`image_with_roles`** (unaffected by this change), or `first_frame_image` / `last_frame_image`. `seedance-1.5-pro` and the `face` variants are unaffected.
 </Warning>
 
 <Warning>
@@ -59,7 +59,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedance-2.0-fast",
+    "model": "seedance-2.0-fast",
     "prompt": "A Shiba Inu in a spacesuit walking on the moon, cinematic lighting",
     "duration": 5,
     "resolution": "720p",
@@ -72,7 +72,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedance-2.0",
+    "model": "seedance-2.0",
     "prompt": "The person slowly walks toward the camera, the camera gently pushes in",
     "first_frame_image": "https://cdn.example.com/portrait.jpg",
     "duration": 8,
@@ -85,7 +85,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedance-1.5-pro",
+    "model": "seedance-1.5-pro",
     "prompt": "She turns around and smiles, saying: You are here.",
     "first_frame_image": "https://cdn.example.com/start.jpg",
     "last_frame_image": "https://cdn.example.com/end.jpg",
@@ -100,7 +100,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedance-2.0",
+    "model": "seedance-2.0",
     "prompt": "Keep the character look from @image1, follow the camera rhythm of @video1, with @audio1 as background score",
     "image_urls": ["https://cdn.example.com/char.jpg"],
     "video_urls": ["https://cdn.example.com/ref-cam.mp4"],
@@ -118,7 +118,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 ```json Submit success
 {
   "task_id": "task-wave1775285160b950328499",
-  "model": "doubao-seedance-2.0",
+  "model": "seedance-2.0",
   "status": "queued",
   "created_at": 1775285160040,
   "progress": 0
@@ -132,12 +132,12 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 | Model ID | Series | Supported actions | Resolution | Duration (sec) |
 |---|---|---|---|---|
-| `doubao-seedance-2.0-fast-face` | 2.0 | Same as 2.0 | 480p / 720p | 4-15 |
-| `doubao-seedance-2.0-fast` | 2.0 | Same as 2.0 | 480p / 720p | 4-15 |
-| `doubao-seedance-2.0-mini` | 2.0 | Same as 2.0 | 480p / 720p | 4-15 |
-| `doubao-seedance-2.0-face` | 2.0 | Same as 2.0 | 480p / 720p / 1080p | 4-15 |
-| `doubao-seedance-2.0` | 2.0 | generate / image2video / first_last_frame / reference / reference_video / reference_audio | 480p / 720p / 1080p / 4K | 4-15 |
-| `doubao-seedance-1.5-pro` | 1.5 | generate / image2video / first_last_frame | 480p / 720p / 1080p | 4-12 |
+| `seedance-2.0-fast-face` | 2.0 | Same as 2.0 | 480p / 720p | 4-15 |
+| `seedance-2.0-fast` | 2.0 | Same as 2.0 | 480p / 720p | 4-15 |
+| `seedance-2.0-mini` | 2.0 | Same as 2.0 | 480p / 720p | 4-15 |
+| `seedance-2.0-face` | 2.0 | Same as 2.0 | 480p / 720p / 1080p | 4-15 |
+| `seedance-2.0` | 2.0 | generate / image2video / first_last_frame / reference / reference_video / reference_audio | 480p / 720p / 1080p / 4K | 4-15 |
+| `seedance-1.5-pro` | 1.5 | generate / image2video / first_last_frame | 480p / 720p / 1080p | 4-12 |
 
 ## Common Parameters
 

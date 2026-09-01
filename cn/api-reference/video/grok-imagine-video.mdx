@@ -6,7 +6,7 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 
 xAI Grok Imagine 视频生成模型,Grok 多模态家族中的视频档。
 
-**两档可选** — `grok-imagine-1.0-video`(1.0 基础档)、`grok-imagine-1.5-video`(1.5 升级档)。两档能力一致:文生视频(T2V)/ 图生视频(I2V),480p / 720p,6-30 秒任意整数。
+**两档可选** — `grok-imagine-1.0-video-rev`(1.0 基础档)、`grok-imagine-1.5-video-rev`(1.5 升级档)。两档能力一致:文生视频(T2V)/ 图生视频(I2V),480p / 720p,6-30 秒任意整数。
 
 字段简洁、参数门槛低,适合社交媒体短视频、快速概念演示、低成本内容生产线。
 
@@ -32,7 +32,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.0-video",
+    "model": "grok-imagine-1.0-video-rev",
     "prompt": "霓虹灯下的雨夜街道,赛博朋克氛围,镜头缓慢推进",
     "duration": 6,
     "aspect_ratio": "16:9",
@@ -45,7 +45,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.0-video",
+    "model": "grok-imagine-1.0-video-rev",
     "prompt": "人物缓缓转头看向镜头",
     "image_urls": ["https://cdn.example.com/portrait.jpg"],
     "duration": 10,
@@ -58,7 +58,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.0-video",
+    "model": "grok-imagine-1.0-video-rev",
     "prompt": "保持角色一致,在森林中奔跑",
     "image_urls": [
       "https://cdn.example.com/ref-1.jpg",
@@ -79,7 +79,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.5-video",
+    "model": "grok-imagine-1.5-video-rev",
     "prompt": "极光下的雪原,镜头缓慢横移",
     "duration": 10,
     "aspect_ratio": "16:9",
@@ -93,7 +93,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 ```json 提交成功
 {
   "task_id": "task-wave1775285160b950328499",
-  "model": "grok-imagine-1.0-video",
+  "model": "grok-imagine-1.0-video-rev",
   "action": "generate",
   "status": "queued",
   "created_at": 1775285160040,
@@ -108,15 +108,15 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 | 模型 ID | 分辨率 | 时长(秒) | Actions | 说明 |
 |---|---|---|---|---|
-| `grok-imagine-1.0-video` | 480p / 720p | 6-30 | generate | 基础档,T2V / I2V |
-| `grok-imagine-1.5-video` | 480p / 720p | 6-30 | generate | 升级档,T2V / I2V,与 1.0 同价 |
+| `grok-imagine-1.0-video-rev` | 480p / 720p | 6-30 | generate | 基础档,T2V / I2V |
+| `grok-imagine-1.5-video-rev` | 480p / 720p | 6-30 | generate | 升级档,T2V / I2V,与 1.0 同价 |
 
 ## 通用参数
 
 <ParamField body="model" type="string" required>
   模型 ID,可选值:
-  - `grok-imagine-1.0-video`
-  - `grok-imagine-1.5-video`
+  - `grok-imagine-1.0-video-rev`
+  - `grok-imagine-1.5-video-rev`
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">

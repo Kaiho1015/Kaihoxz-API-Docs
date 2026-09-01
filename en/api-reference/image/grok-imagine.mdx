@@ -6,8 +6,8 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 
 The xAI Grok Imagine image generation and editing series. Two generations, each split into a **text-to-image** model and an **image editing** model:
 
-- **grok-imagine-1.0** / **grok-imagine-1.5** — Text-to-image (`generate`), from a text prompt alone
-- **grok-imagine-1.0-edit** / **grok-imagine-1.5-edit** — Image editing (requires reference images in `image_urls`)
+- **grok-imagine-1.0-rev** / **grok-imagine-1.5-rev** — Text-to-image (`generate`), from a text prompt alone
+- **grok-imagine-1.0-edit-rev** / **grok-imagine-1.5-edit-rev** — Image editing (requires reference images in `image_urls`)
 
 All four models are billed per image, at the same rate.
 
@@ -24,47 +24,47 @@ Prices are not listed here — they follow upstream changes, and anything writte
 
 <CodeGroup>
 
-```bash Text-to-image (grok-imagine-1.5)
+```bash Text-to-image (grok-imagine-1.5-rev)
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.5",
+    "model": "grok-imagine-1.5-rev",
     "prompt": "Cyberpunk city at night, neon reflecting off rain-soaked streets, cinematic look",
     "aspect_ratio": "16:9",
     "n": 1
   }'
 ```
 
-```bash Text-to-image (grok-imagine-1.0)
+```bash Text-to-image (grok-imagine-1.0-rev)
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.0",
+    "model": "grok-imagine-1.0-rev",
     "prompt": "A Shiba Inu wearing an astronaut helmet floating in space, cartoon style",
     "aspect_ratio": "1:1"
   }'
 ```
 
-```bash Image editing (grok-imagine-1.5-edit)
+```bash Image editing (grok-imagine-1.5-edit-rev)
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.5-edit",
+    "model": "grok-imagine-1.5-edit-rev",
     "prompt": "Replace the background with a snowy mountain at sunset, keep the subject unchanged",
     "image_urls": ["https://cdn.example.com/portrait.jpg"],
     "n": 1
   }'
 ```
 
-```bash Image editing (grok-imagine-1.0-edit)
+```bash Image editing (grok-imagine-1.0-edit-rev)
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.0-edit",
+    "model": "grok-imagine-1.0-edit-rev",
     "prompt": "Add a warm color filter to the image, strengthen the dusk atmosphere",
     "image_urls": ["https://cdn.example.com/street.jpg"]
   }'
@@ -76,7 +76,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 ```json Submission successful
 {
   "task_id": "task-wave1775290140a830128812",
-  "model": "grok-imagine-1.5",
+  "model": "grok-imagine-1.5-rev",
   "action": "generate",
   "status": "queued",
   "created_at": 1775290140120,
@@ -91,15 +91,15 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 | Model ID | Type | Description |
 |---|---|---|
-| `grok-imagine-1.0` | Text-to-image | Grok Imagine 1.0. Generates from a text prompt alone, 5 aspect ratios |
-| `grok-imagine-1.5` | Text-to-image | Grok Imagine 1.5. Next-generation text-to-image, 5 aspect ratios |
-| `grok-imagine-1.0-edit` | Image editing | Grok Imagine 1.0 image editing. Requires reference images in `image_urls` |
-| `grok-imagine-1.5-edit` | Image editing | Grok Imagine 1.5 image editing. Requires reference images in `image_urls` |
+| `grok-imagine-1.0-rev` | Text-to-image | Grok Imagine 1.0. Generates from a text prompt alone, 5 aspect ratios |
+| `grok-imagine-1.5-rev` | Text-to-image | Grok Imagine 1.5. Next-generation text-to-image, 5 aspect ratios |
+| `grok-imagine-1.0-edit-rev` | Image editing | Grok Imagine 1.0 image editing. Requires reference images in `image_urls` |
+| `grok-imagine-1.5-edit-rev` | Image editing | Grok Imagine 1.5 image editing. Requires reference images in `image_urls` |
 
 ## Common Parameters
 
 <ParamField body="model" type="string" required>
-  Choose one from the [Available Models](#available-models) list. Use `grok-imagine-1.0` / `grok-imagine-1.5` for text-to-image, `grok-imagine-1.0-edit` / `grok-imagine-1.5-edit` for image editing
+  Choose one from the [Available Models](#available-models) list. Use `grok-imagine-1.0-rev` / `grok-imagine-1.5-rev` for text-to-image, `grok-imagine-1.0-edit-rev` / `grok-imagine-1.5-edit-rev` for image editing
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
@@ -120,7 +120,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 ## Model-Specific Parameters
 
-### Text-to-image (grok-imagine-1.0 / grok-imagine-1.5)
+### Text-to-image (grok-imagine-1.0-rev / grok-imagine-1.5-rev)
 
 <ParamField body="aspect_ratio" type="string" default="1:1">
   Aspect ratio. 5 options:
@@ -129,7 +129,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
   - `3:2` / `2:3` — Camera ratio landscape / portrait
 </ParamField>
 
-### Image editing (grok-imagine-1.0-edit / grok-imagine-1.5-edit)
+### Image editing (grok-imagine-1.0-edit-rev / grok-imagine-1.5-edit-rev)
 
 <ParamField body="image_urls" type="string[]" required>
   URLs of the reference images to edit. The image editing models require this field
