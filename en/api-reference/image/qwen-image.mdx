@@ -4,10 +4,12 @@ description: "Alibaba Tongyi Qianwen image — generation / editing / multi-imag
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-Alibaba Tongyi Qianwen image series, with **two tiers**:
+Alibaba Tongyi Qianwen image series — **two generations, four tiers**:
 
-- **2.0 Pro** — Flagship highest-fidelity tier. Native 2K, strong detail, accurate composition, professional-grade text rendering. Suited for infographics, posters, and marketing assets
-- **2.0** — Standard version. Combined generation and editing, supports very long prompts, 2K high-quality output. Suited for use cases needing clear text and professional design aesthetics
+- **3.0 Pro** — Gen-3 flagship, built for dense information layouts: restaurant menus, product tables, multi-column pages, storyboards. 1K and 2K are priced separately
+- **3.0** — Gen-3 standard. Markedly more reliable text rendering — headlines and body copy stay legible in both Chinese and English on posters and dense layouts. Same price at 1K and 2K
+- **2.0 Pro** — Gen-2 flagship highest-fidelity tier. Native 2K, strong detail, accurate composition, professional-grade text rendering
+- **2.0** — Gen-2 standard. Combined generation and editing, supports very long prompts, 2K high-quality output
 
 Per-image pricing, unified interface supporting text-to-image / image-to-image / multi-image reference.
 
@@ -95,6 +97,8 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 | Model ID | Description |
 |---|---|
+| `qwen-image-3.0-pro` | Gen-3 flagship for dense layouts (menus / product tables / multi-column). 1K and 2K priced separately |
+| `qwen-image-3.0` | Gen-3 standard, more reliable text rendering, same price at 1K and 2K |
 | `qwen-image-2.0-pro` | Flagship, native 2K, strong detail, accurate composition, professional-grade text rendering |
 | `qwen-image-2.0` | Standard, combined generation + editing, very long prompts, 2K high-quality output |
 

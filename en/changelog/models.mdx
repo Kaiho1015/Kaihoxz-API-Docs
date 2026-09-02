@@ -2,6 +2,25 @@
 title: "Model Updates"
 ---
 
+<Update label="2026-09-01" description="Model launch">
+**Qwen Image 3.0 · Image**
+
+- **Model IDs**: `qwen-image-3.0` (standard) · `qwen-image-3.0-pro` (dense layouts)
+- Markedly more reliable text rendering than gen-2. 1K / 2K, seven aspect ratios, up to 3 reference images, up to 6 images per request.
+- The Pro tier prices 1K and 2K separately; the standard tier charges the same for both.
+
+**GPT Image 1.5 · Image**
+
+- **Model ID**: `gpt-image-1.5`
+- Faster than GPT Image 1, with markedly better instruction following and editing precision. 1:1 / 2:3 / 3:2, four quality tiers.
+- **Omitting `quality` bills at the `high` rate** — see [GPT-Image series](/en/api-reference/image/gpt-image).
+
+**Speech · three models**
+
+- **Model IDs**: `tts-1` · `tts-1-hd` · `whisper-1`
+- TTS is billed per character of input text; Whisper is billed per minute of audio.
+</Update>
+
 <Update label="2026-09-01" description="Breaking change">
 **Seedance / Seedream · `doubao-` prefix dropped from model IDs**
 

@@ -7,8 +7,8 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 OpenAI's GPT-Image generation models, **across three generations**:
 
 - **GPT-Image-2** — flagship new release, expanded to 13 ratios × 1K/2K/4K resolution tiers with independent billing, up to 16 reference images, with transparent background and mask inpainting support
-- **GPT-Image-1.5 Official** — upgraded GPT-Image-1 with significantly improved visual quality and instruction following
-- **GPT-Image-1 Official** — multimodal generation model integrating text and image understanding, suited for high-quality generation and editing
+- **GPT-Image-1.5** — upgraded GPT-Image-1: faster, with markedly better instruction following and editing precision; 1:1 / 2:3 / 3:2 across four quality tiers
+- **GPT-Image-1** — multimodal generation model integrating text and image understanding, suited for high-quality generation and editing
 
 Per-image billing. Supports text-to-image / image-to-image / editing / mask inpainting / multi-image reference.
 
@@ -108,10 +108,18 @@ After submitting, poll task status with [`GET /v1/tasks/{task_id}`](/en/api-refe
 
 ## Available Models
 
-| Model ID | Description |
-|---|---|
-| `gpt-image-2-rev` | Flagship new release, 13 ratios × 1K/2K/4K, up to 16 reference images |
-| `gpt-image-1` | Multimodal text + image understanding, suited for high-quality generation and editing |
+| Model ID | Channel | action | Notes |
+|---|---|---|---|
+| `gpt-image-2-rev` | Accelerated | `generate` | 15 ratios × 1K/2K/4K, billed by resolution tier, best value; can `official_fallback` to the official channel |
+| `gpt-image-2` | Official | `generate` / `edit` | 15 ratios × 1K/2K/4K, billed by ratio + resolution, supports mask inpainting |
+| `gpt-image-1.5` | Official | `generate` / `edit` | 1:1 / 2:3 / 3:2 across four quality tiers; faster and more precise at editing than v1 |
+| `gpt-image-1` | Official | `generate` / `edit` | Multimodal text + image understanding, suited for high-quality generation and editing |
+
+<Note>
+**Omitting `quality` bills at the `high` rate.** The default for `quality` is `auto`, which
+lets the model pick — and the upstream charges `auto` at its top tier, so we price it the
+same way. To pay less, pass `quality: "low"` or `"medium"` **explicitly**.
+</Note>
 
 ## Common Parameters
 
@@ -218,7 +226,7 @@ After submitting, poll task status with [`GET /v1/tasks/{task_id}`](/en/api-refe
     </ParamField>
   </Tab>
 
-  <Tab title="GPT-Image-1.5 Official">
+  <Tab title="GPT-Image-1.5">
     **Supported actions**: `generate` / `image2image` / `edit` / `reference` / `inpaint`
 
     **aspect_ratio** (3): `1:1` / `3:2` / `2:3`
@@ -255,7 +263,7 @@ After submitting, poll task status with [`GET /v1/tasks/{task_id}`](/en/api-refe
 
       </Tab>
 
-  <Tab title="GPT-Image-1 Official">
+  <Tab title="GPT-Image-1">
     **Supported actions**: `generate` / `image2image` / `edit` / `reference` / `inpaint`
 
     **aspect_ratio** (3): `1:1` / `3:2` / `2:3`
