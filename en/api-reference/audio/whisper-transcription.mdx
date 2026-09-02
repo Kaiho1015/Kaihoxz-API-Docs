@@ -132,7 +132,9 @@ public class Main {
 
 | Model ID | Description |
 |---------|------|
-| `whisper-1` | OpenAI Whisper, supports multilingual recognition |
+| `gpt-4o-transcribe` | OpenAI's current-generation transcription — markedly lower word-error rate than Whisper, more robust to accents and noisy audio |
+| `gpt-4o-mini-transcribe` | Budget tier at half the price of gpt-4o-transcribe, still ahead of Whisper on accuracy |
+| `whisper-1` | OpenAI Whisper, multilingual recognition; all three are billed per minute of audio |
 
 ## Two Endpoints
 
@@ -161,7 +163,7 @@ Use the `multipart/form-data` format:
 </ParamField>
 
 <ParamField body="model" type="string" required>
-  Model ID: `whisper-1`
+  Model ID: `gpt-4o-transcribe` / `gpt-4o-mini-transcribe` / `whisper-1`. The translation endpoint (`/v1/audio/translations`) currently supports `whisper-1` only
 </ParamField>
 
 ## Response
