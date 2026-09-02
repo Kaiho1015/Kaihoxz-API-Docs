@@ -28,8 +28,10 @@ Prices are not listed here — they follow upstream changes, and anything writte
 | Model ID | Resolution | Duration (sec) | Audio | Notes |
 |---|---|---|---|---|
 | `minimax-h3` | `768p` / `2k` | any integer 4–15 | ✅ native | Omni-modal input, finished clip with sound in one pass |
+| `minimax-h3-max` | `480p` / `768p` | any integer 4–15 | ✅ native | Faster, cheaper low-resolution tier with the same capabilities as H3 |
+| `minimax-h3-regeneration` | `2k` | any integer 4–15 | ✅ native | Re-renders an existing 768p H3 clip at native 2K; `video_urls` required |
 
-Billed by **resolution × duration**; `2k` costs more.
+Billed by **resolution × duration**; `2k` costs more. **A reference video (`video_urls`) is billed at 2× the unit price** — the upstream charges input-video seconds plus output seconds, and this is an interim approximation; `minimax-h3-regeneration`'s unit price already includes the input, so it is not doubled. The first 5 reference images are free; beyond that the upstream charges per image, which we currently **do not** pass on.
 
 ## Examples
 
