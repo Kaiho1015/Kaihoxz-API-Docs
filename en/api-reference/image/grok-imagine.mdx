@@ -1,15 +1,22 @@
 ---
 title: "Grok Imagine Series"
-description: "xAI Grok Imagine image generation — text-to-image (1.0 / 1.5) and image editing (1.0-edit / 1.5-edit)"
+description: "xAI Grok Imagine image generation — three official tiers (standard / quality / 2.0) and economy lines (1.0 / 1.5 / 2.0)"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-The xAI Grok Imagine image generation and editing series. Two generations, each split into a **text-to-image** model and an **image editing** model:
+The xAI Grok Imagine image generation and editing series, in an **official** line and an **economy** line:
 
-- **grok-imagine-1.0-rev** / **grok-imagine-1.5-rev** — Text-to-image (`generate`), from a text prompt alone
-- **grok-imagine-1.0-edit-rev** / **grok-imagine-1.5-edit-rev** — Image editing (requires reference images in `image_urls`)
+**Official** (xAI's official API, billed per image):
 
-All four models are billed per image, at the same rate.
+- **grok-imagine-image** — standard tier, same price at 1K and 2K, the most affordable official Grok image model; text-to-image + reference-image editing
+- **grok-imagine-image-quality** — quality tier, 1K and 2K priced separately; text-to-image + reference-image editing
+- **grok-imagine-image-2.0** — generation 2.0, 1K / 2K × low / medium tiers; text-to-image + reference-image editing
+
+**Economy** (alternate channel, cheaper, slightly fewer capabilities):
+
+- **grok-imagine-image-2.0-rev** — generation 2.0 at fixed quality, 7 aspect ratios, text-to-image only
+- **grok-imagine-1.0-rev** / **grok-imagine-1.5-rev** — text-to-image (`generate`)
+- **grok-imagine-1.0-edit-rev** / **grok-imagine-1.5-edit-rev** — image editing (requires `image_urls`)
 
 ## Pricing
 
@@ -89,17 +96,19 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 ## Available Models
 
-| Model ID | Type | Description |
-|---|---|---|
-| `grok-imagine-1.0-rev` | Text-to-image | Grok Imagine 1.0. Generates from a text prompt alone, 5 aspect ratios |
-| `grok-imagine-1.5-rev` | Text-to-image | Grok Imagine 1.5. Next-generation text-to-image, 5 aspect ratios |
-| `grok-imagine-1.0-edit-rev` | Image editing | Grok Imagine 1.0 image editing. Requires reference images in `image_urls` |
-| `grok-imagine-1.5-edit-rev` | Image editing | Grok Imagine 1.5 image editing. Requires reference images in `image_urls` |
+| Model ID | Line | action | Notes |
+|---|---|---|---|
+| `grok-imagine-image` | Official · standard | `generate` / `edit` | Same price at 1K / 2K, cheapest official tier, 5 aspect ratios |
+| `grok-imagine-image-quality` | Official · quality | `generate` / `edit` | Higher fidelity, 1K and 2K priced separately |
+| `grok-imagine-image-2.0` | Official · 2.0 | `generate` / `edit` | 1K / 2K × `quality` low / medium, 7 aspect ratios |
+| `grok-imagine-image-2.0-rev` | Economy · 2.0 | `generate` | Fixed quality, 7 aspect ratios, text-to-image only |
+| `grok-imagine-1.0-rev` / `grok-imagine-1.5-rev` | Economy | `generate` | Text-to-image from a prompt alone, 5 aspect ratios |
+| `grok-imagine-1.0-edit-rev` / `grok-imagine-1.5-edit-rev` | Economy | `edit` | Image editing, requires reference images in `image_urls` |
 
 ## Common Parameters
 
 <ParamField body="model" type="string" required>
-  Choose one from the [Available Models](#available-models) list. Use `grok-imagine-1.0-rev` / `grok-imagine-1.5-rev` for text-to-image, `grok-imagine-1.0-edit-rev` / `grok-imagine-1.5-edit-rev` for image editing
+  Pick one from the [Available Models](#available-models) list. The official line (`grok-imagine-image` / `-quality` / `grok-imagine-image-2.0`) supports both `generate` and `edit`; on the economy line use `grok-imagine-1.0-rev` / `1.5-rev` / `grok-imagine-image-2.0-rev` for text-to-image and `grok-imagine-1.0-edit-rev` / `1.5-edit-rev` for editing
 </ParamField>
 
 <ParamField body="prompt" type="string" required>

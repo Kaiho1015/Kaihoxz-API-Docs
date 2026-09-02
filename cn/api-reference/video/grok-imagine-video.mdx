@@ -1,12 +1,17 @@
 ---
 title: "Grok Imagine Video 系列"
-description: "xAI Grok Imagine 视频档 — 1.0 / 1.5,文生 / 图生,480p / 720p,6-30 秒"
+description: "xAI Grok Imagine 视频档 — 官方 1.0 / 1.5 与经济线,480p / 720p / 1080p,6-15 秒"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
 xAI Grok Imagine 视频生成模型,Grok 多模态家族中的视频档。
 
-**两档可选** — `grok-imagine-1.0-video-rev`(1.0 基础档)、`grok-imagine-1.5-video-rev`(1.5 升级档)。两档能力一致:文生视频(T2V)/ 图生视频(I2V),480p / 720p,6-30 秒任意整数。
+**四档可选**,分官方线与经济线:
+
+- **官方线** — `grok-imagine-video`(1.0:文生 / 图生 / 视频驱动,480p / 720p)、`grok-imagine-video-1.5`(1.5:新增 1080p 与音频驱动)
+- **经济线** — `grok-imagine-1.0-video-rev`、`grok-imagine-1.5-video-rev`(文生 / 图生,480p / 720p,更便宜)
+
+全部 6-15 秒任意整数,按输出秒数计费。
 
 字段简洁、参数门槛低,适合社交媒体短视频、快速概念演示、低成本内容生产线。
 
@@ -106,17 +111,21 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 ## 可用模型
 
-| 模型 ID | 分辨率 | 时长(秒) | Actions | 说明 |
-|---|---|---|---|---|
-| `grok-imagine-1.0-video-rev` | 480p / 720p | 6-30 | generate | 基础档,T2V / I2V |
-| `grok-imagine-1.5-video-rev` | 480p / 720p | 6-30 | generate | 升级档,T2V / I2V,与 1.0 同价 |
+| 模型 ID | 线路 | 分辨率 | 时长(秒) | Actions | 说明 |
+|---|---|---|---|---|---|
+| `grok-imagine-video` | 官方 · 1.0 | 480p / 720p | 6-15 | generate | T2V / I2V / 视频驱动(`video_urls`) |
+| `grok-imagine-video-1.5` | 官方 · 1.5 | 480p / 720p / 1080p | 6-15 | generate | T2V / I2V / 音频驱动(`audio_urls`),按分辨率分档 |
+| `grok-imagine-1.0-video-rev` | 经济 | 480p / 720p | 6-15 | generate | 基础档,T2V / I2V |
+| `grok-imagine-1.5-video-rev` | 经济 | 480p / 720p | 6-15 | generate | 升级档,T2V / I2V,与 1.0 同价 |
 
 ## 通用参数
 
 <ParamField body="model" type="string" required>
   模型 ID,可选值:
-  - `grok-imagine-1.0-video-rev`
-  - `grok-imagine-1.5-video-rev`
+  - `grok-imagine-video`(官方 1.0)
+  - `grok-imagine-video-1.5`(官方 1.5)
+  - `grok-imagine-1.0-video-rev`(经济)
+  - `grok-imagine-1.5-video-rev`(经济)
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
@@ -143,7 +152,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="duration" type="integer" default="6">
-  视频时长(秒),**范围 6-30** 任意整数。注意:30 秒为上限,跟其他常见 video model(多为 5/10/15)不同
+  视频时长(秒),**范围 6-15** 任意整数。注意:30 秒为上限,跟其他常见 video model(多为 5/10/15)不同
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
@@ -161,7 +170,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 ## 注意事项
 
 - **图生模式比例自动匹配** — 传入 `image_urls` 后,`aspect_ratio` 字段会被忽略,输出比例跟随首张参考图。
-- **duration 范围特殊** — `6-30` 秒,跟仓内多数 video model(`5/10/15` 三档)不同,业务侧表单做枚举校验时记得放开整段区间。
+- **duration 范围特殊** — `6-15` 秒,跟仓内多数 video model(`5/10/15` 三档)不同,业务侧表单做枚举校验时记得放开整段区间。
 - **可用性受配额影响** — xAI / Grok 配额可能波动,建议生产环境配 `callback_url` 异步推送、不要纯轮询。
 
 ## 资源限制
@@ -169,7 +178,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 | 项目 | 限制 |
 |---|---|
 | 参考图片 | **最多 7 张**,JPG/PNG/WEBP |
-| 时长 | 6-30 秒 |
+| 时长 | 6-15 秒 |
 | 分辨率 | 480p / 720p |
 | 输出 | MP4,链接 24 小时有效 |
 

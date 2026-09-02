@@ -1,10 +1,15 @@
 ---
 title: "Grok Imagine Video Series"
-description: "xAI Grok Imagine 1.0 video tier — text/image-to-video, 5 aspect ratios, 480p / 720p, 6-30 seconds"
+description: "xAI Grok Imagine video tier — official 1.0 / 1.5 and economy lines, 480p / 720p / 1080p, 6-15 seconds"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-xAI Grok Imagine 1.0 video generation model — the video tier of the Grok multimodal family.
+xAI Grok Imagine video generation — the video tier of the Grok multimodal family. **Four options**, split into official and economy lines:
+
+- **Official** — `grok-imagine-video` (1.0: text / image / video-driven, 480p / 720p) and `grok-imagine-video-1.5` (1.5: adds 1080p and audio-driven generation)
+- **Economy** — `grok-imagine-1.0-video-rev` and `grok-imagine-1.5-video-rev` (text / image-driven, 480p / 720p, cheaper)
+
+All four take any integer duration from 6 to 15 seconds and are billed per second of output.
 
 Concise fields, low parameter overhead. Suited for social-media short videos, quick concept demos, and low-cost content pipelines.
 
@@ -91,14 +96,21 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 ## Available Models
 
-| Model ID | Description |
-|---|---|
-| `grok-imagine-1.0-video-rev` | xAI Grok Imagine 1.0 video tier, T2V / I2V, 5 aspect ratios, 480p / 720p, 6-30 seconds |
+| Model ID | Line | Resolution | Duration (sec) | Actions | Notes |
+|---|---|---|---|---|---|
+| `grok-imagine-video` | Official · 1.0 | 480p / 720p | 6-15 | generate | T2V / I2V / video-driven (`video_urls`) |
+| `grok-imagine-video-1.5` | Official · 1.5 | 480p / 720p / 1080p | 6-15 | generate | T2V / I2V / audio-driven (`audio_urls`), priced by resolution |
+| `grok-imagine-1.0-video-rev` | Economy | 480p / 720p | 6-15 | generate | Base tier, T2V / I2V |
+| `grok-imagine-1.5-video-rev` | Economy | 480p / 720p | 6-15 | generate | Upgraded tier, T2V / I2V, same price as 1.0 |
 
 ## Common Parameters
 
 <ParamField body="model" type="string" required>
-  Fixed value `grok-imagine-1.0-video-rev`
+  Model ID. Accepted values:
+  - `grok-imagine-video` (official 1.0)
+  - `grok-imagine-video-1.5` (official 1.5)
+  - `grok-imagine-1.0-video-rev` (economy)
+  - `grok-imagine-1.5-video-rev` (economy)
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
@@ -127,7 +139,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="duration" type="integer" default="6">
-  Video duration in seconds, **any integer in 6-30**. Note: 30 seconds is the upper bound, which differs from most other video models (typically 5/10/15)
+  Video duration in seconds, **any integer from 6 to 15**
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
@@ -145,7 +157,6 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 ## Notes
 
 - **Aspect ratio auto-matched in I2V mode** — once `image_urls` is passed, the `aspect_ratio` field is ignored and the output ratio follows the first reference image.
-- **Unusual duration range** — `6-30` seconds, different from most video models in the catalog (which use the `5/10/15` tiers). When validating form input on the business side, remember to allow the full range.
 - **Availability subject to upstream** — upstream xAI / Grok quotas may fluctuate. For production, configure `callback_url` for async push instead of pure polling.
 
 ## Resource Limits
@@ -153,8 +164,8 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 | Item | Limit |
 |---|---|
 | Reference images | **Up to 7**, JPG/PNG/WEBP |
-| Duration | 6-30 seconds |
-| Resolution | 480p / 720p |
+| Duration | 6-15 seconds |
+| Resolution | 480p / 720p (1080p on `grok-imagine-video-1.5`) |
 | Output | MP4, link valid for 24 hours |
 
 ## Related Docs
