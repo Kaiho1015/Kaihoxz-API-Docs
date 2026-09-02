@@ -24,6 +24,10 @@ Prices are not listed here — they follow upstream changes, and anything writte
 **What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
 </Note>
 
+**Billing tiers: by output resolution; reference video is extra.** The whole family is billed by **output resolution × output seconds**. **Text-to-video and image-to-video cost the same** — passing `image_urls` does not change the unit price (the upstream does not charge for input images).
+
+The one exception is a **reference video** (`video_urls`): the upstream charges for input-video seconds plus output seconds, which we currently approximate as **2× the unit price** per output second. When the reference video is much longer than the output, actual cost can exceed this — it is an interim rule and will move to exact input-duration billing.
+
 ## Mode Routing
 
 The whole series shares a field-routing convention — the backend automatically determines the action from the media fields you pass in, so you usually don't need to set `action` explicitly.
