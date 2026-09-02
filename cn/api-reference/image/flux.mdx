@@ -7,7 +7,7 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 Black Forest Labs 出品的 FLUX 图像模型系列,共 **5 个模型**,分为两类:
 
 - **FLUX.1 Kontext(图像编辑)** — `flux-kontext-pro` / `flux-kontext-max`,**以图编图**,擅长局部编辑、风格迁移、元素替换与角色一致性。**必须传入参考图 `image_urls`**,纯文本提示无法出图。
-- **FLUX.2(文生图)** — `flux-2-pro` / `flux-2-max` / `flux-2-flex`,纯文本生成图像,支持 `1K` / `2K` 两档分辨率,`2K` 单独计费。`max` 是最高画质档。
+- **FLUX.2(文生图 / 参考图生成)** — `flux-2-pro` / `flux-2-max` / `flux-2-flex`,文本生成图像,可选传最多 **8 张参考图**(`image_urls`)做图生图与多图融合,支持 `1K` / `2K` 两档分辨率,`2K` 单独计费。`max` 是最高画质档。参考图按张加价。
 
 按张计费,异步任务,提交后轮询任务状态获取结果。
 
@@ -30,8 +30,9 @@ Black Forest Labs 出品的 FLUX 图像模型系列,共 **5 个模型**,分为�
 |---|---|---|---|---|
 | `flux-kontext-pro` | 图像编辑 | `prompt` + `image_urls` | `generate` / `edit` | — |
 | `flux-kontext-max` | 图像编辑(增强) | `prompt` + `image_urls` | `generate` / `edit` | — |
-| `flux-2-pro` | 文生图 | `prompt` | `generate` | `1K` / `2K` |
-| `flux-2-flex` | 文生图(灵活档) | `prompt` | `generate` | `1K` / `2K` |
+| `flux-2-pro` | 文生图 / 参考图 | `prompt`(可选 `image_urls` ≤ 8) | `generate` | `1K` / `2K` |
+| `flux-2-max` | 文生图 / 参考图(最高画质) | `prompt`(可选 `image_urls` ≤ 8) | `generate` | `1K` / `2K` |
+| `flux-2-flex` | 文生图 / 参考图(灵活档) | `prompt`(可选 `image_urls` ≤ 8) | `generate` | `1K` / `2K` |
 
 ## 调用示例
 
@@ -152,7 +153,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  参考图片 URL 数组。**Kontext 模型(`flux-kontext-pro` / `flux-kontext-max`)必填**;FLUX.2 不接收该字段
+  参考图片 URL 数组。**Kontext 模型(`flux-kontext-pro` / `flux-kontext-max`)必填**;FLUX.2 三个模型可选传,最多 8 张(输出图与全部参考图总像素不超过 9MP),用于图生图与多图参考融合。FLUX.2 的参考图**按张加价**,单价见 [Explore](https://qingbo.dev/explore) 模型详情页
 </ParamField>
 
 <ParamField body="callback_url" type="string">

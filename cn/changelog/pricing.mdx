@@ -6,6 +6,24 @@ title: "价格调整"
 价格调整仅对**调整生效后**的调用计费，历史调用不受影响。各模型实时单价以 [模型总览](/cn/docs/models) 与控制台「模型市场」为准；每次费用以接口返回的 `cost` / `usage.cost` 为准。
 </Note>
 
+<Update label="2026-09-02" description="计费口径">
+**图像模型参考图改为「按张」计费**
+
+以下模型的参考图（`image_urls`）从今天起**每张单独加价**，与厂商官方口径一致（此前部分模型不收、部分按档位上界收）：
+
+| 模型 | 参考图单价 / 张 |
+|---|---|
+| `seedream-5.0-pro` | $0.002571 |
+| `qwen-image-3.0` / `qwen-image-3.0-pro` | $0.002571 |
+| `grok-imagine-image` | $0.0018 |
+| `grok-imagine-image-quality` / `grok-imagine-image-2.0` | $0.009 |
+| `flux-2-pro` / `flux-2-max` / `flux-2-flex` | $0.0135 / $0.027 / $0.045（同时开放最多 8 张参考图） |
+| `gpt-image-2` / `gpt-image-1.5` | $0.0025（此前 gpt-image-2 按 1-3 张 / 4 张以上两档收，改为逐张） |
+| `gpt-image-1` | $0.0031 |
+
+单次费用 = 输出档位价 + 参考图张数 × 单价；不传参考图不受影响。Seedream 4.x / 5.0-lite、Qwen Image 2.0、Wan 2.7 Image、Nano Banana 系列参考图不加价。实时单价以 [Explore](https://qingbo.dev/explore) 与控制台「模型市场」为准，`POST /waveapi/public/quote` 传 `image_urls` 可预估。
+</Update>
+
 <Update label="2026-09-02" description="价格调整">
 **Nano Banana Pro / Nano Banana 2 标准档降价**
 

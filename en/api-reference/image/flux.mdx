@@ -7,7 +7,7 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 Black Forest Labs' FLUX image model series, **5 models** in two families:
 
 - **FLUX.1 Kontext (image editing)** — `flux-kontext-pro` / `flux-kontext-max`. Edits an existing image; good at local edits, style transfer, element replacement, and character consistency. **A reference image in `image_urls` is required** — a text-only prompt will not produce an image.
-- **FLUX.2 (text-to-image)** — `flux-2-pro` / `flux-2-max` / `flux-2-flex`. Generates images from text alone, at `1K` or `2K` resolution; `2K` is billed separately. `max` is the top quality tier.
+- **FLUX.2 (text-to-image / reference-guided)** — `flux-2-pro` / `flux-2-max` / `flux-2-flex`. Generates images from text, optionally guided by up to **8 reference images** (`image_urls`) for image-to-image and multi-image fusion, at `1K` or `2K` resolution; `2K` is billed separately. `max` is the top quality tier. Reference images carry a per-image surcharge.
 
 Per-image pricing, async tasks — submit, then poll task status for the result.
 
@@ -30,8 +30,9 @@ Prices are not listed here — they follow upstream changes, and anything writte
 |---|---|---|---|---|
 | `flux-kontext-pro` | Image editing | `prompt` + `image_urls` | `generate` / `edit` | — |
 | `flux-kontext-max` | Image editing (enhanced) | `prompt` + `image_urls` | `generate` / `edit` | — |
-| `flux-2-pro` | Text-to-image | `prompt` | `generate` | `1K` / `2K` |
-| `flux-2-flex` | Text-to-image (flex tier) | `prompt` | `generate` | `1K` / `2K` |
+| `flux-2-pro` | Text-to-image / reference | `prompt` (optional `image_urls` ≤ 8) | `generate` | `1K` / `2K` |
+| `flux-2-max` | Text-to-image / reference (top quality) | `prompt` (optional `image_urls` ≤ 8) | `generate` | `1K` / `2K` |
+| `flux-2-flex` | Text-to-image / reference (flex tier) | `prompt` (optional `image_urls` ≤ 8) | `generate` | `1K` / `2K` |
 
 ## Examples
 
@@ -152,7 +153,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  Array of reference image URLs. **Required for Kontext models (`flux-kontext-pro` / `flux-kontext-max`)**; FLUX.2 does not accept this field
+  Array of reference image URLs. **Required for Kontext models (`flux-kontext-pro` / `flux-kontext-max`)**; optional for the three FLUX.2 models, up to 8 images (output plus all reference images must not exceed 9MP in total), used for image-to-image and multi-image reference fusion. FLUX.2 reference images are **billed per image** — see the model page on [Explore](https://qingbo.dev/explore) for the unit price
 </ParamField>
 
 <ParamField body="callback_url" type="string">

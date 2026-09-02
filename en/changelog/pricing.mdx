@@ -6,6 +6,24 @@ title: "Pricing Updates"
 Pricing changes apply only to calls made **after** the change takes effect; historical calls are unaffected. Each model's live unit price is shown in the [Models overview](/en/docs/models) and the console "Model Market"; the cost of each call is authoritative as returned in `cost` / `usage.cost`.
 </Note>
 
+<Update label="2026-09-02" description="Billing change">
+**Image models: reference images now billed per image**
+
+For the models below, reference images (`image_urls`) are now **charged per image**, matching the vendors' official pricing (previously some models charged nothing and some charged an upper-bound tier):
+
+| Model | Per reference image |
+|---|---|
+| `seedream-5.0-pro` | $0.002571 |
+| `qwen-image-3.0` / `qwen-image-3.0-pro` | $0.002571 |
+| `grok-imagine-image` | $0.0018 |
+| `grok-imagine-image-quality` / `grok-imagine-image-2.0` | $0.009 |
+| `flux-2-pro` / `flux-2-max` / `flux-2-flex` | $0.0135 / $0.027 / $0.045 (up to 8 reference images now accepted) |
+| `gpt-image-2` / `gpt-image-1.5` | $0.0025 (gpt-image-2 previously used 1–3 / 4+ image tiers; now linear) |
+| `gpt-image-1` | $0.0031 |
+
+Cost per call = output tier price + number of reference images × unit price; calls without reference images are unaffected. Seedream 4.x / 5.0-lite, Qwen Image 2.0, Wan 2.7 Image and the Nano Banana family do not charge for reference images. Live prices are on [Explore](https://qingbo.dev/explore) and in the console "Model Market"; `POST /waveapi/public/quote` with `image_urls` returns an estimate.
+</Update>
+
 <Update label="2026-09-02" description="Pricing change">
 **Nano Banana Pro / Nano Banana 2 standard tiers — price cut**
 
