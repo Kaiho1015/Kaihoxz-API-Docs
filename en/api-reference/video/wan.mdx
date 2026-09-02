@@ -1,33 +1,108 @@
 ---
 title: "Wan Series"
-description: "Alibaba Tongyi Wanxiang 2.7 video-edit edition — style transfer / content replacement / video rewriting"
+description: "Alibaba Tongyi Wanxiang — text-to-video / image-to-video / reference-to-video / video editing, one task endpoint, billed per second"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-Alibaba Tongyi Wanxiang 2.7 video-edit edition.
+Alibaba Tongyi Wanxiang (Wan) video generation series, covering **text-to-video / image-to-video / reference-to-video / video editing** through a single async task endpoint.
 
-**Purpose-built for video-rewriting workflows** — feed in a source video plus a text instruction (and up to 4 optional style reference images), get back a new video with style transfer / content replacement / full rewrite. Unlike T2V/I2V, VideoEdit requires `video_urls` and operates on "reworking an existing video".
+Seven tiers:
 
-Billed by **resolution**, with linear scaling by source-video duration.
+- **`wan2.7`** — the current flagship; one entry point for text- and image-to-video (pass `image_urls` to switch to image mode: first frame, or first + last frame), 720P / 1080P, any integer 2-15 sec, negative prompt and smart prompt expansion
+- **`wan2.6`** — the stable classic tier, text- and image-to-video, 720p / 1080p, 5 / 10 / 15 sec
+- **`wan2.6-i2v`** — 2.6 image-to-video, standard tier; driven by a reference image with synchronized audio, 720p / 1080p, 5 / 10 / 15 sec, requires `image_urls`
+- **`wan2.6-i2v-flash`** — 2.6 image-to-video, fast tier at roughly half the price of the standard I2V tier, 720p / 1080p, 5 / 10 / 15 sec, requires `image_urls`
+- **`wan2.5-preview`** — the 2.5 preview tier, text- and image-to-video (pass `image_urls` for image mode), 480p / 720p / 1080p, 5 / 10 sec, the most affordable price point
+- **`wan2.7-r2v`** — reference-to-video (R2V): one or more reference images drive subject / style, for character consistency and style continuity; requires `image_urls`
+- **`wan2.7-videoedit`** — video editing: a source video plus a text instruction for style transfer / content replacement / full rewrite; requires `video_urls`
 
-<Note>
-Other tiers in the Wan 2.7 family (T2V / I2V / R2V) are not yet available; please contact sales if you need them.
-</Note>
+The whole series is **billed per second**: cost = the per-second price for the chosen resolution × duration in seconds.
 
 ## Pricing
 
 <Note>
-Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+No unit prices on this page — prices track upstream changes, and anything written here will drift out of date.
 
-**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
-**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+**Live prices:** the console's Model Market, or the `GET /v1/models` endpoint (see [Model list](/en/docs/models)).
+**Actual cost of one call:** every response carries `cost` / `usage.cost` — that is the number to trust.
 </Note>
+
+**Video editing and reference-to-video bill the input video too.** For `wan2.7-videoedit` and `wan2.7-r2v` the upstream charges for source-video seconds plus output seconds. We currently approximate this as **2× the unit price** per output second; when the source is much longer than the output, actual cost can exceed this. This is an interim rule and will move to exact input-duration billing.
 
 ## Examples
 
 <CodeGroup>
 
-```bash Basic video edit
+```bash Text-to-video (wan2.7)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "wan2.7",
+    "prompt": "A coastal road at sunset, slow push-in, cinematic look",
+    "duration": 8,
+    "resolution": "1080P",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```bash Image-to-video (wan2.7, first frame)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "wan2.7",
+    "prompt": "The person slowly stands up and walks toward the camera",
+    "image_urls": ["https://cdn.example.com/person.jpg"],
+    "duration": 8,
+    "resolution": "1080P"
+  }'
+```
+
+```bash Text-to-video (wan2.6)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "wan2.6",
+    "prompt": "A cute cat running across a meadow",
+    "duration": 5,
+    "resolution": "720p",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```bash Image-to-video (wan2.6-i2v-flash)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "wan2.6-i2v-flash",
+    "prompt": "The subject turns and smiles at the camera",
+    "image_urls": ["https://cdn.example.com/portrait.jpg"],
+    "duration": 5,
+    "resolution": "720p"
+  }'
+```
+
+```bash Reference-to-video (wan2.7-r2v)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "wan2.7-r2v",
+    "prompt": "Keep the character consistent, running through a forest, camera follows",
+    "image_urls": [
+      "https://cdn.example.com/char-1.jpg",
+      "https://cdn.example.com/char-2.jpg"
+    ],
+    "duration": 8,
+    "resolution": "1080P",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```bash Video editing (wan2.7-videoedit)
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
@@ -35,50 +110,19 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
     "model": "wan2.7-videoedit",
     "prompt": "Change the scene to a snowy day, keep the character motion",
     "video_urls": ["https://cdn.example.com/source.mp4"],
-    "duration": 0,
-    "resolution": "1080p"
-  }'
-```
-
-```bash With style reference images
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "wan2.7-videoedit",
-    "prompt": "Transfer the entire video to ink-wash painting style",
-    "video_urls": ["https://cdn.example.com/source.mp4"],
-    "image_urls": [
-      "https://cdn.example.com/style-1.jpg",
-      "https://cdn.example.com/style-2.jpg"
-    ],
-    "duration": 0,
-    "resolution": "1080p",
-    "aspect_ratio": "adaptive"
-  }'
-```
-
-```bash Audio strategy control
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "wan2.7-videoedit",
-    "prompt": "Replace the background with a neon-lit city street",
-    "video_urls": ["https://cdn.example.com/source.mp4"],
-    "metadata": {"audio_setting": "origin"},
     "duration": 8,
-    "resolution": "1080p"
+    "resolution": "1080P"
   }'
 ```
 
 </CodeGroup>
 
 <ResponseExample>
-```json Submission accepted
+```json Submitted
 {
   "task_id": "task-wave1775285160b950328499",
-  "model": "wan2.7-videoedit",
+  "model": "wan2.7",
+  "action": "generate",
   "status": "queued",
   "created_at": 1775285160040,
   "progress": 0
@@ -86,91 +130,135 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 ```
 </ResponseExample>
 
-After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status); see [Task System](/en/docs/task-system) for details.
+After submitting, poll [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status) for status — see [Task system](/en/docs/task-system).
 
-## Available Models
+## Available models
 
-| Model ID | Description |
-|---|---|
-| `wan2.7-videoedit` | Video editing — style transfer / content replacement / full rewrite, 720P/1080P, 0-10 sec, ≤ 4 reference images |
+| Model ID | Resolution | Duration | Aspect ratio | Required | Notes |
+|---|---|---|---|---|---|
+| `wan2.7` | 720P / 1080P | any integer 2-15 sec | 16:9 / 9:16 / 1:1 / 4:3 / 3:4 | `prompt` | One entry for text / image mode; pass `image_urls` for image mode |
+| `wan2.6` | 720p / 1080p | 5 / 10 / 15 sec | 16:9 / 9:16 / 1:1 | `prompt` | Stable classic tier, text / image |
+| `wan2.6-i2v` | 720p / 1080p | 5 / 10 / 15 sec | 16:9 / 9:16 / 1:1 | `prompt` + `image_urls` | 2.6 image-to-video standard tier, synchronized audio |
+| `wan2.6-i2v-flash` | 720p / 1080p | 5 / 10 / 15 sec | 16:9 / 9:16 / 1:1 | `prompt` + `image_urls` | 2.6 image-to-video fast tier, about half price; billed as audio when `audio` is omitted |
+| `wan2.5-preview` | 480p / 720p / 1080p | 5 / 10 sec | 16:9 / 9:16 / 1:1 | `prompt` | 2.5 preview tier, text / image; pass `image_urls` for image mode |
+| `wan2.7-r2v` | 720P / 1080P | any integer 2-15 sec | 16:9 / 9:16 / 1:1 | `prompt` + `image_urls` | Reference-to-video, character / style consistency |
+| `wan2.7-videoedit` | 720P / 1080P | any integer 2-15 sec | 16:9 / 9:16 / 1:1 | `prompt` + `video_urls` | Video editing, style transfer / content replacement |
 
-## Common Parameters
+<Note>
+Resolution casing differs by model: `wan2.7` / `wan2.7-r2v` / `wan2.7-videoedit` take upper-case `720P` / `1080P`; `wan2.6` / `wan2.6-i2v` / `wan2.6-i2v-flash` / `wan2.5-preview` take lower-case `720p` / `1080p` (`wan2.5-preview` also has `480p`).
+</Note>
+
+## Common parameters
 
 <ParamField body="model" type="string" required>
-  Fixed to `wan2.7-videoedit`
-</ParamField>
-
-<ParamField body="action" type="string" default="generate">
-  `generate` — the only action this model takes.
-
-  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-video; `image_urls` is image-to-video; `first_frame_image` + `last_frame_image` is a first/last-frame transition; `video_urls` / `audio_urls` is reference-to-video.
+  Model ID — see the [Available models](#available-models) table
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
-  Edit instruction text describing the target effect (replacement / transfer / rewrite), up to 5000 characters
-</ParamField>
-
-<ParamField body="video_urls" type="string[]" required>
-  Source video URL array (single element), **required**:
-  - Base64 not currently supported
-  - Public download URL required
+  Description of the video. Required in text mode; optional in image / reference / edit mode but recommended to guide camera and motion. Up to 5000 characters
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  Style / content reference image URL array, **up to 4**
+  Reference / input image URLs:
+  - `wan2.7`: passing it switches to image mode — 1 image = first frame, 2 images = first + last frame
+  - `wan2.6`: 1 image only; passing it switches to image mode
+  - `wan2.6-i2v` / `wan2.6-i2v-flash`: **required**, 1 image as the driving first frame
+  - `wan2.5-preview`: passing it switches to image mode (image-to-video)
+  - `wan2.7-r2v`: **required**, as subject / style reference (R2V)
+  - `wan2.7-videoedit`: optional style / content reference images, **up to 4**
 </ParamField>
 
-<ParamField body="aspect_ratio" type="string" default="adaptive">
-  Frame aspect ratio. Allowed values:
-  - `16:9` — landscape widescreen
-  - `9:16` — portrait
-  - `1:1` — square
-  - `4:3` — landscape
-  - `3:4` — portrait
-  - `adaptive` — follow source-video ratio (recommended)
+<ParamField body="video_urls" type="string[]">
+  Source video URL (single element). **Required** for `wan2.7-videoedit`; base64 is not accepted — must be a publicly downloadable link
 </ParamField>
 
-<ParamField body="resolution" type="string" default="720p">
-  Output resolution. Allowed values:
-  - `720p`
-  - `1080p`
+<ParamField body="resolution" type="string">
+  Output resolution, per the [Available models](#available-models) table:
+  - `wan2.7` / `wan2.7-r2v` / `wan2.7-videoedit`: `720P` / `1080P` (default `1080P`)
+  - `wan2.6` / `wan2.6-i2v` / `wan2.6-i2v-flash`: `720p` / `1080p` (default `720p`)
+  - `wan2.5-preview`: `480p` / `720p` / `1080p` (default `720p`)
 </ParamField>
 
-<ParamField body="duration" type="integer" default="0">
-  Video duration in seconds, range `0-10`:
-  - `0` — follow source-video duration (recommended)
-  - `1-10` — specify output duration
+<ParamField body="duration" type="integer">
+  Video length in seconds:
+  - `wan2.7` / `wan2.7-r2v` / `wan2.7-videoedit`: any integer `2`-`15` (default `5`)
+  - `wan2.6` / `wan2.6-i2v` / `wan2.6-i2v-flash`: `5` / `10` / `15` only (default `5`)
+  - `wan2.5-preview`: `5` / `10` only (default `5`)
+
+  `wan2.7-videoedit` is settled on the output duration you specify.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Aspect ratio (ignored in image mode — the input image decides):
+  - `wan2.7`: `16:9` / `9:16` / `1:1` / `4:3` / `3:4`
+  - `wan2.6` / `wan2.6-i2v` / `wan2.6-i2v-flash` / `wan2.5-preview` / `wan2.7-r2v` / `wan2.7-videoedit`: `16:9` / `9:16` / `1:1`
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  Random seed (≥ 0). The same request with the same seed produces similar results; omit for a different result each time
 </ParamField>
 
 <ParamField body="callback_url" type="string">
-  Webhook callback URL, invoked when the task reaches a terminal state. See [Callback Mechanism](/en/docs/sync-async#async-task-webhook)
+  Webhook URL, called when the task reaches a terminal state. See [Callbacks](/en/docs/sync-async#async-task-webhook)
 </ParamField>
 
 <ParamField body="callback_events" type="string[]">
-  Subscribed callback event types; defaults to terminal events
+  Callback events to subscribe to. Defaults to terminal states (`succeeded` / `failed` / `cancelled`)
 </ParamField>
 
-## Model-specific Parameters
+## Model-specific parameters
 
-<ParamField body="watermark" type="boolean" default="false">
-  Add an AI-generated watermark to the bottom-right corner
-</ParamField>
+<Tabs>
+  <Tab title="wan2.7">
+    <ParamField body="prompt_extend" type="boolean" default="true">
+      Smart prompt expansion — a clear improvement for short prompts, at the cost of extra latency
+    </ParamField>
 
-<ParamField body="prompt_extend" type="boolean" default="true">
-  Smart prompt rewriting — the backend auto-expands the edit instruction toward the target style
-</ParamField>
+    <ParamField body="negative_prompt" type="string">
+      Content to avoid. Example: `"blurry, distorted, low quality"`
+    </ParamField>
+  </Tab>
 
-## Resource Limits
+  <Tab title="wan2.6">
+    Wan 2.6 has no extra parameters — everything available is in [Common parameters](#common-parameters). Text vs image mode is decided by whether `image_urls` is passed.
+  </Tab>
+
+  <Tab title="wan2.6-i2v / wan2.6-i2v-flash">
+    Both tiers require `image_urls` (1 image, used as the first frame). Optional:
+
+    <ParamField body="audio" type="boolean" default="true">
+      Generate video with audio. `wan2.6-i2v` is always with audio; for `wan2.6-i2v-flash` the upstream charges half price for silent output, but **we currently bill as audio whether the flag is omitted or set to `false`** — this will be split once the billing chain supports it
+    </ParamField>
+
+    <ParamField body="negative_prompt" type="string">
+      Content to avoid
+    </ParamField>
+  </Tab>
+
+  <Tab title="wan2.5-preview">
+    The 2.5 preview tier has no extra parameters — everything available is in [Common parameters](#common-parameters). Text vs image mode is decided by whether `image_urls` is passed.
+  </Tab>
+
+  <Tab title="wan2.7-r2v">
+    The R2V tier has no extra parameters. `image_urls` is required as the character / style reference; the prompt describes motion and camera.
+  </Tab>
+
+  <Tab title="wan2.7-videoedit">
+    The VideoEdit tier has no extra parameters. `video_urls` (source video) is required; `image_urls` can add style / content references (≤ 4); `duration` sets the output length.
+  </Tab>
+</Tabs>
+
+## Limits
 
 | Item | Limit |
 |---|---|
-| Source video | MP4/MOV, ≤ 100MB, 2-30 sec, public download required |
-| Style reference image | Up to 4, each ≤ 30MB, JPG/PNG/WEBP |
+| Source video (videoedit) | MP4 / MOV, ≤ 100MB, publicly downloadable |
+| Reference images | JPG / PNG / WEBP, publicly downloadable URLs (videoedit: up to 4) |
 | Prompt | ≤ 5000 characters |
-| Output | MP4, link valid for 24 hours, please download promptly |
+| Output | MP4, link valid for 24 hours — download promptly |
 
-## Related Docs
+## Related
 
-- [Task System Reference](/en/docs/task-system) — task state machine / polling cadence / async push
-- [Request & Response Format](/en/docs/request-response) — common error codes / headers / rate limits
-- [Authentication](/en/docs/authentication) — API key signup and usage
+- [Task system](/en/docs/task-system) — state machine / polling cadence / async push
+- [Request & response format](/en/docs/request-response) — common error codes / headers / rate limits
+- [Authentication](/en/docs/authentication) — getting and using an API key

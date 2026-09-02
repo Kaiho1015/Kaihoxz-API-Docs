@@ -134,14 +134,16 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 ## Available Models
 
-| Model ID | Series | Supported actions | Resolution | Duration (sec) |
-|---|---|---|---|---|
-| `seedance-2.0-fast-face` | 2.0 | Same as 2.0 | 480p / 720p | 4-15 |
-| `seedance-2.0-fast` | 2.0 | Same as 2.0 | 480p / 720p | 4-15 |
-| `seedance-2.0-mini` | 2.0 | Same as 2.0 | 480p / 720p | 4-15 |
-| `seedance-2.0-face` | 2.0 | Same as 2.0 | 480p / 720p / 1080p | 4-15 |
-| `seedance-2.0` | 2.0 | generate / image2video / first_last_frame / reference / reference_video / reference_audio | 480p / 720p / 1080p / 4K | 4-15 |
-| `seedance-1.5-pro` | 1.5 | generate / image2video / first_last_frame | 480p / 720p / 1080p | 4-12 |
+| Model ID | Resolution | Duration (sec) | Notes |
+|---|---|---|---|
+| `seedance-2.0` | 480p / 720p / 1080p / 4K | any integer 4-15 | 2.0 standard tier, text / image, reference video supported |
+| `seedance-2.0-fast` | 480p / 720p | any integer 4-15 | Fast tier, faster and cheaper |
+| `seedance-2.0-mini` | 480p / 720p | any integer 4-15 | Mini tier, lowest cost, same capabilities as standard |
+| `seedance-2.0-face` | 480p / 720p / 1080p | any integer 4-15 | Face / digital-human scenes |
+| `seedance-2.0-fast-face` | 480p / 720p | any integer 4-15 | Fast, lower-priced face tier |
+| `seedance-1.5-pro` | 480p / 720p / 1080p | any integer 4-12 | Joint audio-video generation, lip sync, multilingual dialogue |
+| `seedance-1.0-pro` | 480p / 720p / 1080p | 5 / 10 | 1.0 quality mode, multi-shot storytelling; the stable 1.x flagship, priced below 1.5 / 2.x |
+| `seedance-1.0-pro-fast` | 480p / 720p / 1080p | 5 / 10 | 1.0 fast mode, about 3× faster; the cheapest Seedance video tier |
 
 ## Common Parameters
 
