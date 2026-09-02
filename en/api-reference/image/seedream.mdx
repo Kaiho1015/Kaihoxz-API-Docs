@@ -4,11 +4,12 @@ description: "ByteDance Doubao image generation — multi-version evolution, mul
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-ByteDance Seed team's image generation series, with **three generations**:
+ByteDance Seed team's image generation series — **two generations, four tiers**:
 
-- **5.0 Lite** — Visual reasoning (CoT) + real-time web search, 14 reference images, 2K/3K, strong identity preservation, cost-effective tier
-- **4.5** — Professional production grade, native 4K, 14 reference images, 94% typography accuracy, 90% cross-angle character consistency
-- **4.0** — Multimodal creation, 2-10 reference image fusion, unified interface for text-to-image / editing / image groups
+- **5.0 Pro** — Quality-first: cinematic detail and text accuracy, 1K / 2K, up to 10 reference images, 2K priced separately
+- **5.0 Lite** — Visual reasoning (CoT) + real-time web search, strong identity preservation (eyes / jawline / proportions / skin tone hold across styles), 2K / 3K / 4K, the value tier
+- **4.5** — The refined 4.x tier: better text accuracy and multi-reference style fusion, 1K / 2K / 4K, up to 10 reference images and 15 images per request
+- **4.0** — Unified text-to-image and editing, strong in-image text rendering, 1K / 2K / 4K, up to 10 reference images; a generation behind 5.0 and priced lower
 
 Per-image pricing, generates 1K-4K images (range varies by version).
 
@@ -110,7 +111,10 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 | Model ID | Description |
 |---|---|
-| `seedream-5.0-lite` | Visual reasoning + web search, 14 reference images, 2K/3K, strong identity preservation |
+| `seedream-5.0-pro` | Quality-first tier, cinematic detail, 1K / 2K (2K priced separately), up to 10 reference images |
+| `seedream-5.0-lite` | Visual reasoning + web search, strong identity preservation, 2K / 3K / 4K, unified generate / edit / image-set interface |
+| `seedream-4.5` | Refined 4.x tier, better text accuracy and multi-reference fusion, 1K / 2K / 4K |
+| `seedream-4.0` | Unified generation + editing, strong text rendering, 1K / 2K / 4K, lowest price |
 
 ## Common Parameters
 
