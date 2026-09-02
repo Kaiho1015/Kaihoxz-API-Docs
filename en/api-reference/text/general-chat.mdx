@@ -275,14 +275,15 @@ public class Main {
 
   Supported models include:
 
-  * **OpenAI**: `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5.1`, `gpt-5.2`, `gpt-5.4`, `gpt-4.1`, `gpt-4.1-mini`, `gpt-4.1-nano`, `gpt-4o`, `gpt-4o-mini`, `o1`, `o3-mini`, `o4-mini`
-  * **Anthropic**: `claude-opus-4.6`, `claude-sonnet-4.6`, `claude-opus-4.5-20251101`, `claude-sonnet-4.5-20250929`, `claude-haiku-4.5-20251001`
-  * **Google**: `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.5-flash-lite`, `gemini-3-flash-preview`, `gemini-3.1-pro-preview`
-  * **DeepSeek**: `deepseek-r1-0528`, `deepseek-v3.2`, `deepseek-v3.2-exp`
-  * **MiniMax**: `minimax-m2.1`, `minimax-m2.5`
-  * **MoonshotAI**: `kimi-k2.5`, `kimi-k3`
+  * **OpenAI**: `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.5`, `gpt-5.4`, `gpt-5.4-mini`, `gpt-5.4-nano`, `gpt-5.4-pro`, `gpt-5.3-codex`, `gpt-5.2`, `gpt-5.2-pro`, `gpt-5.2-codex`, `gpt-5.1`, `gpt-5.1-codex-max`, `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-4.1`, `gpt-4.1-mini`, `gpt-4.1-nano`, `gpt-4o`, `gpt-4o-mini`, `o3`, `o4-mini`, `o3-mini`, `o1`
+  * **Anthropic**: `claude-fable-5`, `claude-opus-5`, `claude-sonnet-5`, `claude-opus-4.8`, `claude-opus-4.7`, `claude-opus-4.6`, `claude-sonnet-4.6`, `claude-opus-4.5-20251101`, `claude-sonnet-4.5-20250929`, `claude-haiku-4.5-20251001`
+  * **Google**: `gemini-3.7-flash`, `gemini-3.6-flash`, `gemini-3.5-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-pro-preview`, `gemini-3.1-flash-lite-preview`, `gemini-3-flash-preview`, `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.5-flash-lite`
+  * **DeepSeek**: `deepseek-v4-pro`, `deepseek-v4-flash`, `deepseek-r1-0528`, `deepseek-v3.2`, `deepseek-v3.2-exp`
+  * **Qwen**: `qwen3.8-max`, `qwen3.7-max`, `qwen3.7-plus`, `qwen3.6-plus`, `qwen3.6-flash`
+  * **MiniMax**: `minimax-m3`, `minimax-m2.7`, `minimax-m2.5`, `minimax-m2.1`
+  * **MoonshotAI**: `kimi-k3`, `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`, `kimi-k2.6`, `kimi-k2.5`
   * **xAI**: `grok-4.6`, `grok-4.5`, `grok-4.3`, `grok-build-0.1`
-  * **Z.ai**: `glm-4.6`, `glm-4.7`, `glm-5`, `glm-5.1`
+  * **Z.ai**: `glm-5.2`, `glm-5.1`, `glm-5`, `glm-4.7`, `glm-4.6`
   * More models added regularly...
 </ParamField>
 
@@ -481,8 +482,23 @@ public class Main {
 
 ## Supported Models
 
+<Note>
+**Long-context tiers**: for some models, once a single request's input exceeds a threshold, the input beyond it and the whole output are billed at a higher tier, matching the vendor's official pricing: GPT-5.4 / 5.5 / 5.6 series **272K**, Grok **200K**, Gemini Pro **200K**, Qwen Plus / Flash **256K**, MiniMax M3 **512K**. Per-tier prices are shown on each model's [Explore](https://qingbo.dev/explore) page. Anthropic 4.6+ models charge the same rate across the full context window.
+</Note>
+
 ### OpenAI series
 
+* `gpt-5.6-sol` — GPT-5.6 Sol flagship (long-context tier above 272K input)
+* `gpt-5.6-terra` — GPT-5.6 Terra, balanced tier
+* `gpt-5.6-luna` — GPT-5.6 Luna, lightweight tier
+* `gpt-5.5` — GPT-5.5
+* `gpt-5.4-pro` — GPT-5.4 Pro
+* `gpt-5.4-mini` — GPT-5.4 lightweight
+* `gpt-5.4-nano` — GPT-5.4 ultra-lightweight
+* `gpt-5.3-codex` — GPT-5.3 Codex coding model
+* `gpt-5.2-pro` — GPT-5.2 Pro
+* `gpt-5.2-codex` — GPT-5.2 Codex
+* `gpt-5.1-codex-max` — GPT-5.1 Codex Max
 * `gpt-5` — GPT-5 base model
 * `gpt-5-mini` — GPT-5 lightweight
 * `gpt-5-nano` — GPT-5 ultra-lightweight
@@ -494,41 +510,67 @@ public class Main {
 * `gpt-4.1-nano` — GPT-4.1 ultra-lightweight
 * `gpt-4o` — GPT-4o multimodal model
 * `gpt-4o-mini` — GPT-4o lightweight
-* `o1` — OpenAI o1 reasoning model
-* `o3-mini` — OpenAI o3 Mini
+* `o3` — OpenAI o3 reasoning model
 * `o4-mini` — OpenAI o4 Mini
+* `o3-mini` — OpenAI o3 Mini
+* `o1` — OpenAI o1 reasoning model
 
 ### Anthropic series
 
-* `claude-opus-4.6` — Claude 4.6 Opus, latest flagship
-* `claude-sonnet-4.6` — Claude 4.6 Sonnet, latest version
+* `claude-fable-5` — Claude Fable 5, Mythos-class flagship (1M context)
+* `claude-opus-5` — Claude Opus 5
+* `claude-sonnet-5` — Claude Sonnet 5
+* `claude-opus-4.8` — Claude Opus 4.8
+* `claude-opus-4.7` — Claude Opus 4.7
+* `claude-opus-4.6` — Claude Opus 4.6
+* `claude-sonnet-4.6` — Claude Sonnet 4.6
 * `claude-opus-4.5-20251101` — Claude 4.5 Opus flagship
 * `claude-sonnet-4.5-20250929` — Claude 4.5 Sonnet, balanced
 * `claude-haiku-4.5-20251001` — Claude 4.5 Haiku, fast response
 
 ### Google series
 
-* `gemini-3.1-pro-preview` — Gemini 3.1 Pro preview
+* `gemini-3.7-flash` — Gemini 3.7 Flash (fast agentic workflows, multi-step reasoning)
+* `gemini-3.6-flash` — Gemini 3.6 Flash (coding, web / app development)
+* `gemini-3.5-flash` — Gemini 3.5 Flash
+* `gemini-3.5-flash-lite` — Gemini 3.5 Flash-Lite
+* `gemini-3.1-pro-preview` — Gemini 3.1 Pro preview (long-context tier above 200K input)
+* `gemini-3.1-flash-lite-preview` — Gemini 3.1 Flash-Lite preview
 * `gemini-3-flash-preview` — Gemini 3 Flash preview
-* `gemini-2.5-pro` — Gemini 2.5 Pro
+* `gemini-2.5-pro` — Gemini 2.5 Pro (long-context tier above 200K input)
 * `gemini-2.5-flash` — Gemini 2.5 Flash
 * `gemini-2.5-flash-lite` — Gemini 2.5 Flash Lite
 
 ### DeepSeek series
 
+* `deepseek-v4-pro` — DeepSeek V4 Pro (1M context)
+* `deepseek-v4-flash` — DeepSeek V4 Flash
 * `deepseek-r1-0528` — DeepSeek R1 reasoning model
 * `deepseek-v3.2` — DeepSeek V3.2
 * `deepseek-v3.2-exp` — DeepSeek V3.2 experimental
 
+### Qwen series
+
+* `qwen3.8-max` — Qwen3.8-Max flagship (1M context)
+* `qwen3.7-max` — Qwen3.7-Max
+* `qwen3.7-plus` — Qwen3.7-Plus, balanced tier (long-context tier above 256K input)
+* `qwen3.6-plus` — Qwen3.6-Plus (long-context tier above 256K input)
+* `qwen3.6-flash` — Qwen3.6-Flash, fast low-cost tier (long-context tier above 256K input)
+
 ### MiniMax series
 
-* `minimax-m2.1` — MiniMax M2.1
+* `minimax-m3` — MiniMax M3 multimodal flagship (1M context, 2× above 512K input)
+* `minimax-m2.7` — MiniMax M2.7
 * `minimax-m2.5` — MiniMax M2.5
+* `minimax-m2.1` — MiniMax M2.1
 
 ### MoonshotAI series
 
+* `kimi-k3` — Kimi K3 flagship (1M context)
+* `kimi-k2.7-code` — Kimi K2.7 Code, dedicated coding model
+* `kimi-k2.7-code-highspeed` — Kimi K2.7 Code HighSpeed (~180 tokens/s, 2× price)
+* `kimi-k2.6` — Kimi K2.6 multimodal
 * `kimi-k2.5` — Kimi K2.5
-* `kimi-k3` — Kimi K3 flagship
 
 ### xAI series
 
@@ -543,10 +585,11 @@ For Grok models, when a single request has more than **200K input tokens**, the 
 
 ### Z.ai series
 
-* `glm-4.6` — GLM 4.6
-* `glm-4.7` — GLM 4.7
-* `glm-5` — GLM 5
-* `glm-5.1` — GLM 5.1
+* `glm-5.2` — GLM-5.2 large-scale reasoning model (1M context)
+* `glm-5.1` — GLM-5.1
+* `glm-5` — GLM-5
+* `glm-4.7` — GLM-4.7
+* `glm-4.6` — GLM-4.6
 
 ## Examples
 

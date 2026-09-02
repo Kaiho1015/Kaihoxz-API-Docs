@@ -7,6 +7,24 @@ Pricing changes apply only to calls made **after** the change takes effect; hist
 </Note>
 
 <Update label="2026-09-02" description="Pricing change">
+**Text-model prices re-aligned to vendors' official list prices; long-context tiers added**
+
+While onboarding new text models we cross-checked existing text groups against each vendor's official pricing page:
+
+| Model | Change |
+|---|---|
+| `glm-5.1` / `glm-4.6` | Reference prices had been taken from an upstream conversion that was too low; now priced from Z.ai's official USD list (**raised**) |
+| `minimax-m2.1` | Aligned to MiniMax's official legacy tier (slight increase) |
+| `kimi-k2` | Input price had been above the official reference; **lowered** to 0.9 × reference |
+| `deepseek-r1-0528` / `deepseek-v3.2` / `deepseek-v3.2-exp` | Output prices unified at 0.9 × reference (r1-0528 **lowered**; the two v3.2 tiers slightly raised) |
+| GPT-5.6 Sol / Terra / Luna, GPT-5.5, GPT-5.4, GPT-5.4 Pro | **Long-context tier added above 272K input** (matching OpenAI; previously such requests were billed at the standard rate) |
+| Gemini 3.1 Pro / 3 Pro / 2.5 Pro | **Long-context tier added above 200K input** (matching Google) |
+| `kimi-k3` / `claude-sonnet-5` | Cached-input price added (cache hits billed at the lower rate) |
+
+Changes take effect **immediately** and apply only to calls made afterwards. Live unit prices are shown on [Explore](https://qingbo.dev/explore) and in the console "Model Market".
+</Update>
+
+<Update label="2026-09-02" description="Pricing change">
 **Existing models re-aligned to vendors' official list prices (both up and down)**
 
 While onboarding new models we cross-checked existing ones against each vendor's official pricing page. The following unit prices have been synced:

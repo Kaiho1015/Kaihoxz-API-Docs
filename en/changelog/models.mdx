@@ -3,6 +3,19 @@ title: "Model Updates"
 ---
 
 <Update label="2026-09-02" description="Model launch">
+**Text models · 15 new models (Anthropic / Google / Qwen / MiniMax / MoonshotAI / Z.ai)**
+
+- **Anthropic**: `claude-fable-5` — Mythos-class flagship, 1M-token context, no long-context surcharge.
+- **Google**: `gemini-3.7-flash` · `gemini-3.6-flash` · `gemini-3.5-flash-lite`.
+- **Qwen** (first Qwen text models on the platform): `qwen3.8-max` (released today) · `qwen3.7-max` · `qwen3.7-plus` · `qwen3.6-plus` · `qwen3.6-flash`, all with 1M-token context; Plus / Flash bill a long-context tier above 256K input.
+- **MiniMax**: `minimax-m3` (multimodal, 1M context, 2× above 512K input) · `minimax-m2.7`.
+- **MoonshotAI**: `kimi-k2.6` · `kimi-k2.7-code` · `kimi-k2.7-code-highspeed`.
+- **Z.ai**: `glm-5.2` (1M context).
+- All served via `/v1/chat/completions`; model IDs are bare names with no vendor prefix.
+- **Docs**: [Chat completions](/en/api-reference/text/general-chat)
+</Update>
+
+<Update label="2026-09-02" description="Model launch">
 **Grok text models · four models**
 
 - **Model IDs**: `grok-4.6` · `grok-4.5` · `grok-4.3` · `grok-build-0.1`
