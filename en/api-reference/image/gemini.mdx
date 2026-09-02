@@ -7,6 +7,7 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 Google Gemini's native multimodal image series, **three generations of Nano Banana plus dual-tier access**:
 
 - **Nano Banana 2 (Gemini 3.1 Flash Image Preview)** — lightweight fast tier, low latency, low cost, **exclusive support for Google text / image search augmentation**, ideal for previewing, batches, and iteration
+- **Nano Banana 2 Lite (Gemini 3.1 Flash-Lite Image)** — fastest and cheapest tier, `1K` only, ~4 s per image, built for high-volume generation
 - **Nano Banana Pro (Gemini 3 Pro Image Preview)** — flagship tier, native 4K output, professional fidelity, multi-step planning, built-in quality analysis
 - **Nano Banana (Gemini 2.5 Flash Image Preview)** — previous-generation workhorse, low latency, high cost-performance, multi-image fusion, character consistency
 
@@ -129,6 +130,7 @@ After submitting, poll task status with [`GET /v1/tasks/{task_id}`](/en/api-refe
 | `gemini-3-pro-image-preview-rev` | Nano Banana Pro · Standard | Flagship tier, native 4K, professional fidelity, multi-step planning |
 | `gemini-3.1-flash-image-preview` | Nano Banana 2 · Official Direct | Fast tier with direct channel, search augmentation |
 | `gemini-3.1-flash-image-preview-rev` | Nano Banana 2 · Standard | Fast tier with Google text + image search augmentation |
+| `gemini-3.1-flash-lite-image-rev` | Nano Banana 2 Lite · Standard | Fastest, cheapest tier, `1K` only, up to 14 reference images |
 | `gemini-2.5-flash-image-preview` | Nano Banana · Official Direct | Previous-gen direct, high cost-performance |
 | `gemini-2.5-flash-image-preview-rev` | Nano Banana · Standard | Previous-gen workhorse, low latency, multi-image fusion |
 
@@ -262,13 +264,13 @@ After submitting, poll task status with [`GET /v1/tasks/{task_id}`](/en/api-refe
 
     **Series**: Nano Banana 2 · Standard
 
-    **Supported actions**: `generate` / `image2image` / `edit` / `reference` / `search_grounded`
+    **Supported actions**: `generate` / `edit`
 
     **resolution**: `0.5K` / `1K` / `2K` / `4K`
 
-    **aspect_ratio**: standard 10 + 4 extreme (`1:4` / `4:1` / `1:8` / `8:1`)
+    **aspect_ratio**: 11 options (including `auto`)
 
-    **Highlights**: Lightweight fast tier — low latency, low cost, ideal for previewing, batches, and iteration. **Exclusive support for Google text and image search augmentation**, generating images grounded in real-time web information; supports extreme column / banner ratios.
+    **Highlights**: Lightweight fast tier — low latency, low cost, from the `0.5K` economy tier up to `4K`, ideal for previewing, batches, and iteration. **Exclusive support for Google text and image search augmentation**, generating images grounded in real-time web information.
 
     <ParamField body="google_search" type="boolean" default="false">
       Enable Google text search augmentation — the model can generate based on real-time web information.
@@ -281,6 +283,22 @@ After submitting, poll task status with [`GET /v1/tasks/{task_id}`](/en/api-refe
     <ParamField body="official_fallback" type="boolean" default="false">
       Switch to the official direct tier at runtime. We recommend selecting the `-official` model id directly.
     </ParamField>
+  </Tab>
+
+  <Tab title="3.1 Flash-Lite">
+    **model id**: `gemini-3.1-flash-lite-image-rev`
+
+    **Series**: Nano Banana 2 Lite · Standard
+
+    **Supported actions**: `generate` / `edit`
+
+    **resolution**: `1K` only (`2K` / `4K` / `0.5K` are silently downgraded to `1K`, no error)
+
+    **aspect_ratio**: 11 options (including `auto`)
+
+    **Reference images**: up to 14
+
+    **Highlights**: The fastest, cheapest image model in the Gemini 3.1 family — text-to-image in about 4 seconds, built for high-volume, low-cost generation and rapid visual exploration. **No** `google_search` / `google_image_search` grounding, no `mask_url` inpainting, and no official-direct tier. All outputs carry Google's invisible SynthID watermark.
   </Tab>
 
   <Tab title="2.5 Flash Official">

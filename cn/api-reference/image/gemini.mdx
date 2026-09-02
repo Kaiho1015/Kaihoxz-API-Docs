@@ -7,6 +7,7 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 Google Gemini 原生多模态图像系列,**三代 Nano Banana 演进 + 双档接入**:
 
 - **Nano Banana 2(Gemini 3.1 Flash Image Preview)** — 轻量快速档,延迟低、成本省,**标准档独家支持 Google 文字 / 图片搜索增强**,支持 `0.5K`~`4K` 分辨率,适合预览、批量、迭代
+- **Nano Banana 2 Lite(Gemini 3.1 Flash-Lite Image)** — 最快最便宜档,仅 `1K`,约 4 秒出图,面向规模化批量出图
 - **Nano Banana Pro(Gemini 3 Pro Image Preview)** — 旗舰档,4K 原生输出,专业级保真度,多步规划,内置质量分析
 - **Nano Banana(Gemini 2.5 Flash Image Preview)** — 老一代主力,低延迟、高性价比,多图融合,角色一致性
 
@@ -133,6 +134,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 | `gemini-3-pro-image-preview-rev` | Nano Banana Pro · 标准档 | 旗舰档,4K 原生,专业保真,多步规划 |
 | `gemini-3.1-flash-image-preview` | Nano Banana 2 · 官方直连 | 快速档直连,支持 `0.5K`~`4K` |
 | `gemini-3.1-flash-image-preview-rev` | Nano Banana 2 · 标准档 | 快速档,Google 文字+图片搜索增强 |
+| `gemini-3.1-flash-lite-image-rev` | Nano Banana 2 Lite · 标准档 | 最快最便宜档,仅 `1K`,最多 14 张参考图 |
 | `gemini-2.5-flash-image-preview` | Nano Banana · 官方直连 | 老一代直连,高性价比 |
 | `gemini-2.5-flash-image-preview-rev` | Nano Banana · 标准档 | 老一代主力,低延迟、多图融合 |
 
@@ -272,6 +274,22 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
     <ParamField body="official_fallback" type="boolean" default="false">
       运行时切换到官方直连档。建议直接使用 `-official` 模型 id(注意官方档不支持搜索增强)
     </ParamField>
+  </Tab>
+
+  <Tab title="3.1 Flash-Lite">
+    **model id**:`gemini-3.1-flash-lite-image-rev`
+
+    **系列**:Nano Banana 2 Lite · 标准档
+
+    **支持 action**:`generate` / `edit`
+
+    **resolution**:仅 `1K`(传 `2K` / `4K` / `0.5K` 会静默降级为 `1K`,不报错)
+
+    **aspect_ratio**:11 种(含 `auto`)
+
+    **参考图**:最多 14 张
+
+    **核心特性**:Gemini 3.1 系列中最快、最便宜的图像模型,文生图约 4 秒出图,面向规模化、低成本批量出图与快速视觉探索。**不支持** `google_search` / `google_image_search` 搜索增强,不支持 `mask_url` 局部重绘,无官方直连档。所有出图含 Google SynthID 隐形水印。
   </Tab>
 
   <Tab title="2.5 Flash Official">
