@@ -4,10 +4,10 @@ description: "Black Forest Labs FLUX — Kontext 图像编辑(FLUX.1 Kontext)与
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-Black Forest Labs 出品的 FLUX 图像模型系列,共 **4 个模型**,分为两类:
+Black Forest Labs 出品的 FLUX 图像模型系列,共 **5 个模型**,分为两类:
 
 - **FLUX.1 Kontext(图像编辑)** — `flux-kontext-pro` / `flux-kontext-max`,**以图编图**,擅长局部编辑、风格迁移、元素替换与角色一致性。**必须传入参考图 `image_urls`**,纯文本提示无法出图。
-- **FLUX.2(文生图)** — `flux-2-pro` / `flux-2-flex`,纯文本生成图像,支持 `1K` / `2K` 两档分辨率,`2K` 单独计费。
+- **FLUX.2(文生图)** — `flux-2-pro` / `flux-2-max` / `flux-2-flex`,纯文本生成图像,支持 `1K` / `2K` 两档分辨率,`2K` 单独计费。`max` 是最高画质档。
 
 按张计费,异步任务,提交后轮询任务状态获取结果。
 
@@ -111,6 +111,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 | `flux-kontext-pro` | FLUX.1 Kontext Pro,图像编辑模型,需传 `image_urls`,擅长局部编辑与风格迁移 |
 | `flux-kontext-max` | FLUX.1 Kontext Max,增强版编辑模型,角色一致性与高保真更强 |
 | `flux-2-pro` | FLUX.2 Pro,文生图,支持 `1K` / `2K` 两档分辨率 |
+| `flux-2-max` | FLUX.2 Max,最高画质档,适合对保真度要求高于成本的成片,`1K` / `2K` |
 | `flux-2-flex` | FLUX.2 Flex,文生图灵活档,支持 `1K` / `2K` 两档分辨率 |
 
 ## 通用参数

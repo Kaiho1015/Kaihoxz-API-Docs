@@ -4,10 +4,10 @@ description: "Black Forest Labs FLUX — Kontext image editing (FLUX.1 Kontext) 
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-Black Forest Labs' FLUX image model series, **4 models** in two families:
+Black Forest Labs' FLUX image model series, **5 models** in two families:
 
 - **FLUX.1 Kontext (image editing)** — `flux-kontext-pro` / `flux-kontext-max`. Edits an existing image; good at local edits, style transfer, element replacement, and character consistency. **A reference image in `image_urls` is required** — a text-only prompt will not produce an image.
-- **FLUX.2 (text-to-image)** — `flux-2-pro` / `flux-2-flex`. Generates images from text alone, at `1K` or `2K` resolution; `2K` is billed separately.
+- **FLUX.2 (text-to-image)** — `flux-2-pro` / `flux-2-max` / `flux-2-flex`. Generates images from text alone, at `1K` or `2K` resolution; `2K` is billed separately. `max` is the top quality tier.
 
 Per-image pricing, async tasks — submit, then poll task status for the result.
 
@@ -111,6 +111,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 | `flux-kontext-pro` | FLUX.1 Kontext Pro. Image editing model, requires `image_urls`; good at local edits and style transfer |
 | `flux-kontext-max` | FLUX.1 Kontext Max. Enhanced editing model, stronger character consistency and fidelity |
 | `flux-2-pro` | FLUX.2 Pro. Text-to-image, `1K` / `2K` resolution |
+| `flux-2-max` | FLUX.2 Max. Top quality tier for final renders where fidelity outweighs cost, `1K` / `2K` |
 | `flux-2-flex` | FLUX.2 Flex. Text-to-image flex tier, `1K` / `2K` resolution |
 
 ## Common Parameters
