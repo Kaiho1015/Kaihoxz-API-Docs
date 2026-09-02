@@ -2,6 +2,16 @@
 title: "Model Updates"
 ---
 
+<Update label="2026-09-02" description="Model launch">
+**Grok text models · four models**
+
+- **Model IDs**: `grok-4.6` · `grok-4.5` · `grok-4.3` · `grok-build-0.1`
+- xAI's current-generation text line is now available: 4.6 is the flagship (code and everything else, 500K context); 4.5 is the reasoning tier; 4.3 is the fast general-purpose tier (1M context); Build 0.1 targets coding agents. All support image input, function calling and structured outputs via `/v1/chat/completions`.
+- Requests with more than 200K input tokens are billed at 2× the standard rate, matching xAI's long-context tier.
+- In the same batch, `kimi-k3` output pricing was re-aligned (lowered) to Moonshot's official list price.
+- **Docs**: [Chat completions](/en/api-reference/text/general-chat)
+</Update>
+
 <Update label="2026-09-01" description="Model launch">
 **GPT-4o Transcribe (two tiers) · Speech to text**
 
