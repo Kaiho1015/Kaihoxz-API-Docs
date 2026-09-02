@@ -10,9 +10,12 @@ Per-image pricing, unified 2K output.
 
 ## Pricing
 
-| Model | Price (per image) |
-|---|---|
-| `imagen-4.0` | `$0.0425` |
+<Note>
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+</Note>
 
 ## Examples
 
@@ -82,8 +85,10 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  Operation type. Imagen 4.0 supports only:
-  - `generate` — Text-to-image (default)
+  - `generate` — text to image (default)
+  - `edit` — image editing; pair with `image_urls`
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-image; one `image_urls` entry is image-to-image; several are multi-image reference; add `mask_url` for inpainting.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>

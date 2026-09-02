@@ -6,6 +6,72 @@ title: "价格调整"
 价格调整仅对**调整生效后**的调用计费，历史调用不受影响。各模型实时单价以 [模型总览](/cn/docs/models) 与控制台「模型市场」为准；每次费用以接口返回的 `cost` / `usage.cost` 为准。
 </Note>
 
+<Update label="2026-09-02" description="计费口径">
+**图像模型参考图改为「按张」计费**
+
+以下模型的参考图（`image_urls`）从今天起**每张单独加价**，与厂商官方口径一致（此前部分模型不收、部分按档位上界收）：
+
+| 模型 | 参考图单价 / 张 |
+|---|---|
+| `seedream-5.0-pro` | $0.002571 |
+| `qwen-image-3.0` / `qwen-image-3.0-pro` | $0.002571 |
+| `grok-imagine-image` | $0.0018 |
+| `grok-imagine-image-quality` / `grok-imagine-image-2.0` | $0.009 |
+| `flux-2-pro` / `flux-2-max` / `flux-2-flex` | $0.0135 / $0.027 / $0.045（同时开放最多 8 张参考图） |
+| `gpt-image-2` / `gpt-image-1.5` | $0.0025（此前 gpt-image-2 按 1-3 张 / 4 张以上两档收，改为逐张） |
+| `gpt-image-1` | $0.0031 |
+
+单次费用 = 输出档位价 + 参考图张数 × 单价；不传参考图不受影响。Seedream 4.x / 5.0-lite、Qwen Image 2.0、Wan 2.7 Image、Nano Banana 系列参考图不加价。实时单价以 [Explore](https://qingbo.dev/explore) 与控制台「模型市场」为准，`POST /waveapi/public/quote` 传 `image_urls` 可预估。
+</Update>
+
+<Update label="2026-09-02" description="价格调整">
+**Nano Banana Pro / Nano Banana 2 标准档降价**
+
+上游标准档（`-rev`）刊例下调，同步下调：
+
+| 模型 | 1K / 2K | 4K |
+|---|---|---|
+| `gemini-3-pro-image-preview-rev`（Nano Banana Pro 标准档） | $0.045 → **$0.03375** | $0.073125 → **$0.045** |
+| `gemini-3.1-flash-image-preview-rev`（Nano Banana 2 标准档） | 1K $0.03375 → **$0.016875**，2K $0.045 → **$0.0225** | $0.0675 → **$0.028125** |
+
+官方直连档（不带 `-rev`）价格不变。调整**即日生效**。
+</Update>
+
+<Update label="2026-09-02" description="价格调整">
+**文本模型价格对齐厂商官方刊例；补齐长上下文分档**
+
+本批接入新文本模型时，对存量文本组逐一与厂商官网刊例交叉核对：
+
+| 模型 | 变化 |
+|---|---|
+| `glm-5.1` / `glm-4.6` | 此前参考价取自上游换算值偏低，现按 Z.ai 官方美元刊例重新定价（**上调**） |
+| `minimax-m2.1` | 按 MiniMax 官方 legacy 档统一（微调上调） |
+| `kimi-k2` | 输入单价此前高于官方参考价，**下调**至 0.9 × 参考价 |
+| `deepseek-r1-0528` / `deepseek-v3.2` / `deepseek-v3.2-exp` | 输出单价统一到 0.9 × 参考价（r1-0528 **下调**，v3.2 两档小幅上调） |
+| GPT-5.6 Sol / Terra / Luna、GPT-5.5、GPT-5.4、GPT-5.4 Pro | **新增 >272K 输入的长上下文档**（与 OpenAI 官方一致；此前超长请求按标准价计） |
+| Gemini 3.1 Pro / 3 Pro / 2.5 Pro | **新增 >200K 输入的长上下文档**（与 Google 官方一致） |
+| `kimi-k3` / `claude-sonnet-5` | 新增缓存命中单价（缓存命中的输入按更低单价计费） |
+
+调整**即日生效**，仅对生效后的调用计费。实时单价以 [Explore](https://qingbo.dev/explore) 与控制台「模型市场」为准。
+</Update>
+
+<Update label="2026-09-02" description="价格调整">
+**存量模型价格对齐厂商官方刊例(含上调与下调)**
+
+本批接入新模型时,对存量模型逐一与厂商官网刊例交叉核对,以下模型单价已同步:
+
+| 模型 | 变化 |
+|---|---|
+| `kimi-k3` | 输出单价按 Moonshot 官方价**下调** |
+| `gpt-image-2` | 不传 `quality` 时按 `high` 档计费(此前按低档计,现与 OpenAI 缺省一致) |
+| `seedream-5.0` / `seedream-5.0-lite` | 各档单价同步火山引擎刊例;5.0-lite 补 `1.5K` 档 |
+| `seedance-2.0` / `2.0-fast` / `2.0-face` / `2.0-fast-face` / `2.0-mini` / `2.5` / `1.5-pro` | 图生视频与文生视频**同价**(下调);参考视频按 2× 单价(上调);此前按促销价定的档回到刊例 |
+| `wan2.6` / `wan2.7` / `wan2.7-r2v` / `wan2.7-videoedit` / `wan2.5-preview` | 各档同步阿里云百炼刊例;视频编辑 / 参考生视频按 2× 单价 |
+| `minimax-h3` | 各档同步 MiniMax 官方价目 |
+
+调整**即日生效**,仅对生效后的调用计费。实时单价以 [模型总览](/cn/docs/models) 与控制台「模型市场」为准。
+</Update>
+
 <Update label="2026-07-11" description="价格调整">
 **部分图像 / 视频模型价格同步官方**
 
@@ -16,7 +82,7 @@ title: "价格调整"
 | `gpt-image-2` | 1K / 2K / 4K 各档单价上调 |
 | `gemini-3-pro-image-preview` | 4K 档单价上调 |
 | `veo3.1-fast` / `veo3.1-lite` / `veo3.1-quality` | 各分辨率档单价同步官方(含上调与下调) |
-| `veo3.1-fast-official` | 各档单价下调 |
+| `veo3.1-fast` | 各档单价下调 |
 | `omni-flash-ext` | 改为按 **分辨率 × 时长** 分档计价,详见下方「模型动态」 |
 
 调整**即日生效**,仅对生效后的调用计费。各档实时单价以 [模型总览](/cn/docs/models) 与控制台「模型市场」为准。
@@ -25,7 +91,7 @@ title: "价格调整"
 <Update label="2026-06-24" description="价格调整">
 **Seedance 2.0 价格同步官方**
 
-- `doubao-seedance-2.0` 单价已同步官方价，新增的 **4K** 档同步上线计费。具体以 [模型总览](/cn/docs/models) 与控制台「模型市场」展示的最新价格为准。
+- `seedance-2.0` 单价已同步官方价，新增的 **4K** 档同步上线计费。具体以 [模型总览](/cn/docs/models) 与控制台「模型市场」展示的最新价格为准。
 </Update>
 
 <Update label="2026-06-17" description="价格调整">

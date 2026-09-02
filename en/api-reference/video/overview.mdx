@@ -54,13 +54,9 @@ For the full async flow see [Task System](/en/docs/task-system) — Submit → S
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  Operation type; valid values depend on the model. Common values:
-  - `generate` — text-to-video (T2V)
-  - `image2video` — image-to-video (I2V)
-  - `first_last_frame` — first/last frame
-  - `reference` / `reference_video` — reference-to-video (R2V)
-  - `edit` / `video_edit` / `style_transfer` — video editing
-  - `video_continuation` / `extend` — video continuation
+  `generate` — the only action this model takes.
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-video; `image_urls` is image-to-video; `first_frame_image` + `last_frame_image` is a first/last-frame transition; `video_urls` / `audio_urls` is reference-to-video.
 </ParamField>
 
 <ParamField body="prompt" type="string">
@@ -108,7 +104,7 @@ For the full async flow see [Task System](/en/docs/task-system) — Submit → S
 ```json
 {
   "task_id": "task-wave1775285160b950328499",
-  "model": "veo3.1-quality-official",
+  "model": "veo3.1-quality",
   "action": "generate",
   "status": "queued",
   "created_at": 1775285160040,

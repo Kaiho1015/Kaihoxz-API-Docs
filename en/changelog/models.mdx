@@ -2,6 +2,128 @@
 title: "Model Updates"
 ---
 
+<Update label="2026-09-02" description="Model launch">
+**Nano Banana 2 Lite standard tier · Image**
+
+- **Model ID**: `gemini-3.1-flash-lite-image-rev`
+- The fastest, cheapest image model in the Gemini 3.1 family — about 4 seconds per image, `1K` only, up to 14 reference images, no search grounding or inpainting. Currently the lowest-priced Gemini image tier on the platform.
+- **Docs**: [Gemini image models](/en/api-reference/image/gemini)
+</Update>
+
+<Update label="2026-09-02" description="Model launch">
+**Text models · 15 new models (Anthropic / Google / Qwen / MiniMax / MoonshotAI / Z.ai)**
+
+- **Anthropic**: `claude-fable-5` — Mythos-class flagship, 1M-token context, no long-context surcharge.
+- **Google**: `gemini-3.7-flash` · `gemini-3.6-flash` · `gemini-3.5-flash-lite`.
+- **Qwen** (first Qwen text models on the platform): `qwen3.8-max` (released today) · `qwen3.7-max` · `qwen3.7-plus` · `qwen3.6-plus` · `qwen3.6-flash`, all with 1M-token context; Plus / Flash bill a long-context tier above 256K input.
+- **MiniMax**: `minimax-m3` (multimodal, 1M context, 2× above 512K input) · `minimax-m2.7`.
+- **MoonshotAI**: `kimi-k2.6` · `kimi-k2.7-code` · `kimi-k2.7-code-highspeed`.
+- **Z.ai**: `glm-5.2` (1M context).
+- All served via `/v1/chat/completions`; model IDs are bare names with no vendor prefix.
+- **Docs**: [Chat completions](/en/api-reference/text/general-chat)
+</Update>
+
+<Update label="2026-09-02" description="Model launch">
+**Grok text models · four models**
+
+- **Model IDs**: `grok-4.6` · `grok-4.5` · `grok-4.3` · `grok-build-0.1`
+- xAI's current-generation text line is now available: 4.6 is the flagship (code and everything else, 500K context); 4.5 is the reasoning tier; 4.3 is the fast general-purpose tier (1M context); Build 0.1 targets coding agents. All support image input, function calling and structured outputs via `/v1/chat/completions`.
+- Requests with more than 200K input tokens are billed at 2× the standard rate, matching xAI's long-context tier.
+- In the same batch, `kimi-k3` output pricing was re-aligned (lowered) to Moonshot's official list price.
+- **Docs**: [Chat completions](/en/api-reference/text/general-chat)
+</Update>
+
+<Update label="2026-09-01" description="Model launch">
+**GPT-4o Transcribe (two tiers) · Speech to text**
+
+- **Model IDs**: `gpt-4o-transcribe` · `gpt-4o-mini-transcribe`
+- OpenAI's current-generation transcription models with a markedly lower word-error rate than Whisper; the Mini tier is half price. Billed per minute of audio via `/v1/audio/transcriptions`.
+- **Docs**: [Speech transcription](/en/api-reference/audio/whisper-transcription)
+</Update>
+
+<Update label="2026-09-01" description="Model launch">
+**MiniMax H3 Max / Regeneration · Video**
+
+- **Model IDs**: `minimax-h3-max` (480p / 768p value tier) · `minimax-h3-regeneration` (re-renders a 768p clip at native 2K, `video_urls` required)
+- `minimax-h3` pricing was aligned to MiniMax's official rate card in the same batch.
+- **Docs**: [MiniMax H3](/en/api-reference/video/minimax-h3)
+</Update>
+
+<Update label="2026-09-01" description="Model launch">
+**Video · Seedance 1.0 Pro (two tiers) + Wan 2.6 image-to-video (two tiers)**
+
+- **Model IDs**: `seedance-1.0-pro` · `seedance-1.0-pro-fast` · `wan2.6-i2v` · `wan2.6-i2v-flash`
+- Seedance 1.0 Pro is the stable 1.x flagship, priced below 1.5 / 2.x; the Fast tier is about 3× faster and the cheapest Seedance video option. 480p / 720p / 1080p, 5 or 10 sec.
+- Wan 2.6 image-to-video now has a standard and a Flash tier (about half price), 720p / 1080p, 5 / 10 / 15 sec.
+- **Billing correction**: across the Seedance family, image-to-video costs the **same** as text-to-video (the docs previously described two tiers); reference video is billed at 2× the unit price as an interim rule. Wan 2.7 video editing and reference-to-video use the same 2× interim rule.
+- **Docs**: [Seedance](/en/api-reference/video/seedance) · [Wan series](/en/api-reference/video/wan)
+</Update>
+
+<Update label="2026-09-01" description="Model launch">
+**Seedream 4.0 / 4.5 and Imagen 4 · Image**
+
+- **Model IDs**: `seedream-4.0` · `seedream-4.5` · `imagen-4.0`
+- Both Seedream 4.x tiers are now listed: 4.0 is the lowest-priced Seedream, 4.5 has better text accuracy and multi-reference fusion; both support 1K / 2K / 4K, up to 10 reference images and 15 images per request.
+- Imagen 4 (standard tier) is now open — the docs previously flagged it as under maintenance. Photorealistic text-to-image, 1K / 2K, five aspect ratios, text-to-image only.
+- **Docs**: [Seedream series](/en/api-reference/image/seedream) · [Imagen 4.0](/en/api-reference/image/imagen)
+</Update>
+
+<Update label="2026-09-01" description="Model launch">
+**FLUX.2 Max · Image**
+
+- **Model ID**: `flux-2-max`
+- The top quality tier of the FLUX.2 family, for final renders where fidelity outweighs cost. Up to 8 reference images, `1K` / `2K`, billed by output megapixels.
+- **Docs**: [FLUX series](/en/api-reference/image/flux)
+</Update>
+
+<Update label="2026-09-01" description="Model launch">
+**Grok Imagine official line · four models**
+
+- **Model IDs**: `grok-imagine-image` (standard) · `grok-imagine-image-quality` (quality) · `grok-imagine-video` (1.0) · `grok-imagine-video-1.5`
+- Until now only the Grok Imagine economy line (`-rev`) was listed; the xAI official line is now available too. The standard image tier costs the same at 1K and 2K and is the cheapest official Grok image model; Video 1.5 adds 1080p and audio-driven generation.
+- Correction: the Grok video duration range is **6-15 seconds**; the docs previously said 6-30.
+- **Docs**: [Grok Imagine Image](/en/api-reference/image/grok-imagine) · [Grok Imagine Video](/en/api-reference/video/grok-imagine-video)
+</Update>
+
+<Update label="2026-09-01" description="Model launch">
+**Qwen Image 3.0 · Image**
+
+- **Model IDs**: `qwen-image-3.0` (standard) · `qwen-image-3.0-pro` (dense layouts)
+- Markedly more reliable text rendering than gen-2. 1K / 2K, seven aspect ratios, up to 3 reference images, up to 6 images per request.
+- The Pro tier prices 1K and 2K separately; the standard tier charges the same for both.
+
+**GPT Image 1.5 · Image**
+
+- **Model ID**: `gpt-image-1.5`
+- Faster than GPT Image 1, with markedly better instruction following and editing precision. 1:1 / 2:3 / 3:2, four quality tiers.
+- **Omitting `quality` bills at the `high` rate** — see [GPT-Image series](/en/api-reference/image/gpt-image).
+
+**Speech · three models**
+
+- **Model IDs**: `tts-1` · `tts-1-hd` · `whisper-1`
+- TTS is billed per character of input text; Whisper is billed per minute of audio.
+</Update>
+
+<Update label="2026-09-01" description="Breaking change">
+**Seedance / Seedream · `doubao-` prefix dropped from model IDs**
+
+For consistency with the rest of the catalog — most model IDs here carry no vendor prefix, and vendor is shown separately on the model card — these 7 model IDs have been renamed:
+
+| Old ID | New ID |
+|---|---|
+| `doubao-seedance-1.5-pro` | `seedance-1.5-pro` |
+| `doubao-seedance-2.0` | `seedance-2.0` |
+| `doubao-seedance-2.0-fast` | `seedance-2.0-fast` |
+| `doubao-seedance-2.0-face` | `seedance-2.0-face` |
+| `doubao-seedance-2.0-fast-face` | `seedance-2.0-fast-face` |
+| `doubao-seedance-2.0-mini` | `seedance-2.0-mini` |
+| `doubao-seedream-5.0-lite` | `seedream-5.0-lite` |
+
+- **The old IDs no longer resolve.** Please switch to the new IDs.
+- Capabilities, parameters and pricing are **unchanged** — this is a rename only.
+- **Docs**: [Seedance Video API](/en/api-reference/video/seedance) · [Seedream Image API](/en/api-reference/image/seedream)
+</Update>
+
 <Update label="2026-07-11" description="Model launch">
 **Claude Sonnet 5 · Chat**
 
@@ -24,12 +146,12 @@ title: "Model Updates"
 <Update label="2026-07-11" description="Breaking change">
 **Seedance 2.0 series · `image_urls` semantics change**
 
-Effective **2026-07-09** (upstream), for `doubao-seedance-2.0`, `doubao-seedance-2.0-fast` and `doubao-seedance-2.0-mini`:
+Effective **2026-07-09** (upstream), for `seedance-2.0`, `seedance-2.0-fast` and `seedance-2.0-mini`:
 
 - **Before** — the 1st image in `image_urls` acted as the first frame, the 2nd as the last frame, the rest as references.
 - **After** — **all** images in `image_urls` are treated as reference images only; they no longer carry first/last-frame meaning.
 
-To keep constraining first / last frames, use **`image_with_roles`** (unaffected by this change). `doubao-seedance-1.5-pro` and the `face` variants are unaffected.
+To keep constraining first / last frames, use **`image_with_roles`** (unaffected by this change). `seedance-1.5-pro` and the `face` variants are unaffected.
 
 - **Docs**: [Seedance video API](/en/api-reference/video/seedance)
 </Update>
@@ -37,7 +159,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2026-06-24" description="Capability update">
 **Seedance 2.0 · 4K added**
 
-- `doubao-seedance-2.0` now supports **4K** — 480p / 720p / 1080p / 4K; pricing synced to official rates.
+- `seedance-2.0` now supports **4K** — 480p / 720p / 1080p / 4K; pricing synced to official rates.
 - **Docs**: [Seedance video API](/en/api-reference/video/seedance)
 </Update>
 
@@ -60,16 +182,16 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 
 **Grok Imagine 1.5 · Image / edit / video**
 
-- **Image**　`grok-imagine-1.5` — text-to-image, aspect ratios 1:1 / 16:9 / 9:16 / 3:2 / 2:3, batch `n`
-- **Edit**　`grok-imagine-1.5-edit` — generate / edit, pass `image_urls` as references
-- **Video**　`grok-imagine-1.5-video` — text/image-to-video, resolution 480p / 720p, duration 6–30 s, ratios 16:9 / 9:16 / 1:1
+- **Image**　`grok-imagine-1.5-rev` — text-to-image, aspect ratios 1:1 / 16:9 / 9:16 / 3:2 / 2:3, batch `n`
+- **Edit**　`grok-imagine-1.5-edit-rev` — generate / edit, pass `image_urls` as references
+- **Video**　`grok-imagine-1.5-video-rev` — text/image-to-video, resolution 480p / 720p, duration 6–30 s, ratios 16:9 / 9:16 / 1:1
 - **Docs**: [Grok Imagine image API](/en/api-reference/image/grok-imagine)　·　[Grok Imagine video API](/en/api-reference/video/grok-imagine-video)
 </Update>
 
 <Update label="2026-06-15" description="Model launch">
 **Seedance 2.0 Mini · Video generation**
 
-- **Model ID**: `doubao-seedance-2.0-mini`
+- **Model ID**: `seedance-2.0-mini`
 - **Modes**: text-to-video, image-to-video
 - **Resolution**: 480p / 720p　·　**Duration**: 4–15 s　·　**Aspect ratios**: 16:9 / 9:16 / 1:1
 - **Docs**: [Seedance video API](/en/api-reference/video/seedance)
@@ -103,7 +225,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 - **Model ID**: `midjourney`
 - **Modes**: text-to-image (imagine), blend, describe, edits; chained upscale / variation / zoom / pan (pass `ref_task_id`)
 - **Aspect ratios**: 1:1 / 16:9 / 9:16 / 2:3 / 3:2 / 4:3 / 3:4 / 21:9 / 9:21　·　**Speed tiers**: relax / fast / turbo
-- **Docs**: [Midjourney image API](/cn/api-reference/image/midjourney)
+- **Docs**: [Midjourney image API](/en/api-reference/image/midjourney)
 </Update>
 
 <Update label="2026-04-27" description="Model launch">
@@ -129,7 +251,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2026-04-21" description="Model launch">
 **GPT Image 2 series**
 
-- **Model ID**: `gpt-image-2` · `gpt-image-2-official`
+- **Model ID**: `gpt-image-2` · `gpt-image-2`
 - Resolution 1K / 2K / 4K　·　Aspect ratios 15 ratios　·　generate / edit
 - **Docs**: [GPT Image API](/en/api-reference/image/gpt-image)
 </Update>
@@ -202,7 +324,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2026-02-26" description="Model launch">
 **Gemini 3.1 Flash Image Preview**
 
-- **Model ID**: `gemini-3.1-flash-image-preview` · `gemini-3.1-flash-image-preview-official`
+- **Model ID**: `gemini-3.1-flash-image-preview` · `gemini-3.1-flash-image-preview`
 - Resolution 0.5K / 1K / 2K / 4K　·　Aspect ratios 11 ratios　·　generate / edit
 - **Docs**: [Gemini image API](/en/api-reference/image/gemini)
 </Update>
@@ -244,7 +366,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2026-02-13" description="Model launch">
 **Seedream 5.0 Lite**
 
-- **Model ID**: `doubao-seedream-5.0-lite`
+- **Model ID**: `seedream-5.0-lite`
 - Resolution 2K / 3K / 4K　·　Aspect ratios 9 ratios　·　generate / edit
 - **Docs**: [Seedream image API](/en/api-reference/image/seedream)
 </Update>
@@ -257,7 +379,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 
 **Seedance 2.0 series**
 
-- **Model ID**: `doubao-seedance-2.0` · `doubao-seedance-2.0-fast` · `doubao-seedance-2.0-face` · `doubao-seedance-2.0-fast-face`
+- **Model ID**: `seedance-2.0` · `seedance-2.0-fast` · `seedance-2.0-face` · `seedance-2.0-fast-face`
 - Resolution 480p / 720p / 1080p　·　Duration 4–15 s　·　Aspect ratios 16:9 / 9:16 / 1:1
 - **Docs**: [Seedance video API](/en/api-reference/video/seedance)
 </Update>
@@ -293,13 +415,13 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2026-02-02" description="Model launch">
 **Grok Imagine 1.0 · Image**
 
-- **Model ID**: `grok-imagine-1.0` · `grok-imagine-1.0-edit`
+- **Model ID**: `grok-imagine-1.0-rev` · `grok-imagine-1.0-edit-rev`
 - Aspect ratios 1:1 / 16:9 / 9:16 / 3:2 / 2:3　·　generate / edit
 - **Docs**: [Grok Imagine image API](/en/api-reference/image/grok-imagine)
 
 **Grok Imagine 1.0 · Video**
 
-- **Model ID**: `grok-imagine-1.0-video`
+- **Model ID**: `grok-imagine-1.0-video-rev`
 - Resolution 480p / 720p　·　Duration 6–30 s　·　Aspect ratios 16:9 / 9:16 / 1:1
 - **Docs**: [Grok Imagine video API](/en/api-reference/video/grok-imagine-video)
 </Update>
@@ -342,7 +464,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2025-12-16" description="Model launch">
 **Seedance 1.5 Pro**
 
-- **Model ID**: `doubao-seedance-1.5-pro`
+- **Model ID**: `seedance-1.5-pro`
 - Resolution 480p / 720p / 1080p　·　Duration 5 / 10 s　·　Aspect ratios 16:9 / 9:16 / 1:1
 - **Docs**: [Seedance video API](/en/api-reference/video/seedance)
 
@@ -407,7 +529,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2025-11-20" description="Model launch">
 **Gemini 3 Pro Image Preview**
 
-- **Model ID**: `gemini-3-pro-image-preview` · `gemini-3-pro-image-preview-official`
+- **Model ID**: `gemini-3-pro-image-preview` · `gemini-3-pro-image-preview`
 - Resolution 1K / 2K / 4K　·　Aspect ratios 11 ratios　·　generate / edit
 - **Docs**: [Gemini image API](/en/api-reference/image/gemini)
 </Update>
@@ -451,7 +573,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2025-10-14" description="Model launch">
 **Veo 3.1 series**
 
-- **Model ID**: `veo3.1-quality` · `veo3.1-fast` · `veo3.1-lite` · `veo3.1-quality-official` · `veo3.1-fast-official`
+- **Model ID**: `veo3.1-quality` · `veo3.1-fast` · `veo3.1-lite` · `veo3.1-quality` · `veo3.1-fast`
 - Resolution 720p / 1080p / 4K　·　Duration 8 s　·　Aspect ratios 16:9 / 9:16 / 1:1
 - **Docs**: [Veo video API](/en/api-reference/video/veo)
 
@@ -523,7 +645,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2025-08-26" description="Model launch">
 **Gemini 2.5 Flash Image Preview**
 
-- **Model ID**: `gemini-2.5-flash-image-preview` · `gemini-2.5-flash-image-preview-official`
+- **Model ID**: `gemini-2.5-flash-image-preview` · `gemini-2.5-flash-image-preview`
 - Resolution 1K　·　Aspect ratios 11 ratios　·　generate / edit
 - **Docs**: [Gemini image API](/en/api-reference/image/gemini)
 </Update>
@@ -574,7 +696,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 <Update label="2025-04-23" description="Model launch">
 **GPT Image 1 (official)**
 
-- **Model ID**: `gpt-image-1-official`
+- **Model ID**: `gpt-image-1`
 - Aspect ratios 1:1 / 3:2 / 2:3　·　generate / edit
 - **Docs**: [GPT Image API](/en/api-reference/image/gpt-image)
 </Update>

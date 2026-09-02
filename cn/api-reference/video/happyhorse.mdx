@@ -12,15 +12,11 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 
 ## 定价
 
-按秒计费,单位 `$/秒`(售价即结算 USD 价)。**generate 与 edit 同价**。
-
-| 分辨率 | 单价(generate) | 单价(edit) | 5 秒视频 |
-|---|---|---|---|
-| 720P | `$0.14625` / 秒 | `$0.14625` / 秒 | `$0.73125` |
-| 1080P | `$0.25875` / 秒 | `$0.25875` / 秒 | `$1.29375` |
-
 <Note>
-EDIT 模式(`action: edit`)需传 `video_urls`,输出时长与源视频一致(超过 15s 按截取后的 15s 计费),`duration` 参数不生效;计费分辨率仍按 `resolution` 取价。
+本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
+
+**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
+**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
 </Note>
 
 ## 模式路由
@@ -127,12 +123,9 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  操作类型,**通常无需显式传**,后端按媒体字段自动路由。可选值:
-  - `generate` — 文生视频(T2V)
-  - `image2video` — 图生视频(I2V),需配合 `first_frame_image`
-  - `reference` — 参考生视频(R2V),需配合 `image_urls`
-  - `edit` — 视频编辑,需配合 `video_url`
-  - `reference_audio` — 配合 `audio_urls` 作驱动音
+  `generate` — 本模型唯一动作。
+
+  **模式不靠 action 区分,靠传什么:** 只给 `prompt` 是文生视频;带 `image_urls` 是图生视频;带 `first_frame_image` + `last_frame_image` 是首尾帧;带 `video_urls` / `audio_urls` 是参考生视频。
 </ParamField>
 
 <ParamField body="prompt" type="string">

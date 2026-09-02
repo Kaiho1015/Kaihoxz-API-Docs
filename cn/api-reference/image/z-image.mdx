@@ -10,9 +10,12 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 
 ## 定价
 
-| 模型 | 单价(每张) |
-|---|---|
-| `z-image-turbo` | `$0.01125` |
+<Note>
+本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
+
+**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
+**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
+</Note>
 
 ## 调用示例
 
@@ -73,7 +76,10 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  操作类型,`z-image-turbo` 仅支持 `generate`(文生图)
+  - `generate` — 文生图(默认)
+  - `edit` — 图像编辑,配合 `image_urls` 使用
+
+  **模式不靠 action 区分,靠传什么:** 只给 `prompt` 是文生图;带一张 `image_urls` 是图生图;带多张是多图参考融合;再带 `mask_url` 就是局部重绘。
 </ParamField>
 
 <ParamField body="prompt" type="string" required>

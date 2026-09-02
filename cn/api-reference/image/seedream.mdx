@@ -4,17 +4,23 @@ description: "字节跳动豆包图像生成 — 文生图 / 图像编辑 / 组�
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-字节跳动 Seed 团队的图像生成模型系列。**当前提供 `doubao-seedream-5.0-lite` 版本**(4.0 / 4.5 因按 token 计费暂未接入)。
+字节跳动 Seed 团队的图像生成模型系列,**两代四档**:
 
-**5.0 Lite** — 视觉推理(CoT)+ 实时联网搜索,强身份保留(眼/下颌/比例/肤色跨风格不变),支持 1K/2K/4K 输出,性价比线。
+- **5.0 Pro** — 品质优先,电影级细节与文字准确度,1K / 1.5K / 2K(1.5K 与 1K 同价、更清晰),最多 10 张参考图,2K 单独计价
+- **5.0 Lite** — 视觉推理(CoT)+ 实时联网搜索,强身份保留(眼/下颌/比例/肤色跨风格不变),2K / 3K / 4K,性价比线
+- **4.5** — 4.x 系列精修档,文字准确度与多参考图风格融合更好,1K / 2K / 4K,最多 10 张参考图、单次最多 15 张
+- **4.0** — 文生图与编辑一体,图内文字渲染强,1K / 2K / 4K,最多 10 张参考图,比 5.0 早一代、价格更低
 
 按张计费。
 
 ## 定价
 
-| 模型 | 单价(每张) |
-|---|---|
-| `doubao-seedream-5.0-lite` | `$0.0315` |
+<Note>
+本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
+
+**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
+**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
+</Note>
 
 ## 模式速查
 
@@ -33,7 +39,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedream-5.0-lite",
+    "model": "seedream-5.0-lite",
     "prompt": "未来主义城市夜景,霓虹灯映在湿润街面,电影感构图",
     "resolution": "2K",
     "aspect_ratio": "16:9"
@@ -45,7 +51,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedream-5.0-lite",
+    "model": "seedream-5.0-lite",
     "action": "edit",
     "prompt": "把背景换成黄昏天空,人物保持不变",
     "image_urls": ["https://cdn.example.com/portrait.jpg"],
@@ -58,7 +64,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedream-5.0-lite",
+    "model": "seedream-5.0-lite",
     "action": "edit",
     "prompt": "把第一张图的角色放进第二张图的场景里",
     "image_urls": [
@@ -75,7 +81,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seedream-5.0-lite",
+    "model": "seedream-5.0-lite",
     "prompt": "电商主图四张:正面 / 侧面 / 细节 / 场景应用",
     "sequential_image_generation": "auto",
     "sequential_image_generation_options": {"max_images": 4},
@@ -90,7 +96,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 ```json 提交成功
 {
   "task_id": "task-wave1775285160b950328499",
-  "model": "doubao-seedream-5.0-lite",
+  "model": "seedream-5.0-lite",
   "action": "generate",
   "status": "queued",
   "created_at": 1775285160040,
@@ -105,18 +111,22 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 | 模型 ID | 说明 |
 |---|---|
-| `doubao-seedream-5.0-lite` | 视觉推理 + 联网搜索,身份保留强,支持 1K/2K/4K,文生 / 编辑 / 组图统一接口 |
+| `seedream-5.0-pro` | 品质优先档,电影级细节,1K / 1.5K / 2K(1.5K 与 1K 同价;2K 单独计价;不传分辨率按 2K 计),最多 10 张参考图 |
+| `seedream-5.0-lite` | 视觉推理 + 联网搜索,身份保留强,2K / 3K / 4K,文生 / 编辑 / 组图统一接口 |
+| `seedream-4.5` | 4.x 精修档,文字更准、多参考图融合更好,1K / 2K / 4K |
+| `seedream-4.0` | 文生图 + 编辑一体,文字渲染强,1K / 2K / 4K,价格最低 |
 
 ## 通用参数
 
 <ParamField body="model" type="string" required>
-  目前为 `doubao-seedream-5.0-lite`
+  目前为 `seedream-5.0-lite`
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  操作类型,可选值:
   - `generate` — 文生图(默认)
-  - `edit` — 图像编辑 / 多图参考(需配合 `image_urls`)
+  - `edit` — 图像编辑,配合 `image_urls` 使用
+
+  **模式不靠 action 区分,靠传什么:** 只给 `prompt` 是文生图;带一张 `image_urls` 是图生图;带多张是多图参考融合;再带 `mask_url` 就是局部重绘。
 </ParamField>
 
 <ParamField body="prompt" type="string" required>

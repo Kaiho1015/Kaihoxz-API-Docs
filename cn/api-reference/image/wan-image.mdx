@@ -6,8 +6,8 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 
 阿里通义万相 2.7 图像生成与编辑统一接口。提供 **两个独立 model**,共用同一接口与同一组参数,通过 `model` ID 区分,定价与最高分辨率不同:
 
-- **`wan2.7-image`**(标准版)— 最高 **2K**,`$0.0243` / 张
-- **`wan2.7-image-pro`**(专业版)— 最高 **4K**,`$0.0612` / 张
+- **`wan2.7-image`**(标准版)— 最高 **2K**
+- **`wan2.7-image-pro`**(专业版)— 最高 **4K**
 
 **6 种调用模式**:
 
@@ -22,10 +22,12 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 
 ## 定价
 
-| 模型 | 单价(每张) | 最高分辨率 |
-|---|---|---|
-| `wan2.7-image` | `$0.0243` | 2K |
-| `wan2.7-image-pro` | `$0.0612` | 4K |
+<Note>
+本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
+
+**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
+**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
+</Note>
 
 ## 模式速查
 
@@ -61,7 +63,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "wan2.7-image",
-    "action": "reference",
     "prompt": "把第一张人物放进第二张场景,衣着借鉴第三张",
     "image_urls": [
       "https://cdn.example.com/character.jpg",
@@ -79,7 +80,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "wan2.7-image",
-    "action": "group",
     "prompt": "小狐狸的一天:晨起 / 觅食 / 嬉戏 / 入睡,4 格连环画",
     "enable_sequential": true,
     "n": 4,
@@ -94,7 +94,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "wan2.7-image",
-    "action": "interactive_edit",
     "prompt": "把框中的猫换成柴犬,保持姿势和光照",
     "image_urls": ["https://cdn.example.com/cat.jpg"],
     "bbox_list": [[[120, 80, 540, 460]]],
@@ -152,13 +151,10 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  操作类型,可选值:
   - `generate` — 文生图(默认)
-  - `image2image` — 图生图(需配合 `image_urls` 单张)
-  - `edit` — 图像编辑(局部重绘 / 风格迁移)
-  - `reference` — 多图参考融合(最多 9 张)
-  - `group` — 组图生成(配合 `enable_sequential`)
-  - `interactive_edit` — 交互式框选编辑(配合 `bbox_list`)
+  - `edit` — 图像编辑,配合 `image_urls` 使用
+
+  **模式不靠 action 区分,靠传什么:** 只给 `prompt` 是文生图;带一张 `image_urls` 是图生图;带多张是多图参考融合;再带 `mask_url` 就是局部重绘。
 </ParamField>
 
 <ParamField body="prompt" type="string" required>

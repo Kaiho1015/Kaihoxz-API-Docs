@@ -33,7 +33,7 @@ client = openai.OpenAI(
 
 # 提交异步任务
 response = client.post("/tasks", body={
-    "model": "veo3",
+    "model": "veo3.1-fast",
     "action": "generate",
     "prompt": "A cat walking on the beach",
     "duration": 5
@@ -87,7 +87,7 @@ def wait_for_task(client, task_id, timeout=300):
 
 ```json
 {
-  "model": "veo3",
+  "model": "veo3.1-fast",
   "action": "generate",
   "prompt": "...",
   "callback_url": "https://your-server.com/webhook/task-done"

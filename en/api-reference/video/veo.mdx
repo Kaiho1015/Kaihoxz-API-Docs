@@ -11,9 +11,9 @@ Google Veo 3.1 video generation, available through both **official direct** and 
 
 | Variant | Channel | Billing | Positioning |
 |---|---|---|---|
-| `veo3.1-quality-official` | Official direct | Per-second | Flagship tier, final-delivery quality |
-| `veo3.1-fast-official` | Official direct | Per-second | Fast tier, suited for iteration drafts |
-| `veo3.1-quality` | Reverse-engineered | Per-call | Reverse-engineered flagship, fixed 8 sec |
+| `veo3.1-quality` | Official direct | Per-second | Flagship tier, final-delivery quality |
+| `veo3.1-fast` | Official direct | Per-second | Fast tier, suited for iteration drafts |
+| `veo3.1-quality-rev` | Reverse-engineered | Per-call | Reverse-engineered flagship, fixed 8 sec |
 | `veo3.1-lite` | Reverse-engineered | Per-call | Reverse-engineered lightweight, fixed 8 sec |
 
 Both channels natively support audio, first/last-frame keyframes, and Remix continuation.
@@ -21,41 +21,11 @@ Both channels natively support audio, first/last-frame keyframes, and Remix cont
 ## Pricing
 
 <Note>
-**4K resolution does not support muted output** — you must set `generate_audio=true` (720p / 1080p can be either muted or with audio). In the table below, `720p_sound` / `1080p_sound` are the audio-on premium tiers, and `4k_sound` is the only available 4K tier.
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
 </Note>
-
-### Official Tiers (per-second)
-
-720P and 1080P share the same price (Google's official tiered pricing); enabling `generate_audio=true` **doubles** the unit price.
-
-#### `veo3.1-fast-official`
-
-| Spec | Unit price (per sec) | 8-second video |
-|---|---|---|
-| 720P muted | `$0.08` | `$0.64` |
-| 1080P muted | `$0.08` | `$0.64` |
-| 720P + audio | `$0.12` | `$0.96` |
-| 1080P + audio | `$0.12` | `$0.96` |
-| 4K + audio | `$0.28` | `$2.24` |
-
-#### `veo3.1-quality-official`
-
-| Spec | Unit price (per sec) | 8-second video |
-|---|---|---|
-| 720P muted | `$0.16` | `$1.28` |
-| 1080P muted | `$0.16` | `$1.28` |
-| 720P + audio | `$0.32` | `$2.56` |
-| 1080P + audio | `$0.32` | `$2.56` |
-| 4K + audio | `$0.48` | `$3.84` |
-
-### Reverse-Engineered Tiers (per-call)
-
-Reverse-engineered tiers use a **fixed per-call price** independent of duration, resolution, or audio (only 8 seconds is supported). Refer to the admin panel / console for the published price.
-
-| Model ID | Billing | Duration | Per-call price |
-|---|---|---|---|
-| `veo3.1-quality` | Per-call | 8 seconds (fixed) | TBD (see console) |
-| `veo3.1-lite` | Per-call | 8 seconds (fixed) | TBD (see console) |
 
 ## Request Examples
 
@@ -66,7 +36,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "veo3.1-fast-official",
+    "model": "veo3.1-fast",
     "prompt": "Neon-lit street on a rainy night, a red sports car drives through a puddle, cinematic slow motion",
     "duration": 8,
     "resolution": "1080p",
@@ -79,8 +49,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "veo3.1-quality-official",
-    "action": "image2video",
+    "model": "veo3.1-quality",
     "prompt": "The person slowly looks up and smiles, hair blown by the wind",
     "first_frame_image": "https://cdn.example.com/portrait.jpg",
     "duration": 6,
@@ -94,7 +63,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "veo3.1-quality-official",
+    "model": "veo3.1-quality",
     "prompt": "Waves crashing on rocks, seagulls calling, a distant ship horn",
     "duration": 8,
     "resolution": "1080p",
@@ -108,8 +77,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "veo3.1-fast-official",
-    "action": "remix",
+    "model": "veo3.1-fast",
     "prompt": "Camera continues to push in, the figure turns and walks away",
     "first_frame_image": "https://cdn.example.com/last-frame.jpg",
     "duration": 4,
@@ -123,7 +91,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "veo3.1-quality",
+    "model": "veo3.1-quality-rev",
     "prompt": "A seaside town at sunset, doves flying past the bell tower",
     "duration": 8,
     "aspect_ratio": "16:9"
@@ -136,7 +104,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 ```json Submit success
 {
   "task_id": "task-wave1775285160b950328499",
-  "model": "veo3.1-quality-official",
+  "model": "veo3.1-quality",
   "action": "generate",
   "status": "queued",
   "created_at": 1775285160040,
@@ -151,23 +119,21 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 | Model ID | Channel | Variant | Billing | Duration | Resolution |
 |---|---|---|---|---|---|
-| `veo3.1-quality-official` | Official direct | Quality flagship | Per-second | 4 / 6 / 8 sec | 720P / 1080P / 4K |
-| `veo3.1-fast-official` | Official direct | Fast tier | Per-second | 4 / 6 / 8 sec | 720P / 1080P / 4K |
-| `veo3.1-quality` | Reverse-engineered | Quality flagship variant | Per-call | 8 sec (fixed) | 720P / 1080P |
+| `veo3.1-quality` | Official direct | Quality flagship | Per-second | 4 / 6 / 8 sec | 720P / 1080P / 4K |
+| `veo3.1-fast` | Official direct | Fast tier | Per-second | 4 / 6 / 8 sec | 720P / 1080P / 4K |
+| `veo3.1-quality-rev` | Reverse-engineered | Quality flagship variant | Per-call | 8 sec (fixed) | 720P / 1080P |
 | `veo3.1-lite` | Reverse-engineered | Lite lightweight variant | Per-call | 8 sec (fixed) | 720P / 1080P |
 
 ## Common Parameters
 
 <ParamField body="model" type="string" required>
-  Model ID — one of `veo3.1-quality-official` / `veo3.1-fast-official` / `veo3.1-quality` / `veo3.1-lite`
+  Model ID — one of `veo3.1-quality` / `veo3.1-fast` / `veo3.1-quality-rev` / `veo3.1-lite`
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  Operation type, valid values:
-  - `generate` — text-to-video (T2V)
-  - `image2video` — image-to-video (I2V); requires `first_frame_image`
-  - `first_last_frame` — first/last-frame keyframes; requires both `first_frame_image` and `last_frame_image`
-  - `remix` — continuation based on an existing clip
+  `generate` — the only action this model takes.
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-video; `image_urls` is image-to-video; `first_frame_image` + `last_frame_image` is a first/last-frame transition; `video_urls` / `audio_urls` is reference-to-video.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
@@ -220,7 +186,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </Note>
 
 <Tabs>
-  <Tab title="veo3.1-quality-official">
+  <Tab title="veo3.1-quality">
     <ParamField body="generate_audio" type="boolean" default="false">
       Whether to generate the audio track. When enabled, unit price doubles; **4K must** be `true`
     </ParamField>
@@ -245,12 +211,9 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
       - `disallow` — disallow generating persons
     </ParamField>
 
-    <ParamField body="raw" type="boolean" default="false">
-      Remix-mode only; when `true`, returns only the extension, not concatenated with the original clip
-    </ParamField>
-  </Tab>
+      </Tab>
 
-  <Tab title="veo3.1-fast-official">
+  <Tab title="veo3.1-fast">
     <ParamField body="generate_audio" type="boolean" default="false">
       Whether to generate the audio track. When enabled, unit price doubles; **4K must** be `true`
     </ParamField>
@@ -275,12 +238,9 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
       - `disallow` — disallow generating persons
     </ParamField>
 
-    <ParamField body="raw" type="boolean" default="false">
-      Remix-mode only; when `true`, returns only the extension, not concatenated with the original clip
-    </ParamField>
-  </Tab>
+      </Tab>
 
-  <Tab title="veo3.1-quality (reverse)">
+  <Tab title="veo3.1-quality-rev (reverse)">
     <ParamField body="generate_audio" type="boolean" default="false">
       Whether to generate the audio track
     </ParamField>
@@ -301,11 +261,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
       - `disallow` — disallow generating persons
     </ParamField>
 
-    <ParamField body="raw" type="boolean" default="false">
-      Remix-mode only; when `true`, returns only the extension, not concatenated with the original clip
-    </ParamField>
-
-    <Note>
+        <Note>
     Reverse-engineered tiers are **billed per call**; `duration` only accepts `8`, and `resolution` does not support `4k`.
     </Note>
   </Tab>
@@ -331,11 +287,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
       - `disallow` — disallow generating persons
     </ParamField>
 
-    <ParamField body="raw" type="boolean" default="false">
-      Remix-mode only; when `true`, returns only the extension, not concatenated with the original clip
-    </ParamField>
-
-    <Note>
+        <Note>
     Reverse-engineered tiers are **billed per call**; `duration` only accepts `8`, and `resolution` does not support `4k`.
     </Note>
   </Tab>

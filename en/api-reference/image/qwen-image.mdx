@@ -4,19 +4,23 @@ description: "Alibaba Tongyi Qianwen image — generation / editing / multi-imag
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-Alibaba Tongyi Qianwen image series, with **two tiers**:
+Alibaba Tongyi Qianwen image series — **two generations, four tiers**:
 
-- **2.0 Pro** — Flagship highest-fidelity tier. Native 2K, strong detail, accurate composition, professional-grade text rendering. Suited for infographics, posters, and marketing assets
-- **2.0** — Standard version. Combined generation and editing, supports very long prompts, 2K high-quality output. Suited for use cases needing clear text and professional design aesthetics
+- **3.0 Pro** — Gen-3 flagship, built for dense information layouts: restaurant menus, product tables, multi-column pages, storyboards. 1K and 2K are priced separately
+- **3.0** — Gen-3 standard. Markedly more reliable text rendering — headlines and body copy stay legible in both Chinese and English on posters and dense layouts. Same price at 1K and 2K
+- **2.0 Pro** — Gen-2 flagship highest-fidelity tier. Native 2K, strong detail, accurate composition, professional-grade text rendering
+- **2.0** — Gen-2 standard. Combined generation and editing, supports very long prompts, 2K high-quality output
 
 Per-image pricing, unified interface supporting text-to-image / image-to-image / multi-image reference.
 
 ## Pricing
 
-| Model | Price (per image) |
-|---|---|
-| `qwen-image-2.0-pro` | `$0.053125` |
-| `qwen-image-2.0` | `$0.02125` |
+<Note>
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+</Note>
 
 ## Mode Quick Reference
 
@@ -48,7 +52,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "qwen-image-2.0",
-    "action": "image2image",
     "prompt": "Convert this photo to cyberpunk style, preserve facial features",
     "image_urls": ["https://cdn.example.com/portrait.jpg"],
     "resolution": "2K",
@@ -62,7 +65,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "qwen-image-2.0-pro",
-    "action": "reference",
     "prompt": "Dress the character from the first image in the outfit from the second, place them in the scene from the third",
     "image_urls": [
       "https://cdn.example.com/character.jpg",
@@ -95,6 +97,8 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 | Model ID | Description |
 |---|---|
+| `qwen-image-3.0-pro` | Gen-3 flagship for dense layouts (menus / product tables / multi-column). 1K and 2K priced separately |
+| `qwen-image-3.0` | Gen-3 standard, more reliable text rendering, same price at 1K and 2K |
 | `qwen-image-2.0-pro` | Flagship, native 2K, strong detail, accurate composition, professional-grade text rendering |
 | `qwen-image-2.0` | Standard, combined generation + editing, very long prompts, 2K high-quality output |
 
@@ -105,10 +109,10 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  Operation type. Options:
-  - `generate` — Text-to-image (default)
-  - `image2image` — Image-to-image (use with `image_urls`)
-  - `reference` — Multi-image reference fusion (use with multiple `image_urls`)
+  - `generate` — text to image (default)
+  - `edit` — image editing; pair with `image_urls`
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-image; one `image_urls` entry is image-to-image; several are multi-image reference; add `mask_url` for inpainting.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>

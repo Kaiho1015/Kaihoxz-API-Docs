@@ -19,26 +19,11 @@ Both tiers share the same parameters and capabilities (actions / ref_images / re
 
 ## Pricing
 
-Billed per second (`$ / sec`). When video reference is enabled (`ref_videos` containing `extend` or `reference` types), a separate unit price applies:
-
-### `skyreels-v4-fast`
-
-| Resolution | Standard | With Video Reference | 5-second video (standard) |
-|---|---|---|---|
-| 480P | `$0.068` / sec | `$0.1275` / sec | `$0.34` |
-| 720P | `$0.0935` / sec | `$0.17` / sec | `$0.4675` |
-| 1080P | `$0.23375` / sec | `$0.425` / sec | `$1.16875` |
-
-### `skyreels-v4-std`
-
-| Resolution | Standard | With Video Reference | 5-second video (standard) |
-|---|---|---|---|
-| 480P | `$0.0935` / sec | `$0.153` / sec | `$0.4675` |
-| 720P | `$0.119` / sec | `$0.2125` / sec | `$0.595` |
-| 1080P | `$0.2975` / sec | `$0.53125` / sec | `$1.4875` |
-
 <Note>
-**Video reference surcharge** — when `ref_videos` contains any item of type `reference` (video reference) or `extend` (video extension), pricing follows the "With Video Reference" column; otherwise the standard column.
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
+
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
 </Note>
 
 ## Examples
@@ -64,7 +49,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "skyreels-v4-std",
-    "action": "image2video",
     "prompt": "Character slowly walks toward the camera, long hair flowing",
     "first_frame_image": "https://cdn.example.com/portrait.jpg",
     "duration": 8,
@@ -78,7 +62,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "skyreels-v4-fast",
-    "action": "reference",
     "prompt": "Keep the character consistent, running through a forest, in sync with the audio rhythm",
     "ref_images": [
       {
@@ -107,7 +90,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "skyreels-v4-std",
-    "action": "extend",
     "prompt": "Continue from the previous clip, character turns around and walks off into the distance",
     "ref_videos": [
       {
@@ -147,7 +129,6 @@ Switch generation modes via the `action` field (or the corresponding media field
 | Text-to-video | `generate` | `prompt` | Pure text generation |
 | Image-to-video | `image2video` | `first_frame_image` | Animate a single frame |
 | First/last frame inpainting | `first_last_frame` | `first_frame_image` + `last_frame_image` | Precisely control start/end frames |
-| Multi-image reference (Omni) | `reference` | `ref_images` | Character / style / scene consistency |
 | Video reference | `reference_video` | `ref_videos.type=reference` | Replicate camera motion / style |
 | Video extension | `extend` | `ref_videos.type=extend` | Continue an existing video |
 | Audio-driven | `reference_audio` | `audio_urls` or `ref_images[].audio_url` | Voiceprint / beat sync, lip-sync |
@@ -172,14 +153,9 @@ Switch generation modes via the `action` field (or the corresponding media field
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  Operation type. The backend usually auto-routes based on media fields; passing explicitly locks the mode. Allowed values:
-  - `generate` — text-to-video (T2V)
-  - `image2video` — image-to-video (I2V), with `first_frame_image`
-  - `first_last_frame` — first/last frame inpainting, with `first_frame_image` + `last_frame_image`
-  - `reference` — multi-image reference (Omni style / character consistency), with `ref_images`
-  - `reference_video` — video reference, with `ref_videos.type=reference`
-  - `reference_audio` — audio-driven, with `audio_urls` or `ref_images[].audio_url`
-  - `extend` — video extension, with `ref_videos.type=extend`
+  `generate` — the only action this model takes.
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-video; `image_urls` is image-to-video; `first_frame_image` + `last_frame_image` is a first/last-frame transition; `video_urls` / `audio_urls` is reference-to-video.
 </ParamField>
 
 <ParamField body="prompt" type="string">
@@ -246,19 +222,7 @@ Both tiers share identical parameters; they differ only in generation speed and 
   <Tab title="skyreels-v4-fast">
     **Positioning:** fast tier, quicker response, suited for previews / drafts / high-throughput scenarios.
 
-    <ParamField body="ref_images" type="array">
-      Omni multi-image reference, up to 6 items. Each item supports `image` (single image) or `grid` (multi-image composite), and may include `audio_url` as the driving audio. See [Composite Field Reference](#composite-field-reference) below
-    </ParamField>
-
-    <ParamField body="ref_videos" type="array">
-      Video reference, **up to 1 item**. `type=reference` for style / character reference; `type=extend` for video continuation. See [Composite Field Reference](#composite-field-reference) below
-    </ParamField>
-
-    <ParamField body="mid_frame_images" type="array">
-      Mid-frame keyframes, up to 6 items, with timestamps. Combine with `first_frame_image` / `last_frame_image` to precisely control motion trajectory. See [Composite Field Reference](#composite-field-reference) below
-    </ParamField>
-
-    <ParamField body="prompt_optimizer" type="boolean" default="true">
+                <ParamField body="prompt_optimizer" type="boolean" default="true">
       Whether to enable intelligent prompt rewriting. When on, the backend expands prompt details to improve generation stability; when off, the original prompt is followed strictly
     </ParamField>
   </Tab>
@@ -266,19 +230,7 @@ Both tiers share identical parameters; they differ only in generation speed and 
   <Tab title="skyreels-v4-std">
     **Positioning:** standard quality tier — more stable quality and natural motion, suited for delivery-grade video. Generation takes about 1.5-2x longer than fast.
 
-    <ParamField body="ref_images" type="array">
-      Omni multi-image reference, up to 6 items. Each item supports `image` (single image) or `grid` (multi-image composite), and may include `audio_url` as the driving audio. See [Composite Field Reference](#composite-field-reference) below
-    </ParamField>
-
-    <ParamField body="ref_videos" type="array">
-      Video reference, **up to 1 item**. `type=reference` for style / character reference; `type=extend` for video continuation. See [Composite Field Reference](#composite-field-reference) below
-    </ParamField>
-
-    <ParamField body="mid_frame_images" type="array">
-      Mid-frame keyframes, up to 6 items, with timestamps. Combine with `first_frame_image` / `last_frame_image` to precisely control motion trajectory. See [Composite Field Reference](#composite-field-reference) below
-    </ParamField>
-
-    <ParamField body="prompt_optimizer" type="boolean" default="true">
+                <ParamField body="prompt_optimizer" type="boolean" default="true">
       Whether to enable intelligent prompt rewriting. When on, the backend expands prompt details to improve generation stability; when off, the original prompt is followed strictly
     </ParamField>
   </Tab>
@@ -382,9 +334,6 @@ SkyReels V4's `prompt_optimizer` is on by default, but writing a clear prompt st
 
 | Item | Limit |
 |---|---|
-| `ref_images` | Up to 6 items, 2-9 images per `type=grid` item; each image ≤ 30MB, JPG/PNG/WEBP |
-| `ref_videos` | Up to 1 item, MP4/MOV, ≤ 100MB, 2-30 seconds |
-| `mid_frame_images` | Up to 6 items, timestamps must be strictly increasing and within `(0, duration)` |
 | `audio_urls` / `audio_url` | WAV/MP3, ≤ 15MB, 3-30 seconds |
 | `first_frame_image` / `last_frame_image` | JPG/PNG/WEBP, ≤ 30MB |
 | Output | MP4, link valid for 24 hours |

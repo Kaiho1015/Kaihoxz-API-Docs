@@ -1,10 +1,15 @@
 ---
 title: "Grok Imagine Video Series"
-description: "xAI Grok Imagine 1.0 video tier — text/image-to-video, 5 aspect ratios, 480p / 720p, 6-30 seconds"
+description: "xAI Grok Imagine video tier — official 1.0 / 1.5 and economy lines, 480p / 720p / 1080p, 6-15 seconds"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-xAI Grok Imagine 1.0 video generation model — the video tier of the Grok multimodal family.
+xAI Grok Imagine video generation — the video tier of the Grok multimodal family. **Four options**, split into official and economy lines:
+
+- **Official** — `grok-imagine-video` (1.0: text / image / video-driven, 480p / 720p) and `grok-imagine-video-1.5` (1.5: adds 1080p and audio-driven generation)
+- **Economy** — `grok-imagine-1.0-video-rev` and `grok-imagine-1.5-video-rev` (text / image-driven, 480p / 720p, cheaper)
+
+All four take any integer duration from 6 to 15 seconds and are billed per second of output.
 
 Concise fields, low parameter overhead. Suited for social-media short videos, quick concept demos, and low-cost content pipelines.
 
@@ -14,13 +19,12 @@ The Grok Imagine series has two lines: an **image tier** and a **video tier**. F
 
 ## Pricing
 
-Billed per second by **video duration**, **flat unit price across all resolutions**: `$0.0074375` / sec.
+<Note>
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
 
-| Duration | Cost |
-|---|---|
-| 5 sec | `$0.037` |
-| 10 sec | `$0.074` |
-| 30 sec (max) | `$0.223` |
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+</Note>
 
 ## Examples
 
@@ -31,7 +35,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.0-video",
+    "model": "grok-imagine-1.0-video-rev",
     "prompt": "A rainy night street under neon lights, cyberpunk vibe, slow camera push-in",
     "duration": 6,
     "aspect_ratio": "16:9",
@@ -44,8 +48,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.0-video",
-    "action": "image2video",
+    "model": "grok-imagine-1.0-video-rev",
     "prompt": "Character slowly turns to look at the camera",
     "image_urls": ["https://cdn.example.com/portrait.jpg"],
     "duration": 10,
@@ -58,8 +61,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.0-video",
-    "action": "image2video",
+    "model": "grok-imagine-1.0-video-rev",
     "prompt": "Keep the character consistent, running through a forest",
     "image_urls": [
       "https://cdn.example.com/ref-1.jpg",
@@ -81,7 +83,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 ```json Submitted
 {
   "task_id": "task-wave1775285160b950328499",
-  "model": "grok-imagine-1.0-video",
+  "model": "grok-imagine-1.0-video-rev",
   "action": "generate",
   "status": "queued",
   "created_at": 1775285160040,
@@ -94,20 +96,27 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 ## Available Models
 
-| Model ID | Description |
-|---|---|
-| `grok-imagine-1.0-video` | xAI Grok Imagine 1.0 video tier, T2V / I2V, 5 aspect ratios, 480p / 720p, 6-30 seconds |
+| Model ID | Line | Resolution | Duration (sec) | Actions | Notes |
+|---|---|---|---|---|---|
+| `grok-imagine-video` | Official · 1.0 | 480p / 720p | 6-15 | generate | T2V / I2V / video-driven (`video_urls`) |
+| `grok-imagine-video-1.5` | Official · 1.5 | 480p / 720p / 1080p | 6-15 | generate | T2V / I2V / audio-driven (`audio_urls`), priced by resolution |
+| `grok-imagine-1.0-video-rev` | Economy | 480p / 720p | 6-15 | generate | Base tier, T2V / I2V |
+| `grok-imagine-1.5-video-rev` | Economy | 480p / 720p | 6-15 | generate | Upgraded tier, T2V / I2V, same price as 1.0 |
 
 ## Common Parameters
 
 <ParamField body="model" type="string" required>
-  Fixed value `grok-imagine-1.0-video`
+  Model ID. Accepted values:
+  - `grok-imagine-video` (official 1.0)
+  - `grok-imagine-video-1.5` (official 1.5)
+  - `grok-imagine-1.0-video-rev` (economy)
+  - `grok-imagine-1.5-video-rev` (economy)
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  Operation type. Allowed values:
-  - `generate` — text-to-video (T2V)
-  - `image2video` — image-to-video (I2V), used with `image_urls`
+  `generate` — the only action this model takes.
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-video; `image_urls` is image-to-video; `first_frame_image` + `last_frame_image` is a first/last-frame transition; `video_urls` / `audio_urls` is reference-to-video.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
@@ -130,7 +139,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="duration" type="integer" default="6">
-  Video duration in seconds, **any integer in 6-30**. Note: 30 seconds is the upper bound, which differs from most other video models (typically 5/10/15)
+  Video duration in seconds, **any integer from 6 to 15**
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
@@ -148,7 +157,6 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 ## Notes
 
 - **Aspect ratio auto-matched in I2V mode** — once `image_urls` is passed, the `aspect_ratio` field is ignored and the output ratio follows the first reference image.
-- **Unusual duration range** — `6-30` seconds, different from most video models in the catalog (which use the `5/10/15` tiers). When validating form input on the business side, remember to allow the full range.
 - **Availability subject to upstream** — upstream xAI / Grok quotas may fluctuate. For production, configure `callback_url` for async push instead of pure polling.
 
 ## Resource Limits
@@ -156,8 +164,8 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 | Item | Limit |
 |---|---|
 | Reference images | **Up to 7**, JPG/PNG/WEBP |
-| Duration | 6-30 seconds |
-| Resolution | 480p / 720p |
+| Duration | 6-15 seconds |
+| Resolution | 480p / 720p (1080p on `grok-imagine-video-1.5`) |
 | Output | MP4, link valid for 24 hours |
 
 ## Related Docs

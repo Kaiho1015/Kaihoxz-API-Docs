@@ -12,12 +12,12 @@ Supports text-to-video (T2V) and image-to-video (I2V).
 
 ## Pricing
 
-Billed by **resolution × duration**, in `$ / second`.
+<Note>
+Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
 
-| Model | 768P | 1080P |
-|---|---|---|
-| `minimax-hailuo-2.3` | `$0.05185` | `$0.0765` |
-| `minimax-hailuo-2.3-fast` | `$0.02635` | `$0.04505` |
+**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
+**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
+</Note>
 
 ## Examples
 
@@ -42,7 +42,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "minimax-hailuo-2.3",
-    "action": "image2video",
     "prompt": "The character walks slowly toward the camera",
     "image_urls": ["https://cdn.example.com/portrait.jpg"],
     "duration": 6,
@@ -111,9 +110,9 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  Operation type, usually no need to set explicitly (the backend auto-routes by media fields). Allowed values:
-  - `generate` — text-to-video (T2V)
-  - `image2video` — image-to-video (I2V); pair with `image_urls`
+  `generate` — the only action this model takes.
+
+  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-video; `image_urls` is image-to-video; `first_frame_image` + `last_frame_image` is a first/last-frame transition; `video_urls` / `audio_urls` is reference-to-video.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
@@ -167,10 +166,6 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
   Shortens prompt-optimization latency
 </ParamField>
 
-<ParamField body="camera_movement_tags" type="string[]">
-  Camera-movement tag list (15 total). Recommended to also embed `[tag]` brackets directly in the `prompt`; see [Camera-movement tags](#camera-movement-tags-2-3-2-3-fast) below
-</ParamField>
-
 </Tab>
 
 <Tab title="minimax-hailuo-2.3-fast">
@@ -185,10 +180,6 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 <ParamField body="fast_pretreatment" type="boolean" default="false">
   Shortens prompt-optimization latency
-</ParamField>
-
-<ParamField body="camera_movement_tags" type="string[]">
-  Camera-movement tag list (15 total), identical to 2.3
 </ParamField>
 
 </Tab>

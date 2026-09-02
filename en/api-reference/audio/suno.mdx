@@ -1,0 +1,264 @@
+---
+title: "Suno Music Generation"
+description: "Suno — a song from one line, then extend, cover, mash up, split stems, remaster and clone voices. 31 actions covering the whole music workflow."
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+Suno is an **action-based** model: one `model: "suno"`, and the `action` field decides what this call does. Start a song from scratch with `generate`, then keep going — extend it, cover it, restyle it, split the stems, export WAV, make a music video. **31 actions** in all.
+
+Async: the request returns a `task_id`; poll [task status](/en/api-reference/task/status) until `completed`, then read the artifacts from `result`.
+
+## Actions
+
+Each action is priced separately; **the version (v3.5 – v5.5) does not change the price**. Live prices live in the console's Model Market, and every response carries the actual `cost`.
+
+### Create from scratch
+
+| Action | What it does |
+|---|---|
+| `generate` | A full song. Inspiration mode takes a description; custom mode takes your lyrics |
+| `inspo` | Build a song from a reference recording (requires `audio_urls`) |
+| `lyrics` | Lyrics only, no audio |
+| `sounds` | Sound effects, optionally by type / BPM / key |
+| `upsample_tags` | Expand a rough style description into usable tags |
+| `upload` | Upload your own audio and get a `task_id` the other actions can use |
+
+### Build on an existing track
+
+All of these take `task_id` (the task that produced the source track) plus optional `audio_index` (which track from that result, 1-based).
+
+| Action | What it does |
+|---|---|
+| `extend` | Continue from second `continue_at` |
+| `cover` | Re-perform it in a different style |
+| `remaster` | Mastering pass |
+| `mashup` | Blend two tracks (`task_ids`, **exactly 2**) |
+| `sample` | Take `start_s`–`end_s` as a sample and grow a new song from it |
+| `midi` | Export MIDI |
+| `replace_section` | Replace `start_s`–`end_s`; `infill_lyrics` sets the new words |
+
+### Vocals and stems
+
+| Action | What it does |
+|---|---|
+| `stems` | Pull one stem (`stem_type`, default `lead_vocal`) |
+| `stems_all` | Split every stem at once |
+| `add_vocals` | Add vocals to an instrumental |
+| `add_instrumental` | Add backing to an a cappella |
+| `add_stem` | Layer another stem on top |
+| `vox` | Extract a vocal segment (`vocal_start_s` / `vocal_end_s`) |
+| `create_voice` | Build a voice from a recording |
+| `persona` | Create a singer persona; reuse the same voice later via `persona_id` |
+
+### Audio editing
+
+| Action | What it does |
+|---|---|
+| `crop` | Keep `start_s`–`end_s` |
+| `remove_section` | Cut `start_s`–`end_s` out |
+| `fade_in` / `fade_out` | Fade over `duration_s` seconds |
+| `adjust_speed` | Change speed by `speed`; `keep_pitch` preserves pitch |
+| `concat` | Join segments into one track |
+
+### Export and analysis
+
+| Action | What it does |
+|---|---|
+| `wav` | Export lossless WAV |
+| `generate_video` | Render a music video |
+| `aligned_lyrics` | Lyrics with timestamps |
+| `bpm` | BPM analysis |
+
+## Quick start
+
+<CodeGroup>
+
+```bash Inspiration mode
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "suno",
+    "action": "generate",
+    "prompt": "a gentle city folk song, rainy night, female vocal, guitar and piano",
+    "version": "v5.5"
+  }'
+```
+
+```bash Custom mode (your lyrics)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "suno",
+    "action": "generate",
+    "custom": true,
+    "prompt": "[Verse]\nStreetlights turn the rain to gold\nI left the umbrella with yesterday",
+    "title": "Rain on Southgate",
+    "style": "indie folk, female vocal, acoustic guitar",
+    "vocal_gender": "Female",
+    "version": "v5.5"
+  }'
+```
+
+```bash Instrumental
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "suno",
+    "action": "generate",
+    "prompt": "upbeat lo-fi study background music",
+    "instrumental": true
+  }'
+```
+
+</CodeGroup>
+
+## Keep going from there
+
+Once you have a `task_id`, the later actions chain off it.
+
+<CodeGroup>
+
+```bash Extend
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "suno",
+    "action": "extend",
+    "task_id": "task_01H...",
+    "audio_index": 1,
+    "continue_at": 118
+  }'
+```
+
+```bash Cover in another style
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "suno",
+    "action": "cover",
+    "task_id": "task_01H...",
+    "tags": "city pop, 80s synth, male vocal"
+  }'
+```
+
+```bash Pull the vocal stem
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "suno",
+    "action": "stems",
+    "task_id": "task_01H...",
+    "stem_type": "lead_vocal"
+  }'
+```
+
+```bash Mash two tracks up
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "suno",
+    "action": "mashup",
+    "task_ids": ["task_01A...", "task_01B..."],
+    "audio_indexes": [1, 1]
+  }'
+```
+
+```bash Export WAV
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "suno",
+    "action": "wav",
+    "task_id": "task_01H..."
+  }'
+```
+
+</CodeGroup>
+
+## Parameters
+
+### Common
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `model` | string | ✅ | Always `suno` |
+| `action` | string | ✅ | See the action tables above; defaults to `generate` |
+| `prompt` | string | — | A description in inspiration mode; your lyrics in custom mode (`custom: true`) |
+| `version` | string | — | `v3.5` `v4` `v4.5` `v4.5+` `v4.5-all` `v5` `v5.5`, default `v5.5`. **Does not affect price** |
+| `callback_url` | string | — | Called when the task finishes |
+
+### Creative actions
+
+| Parameter | Type | Description |
+|---|---|---|
+| `custom` | boolean | `false` (default) = inspiration mode, `prompt` is a description; `true` = custom mode, `prompt` is the lyrics |
+| `gpt_description` | string | On `extend` / `cover` / `mashup` / `sample` / `add_*`, the inspiration description goes here; required when `custom: false` |
+| `title` | string | Song title |
+| `style` | string | Style tags — **`generate` uses `style`** |
+| `tags` | string | Style tags — **every other action uses `tags`** |
+| `negative_tags` | string | Styles to avoid |
+| `instrumental` | boolean | Instrumental only, no vocals |
+| `auto_lyrics` | boolean | Write the lyrics automatically |
+| `vocal_gender` | string | `Male` / `Female` |
+| `style_weight` | number | 0–1, how closely to follow the style |
+| `weirdness_constraint` | number | 0–1, creativity |
+| `audio_weight` | number | 0–1, weight of the reference audio |
+| `persona_id` | string | Reuse a persona's voice |
+
+<Note>
+  `style` and `tags` are the same thing under two names — an upstream quirk: **the base generation endpoint calls it `style`, every other endpoint calls it `tags`**. Sending the wrong one is not an error; it is silently ignored, and you are left wondering why the style did nothing.
+</Note>
+
+### Referencing a source track
+
+| Parameter | Type | Description |
+|---|---|---|
+| `task_id` | string | The task that produced the source track |
+| `audio_index` | int | Which track from `music[]`, 1-based, default `1` |
+| `task_ids` | string[] | `mashup` only, **exactly 2** |
+| `audio_indexes` | int[] | `mashup` only, parallel to `task_ids` |
+| `audio_urls` | string[] | `inspo` only, reference audio |
+| `audio_url` | string | `create_voice` only, the recording to build the voice from |
+
+### Action-specific
+
+| Parameter | Type | Actions | Description |
+|---|---|---|---|
+| `continue_at` | int | `extend` | Second to continue from, **required** |
+| `start_s` / `end_s` | number | `crop` `remove_section` `replace_section` `sample` | Range in seconds, **required** |
+| `duration_s` | int | `fade_in` `fade_out` | Fade length, **required** |
+| `speed` | number | `adjust_speed` | Speed multiplier, **required** |
+| `keep_pitch` | boolean | `adjust_speed` | Preserve pitch while changing speed |
+| `stem_type` | string | `stems` | Which stem to pull, default `lead_vocal` |
+| `infill_lyrics` | string | `replace_section` | Lyrics for the replaced section |
+| `variation_category` | string | `remaster` | Mastering direction |
+| `type` / `bpm` / `key` | string / int / string | `sounds` | Effect type, BPM, musical key |
+| `lyrics_model` | string | `lyrics` | Model used to write the lyrics |
+| `name` / `describe` / `styles` | string | `persona` | Persona name / description / styles; `name` **required** |
+| `vocal_start_s` / `vocal_end_s` | int | `vox` `persona` | Vocal segment bounds in seconds |
+| `vox_audio_id` | string | `persona` | Which vocal take to build the persona from |
+| `audioFilePath` | string | `upload` | Path of the audio to upload, **required** |
+
+<Warning>
+  Parameters are validated **per action** — sending `stem_type` to `generate` is rejected outright rather than ignored. That is deliberate: a parameter that does not belong usually means the wrong action was chosen, and failing early beats failing quietly.
+</Warning>
+
+## A typical workflow
+
+How one song usually runs from idea to delivery:
+
+1. `generate` the song → keep the `task_id`
+2. Not happy? `cover` it in another style, or `extend` it longer
+3. Happy? Run `remaster` over it
+4. Need an instrumental? `stems` the `lead_vocal` and use the rest, or `stems_all` to split everything
+5. `wav` for lossless, `generate_video` for the MV, `aligned_lyrics` for timestamped words
+
+Every step produces its own `task_id`, so you can keep chaining.

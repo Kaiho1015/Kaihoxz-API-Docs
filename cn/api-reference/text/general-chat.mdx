@@ -275,13 +275,15 @@ public class Main {
 
   支持的模型包括：
 
-  * **OpenAI**: `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5.1`, `gpt-5.2`, `gpt-5.4`, `gpt-4.1`, `gpt-4.1-mini`, `gpt-4.1-nano`, `gpt-4o`, `gpt-4o-mini`, `o1`, `o3-mini`, `o4-mini`
-  * **Anthropic**: `claude-opus-4.6`, `claude-sonnet-4.6`, `claude-opus-4.5`, `claude-sonnet-4.5`, `claude-haiku-4.5`
-  * **Google**: `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.5-flash-lite`, `gemini-3-flash-preview`, `gemini-3.1-pro-preview`
-  * **DeepSeek**: `deepseek-r1-0528`, `deepseek-v3.2`, `deepseek-v3.2-exp`
-  * **MiniMax**: `minimax-m2.1`, `minimax-m2.5`
-  * **MoonshotAI**: `kimi-k2.5`, `kimi-k2-thinking`
-  * **Z.ai**: `glm-4.6`, `glm-4.7`, `glm-5`, `glm-5.1`
+  * **OpenAI**: `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.5`, `gpt-5.4`, `gpt-5.4-mini`, `gpt-5.4-nano`, `gpt-5.4-pro`, `gpt-5.3-codex`, `gpt-5.2`, `gpt-5.2-pro`, `gpt-5.2-codex`, `gpt-5.1`, `gpt-5.1-codex-max`, `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-4.1`, `gpt-4.1-mini`, `gpt-4.1-nano`, `gpt-4o`, `gpt-4o-mini`, `o3`, `o4-mini`, `o3-mini`, `o1`
+  * **Anthropic**: `claude-fable-5`, `claude-opus-5`, `claude-sonnet-5`, `claude-opus-4.8`, `claude-opus-4.7`, `claude-opus-4.6`, `claude-sonnet-4.6`, `claude-opus-4.5-20251101`, `claude-sonnet-4.5-20250929`, `claude-haiku-4.5-20251001`
+  * **Google**: `gemini-3.7-flash`, `gemini-3.6-flash`, `gemini-3.5-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-pro-preview`, `gemini-3.1-flash-lite-preview`, `gemini-3-flash-preview`, `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.5-flash-lite`
+  * **DeepSeek**: `deepseek-v4-pro`, `deepseek-v4-flash`, `deepseek-r1-0528`, `deepseek-v3.2`, `deepseek-v3.2-exp`
+  * **Qwen**: `qwen3.8-max`, `qwen3.7-max`, `qwen3.7-plus`, `qwen3.6-plus`, `qwen3.6-flash`
+  * **MiniMax**: `minimax-m3`, `minimax-m2.7`, `minimax-m2.5`, `minimax-m2.1`
+  * **MoonshotAI**: `kimi-k3`, `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`, `kimi-k2.6`, `kimi-k2.5`
+  * **xAI**: `grok-4.6`, `grok-4.5`, `grok-4.3`, `grok-build-0.1`
+  * **Z.ai**: `glm-5.2`, `glm-5.1`, `glm-5`, `glm-4.7`, `glm-4.6`
   * 更多模型持续更新中...
 </ParamField>
 
@@ -480,8 +482,23 @@ public class Main {
 
 ## 支持的模型列表
 
+<Note>
+**长上下文分档**：部分模型在单次请求的输入 token 超过阈值后，超出部分的输入与整段输出按更高档单价计费，与厂商官方一致：GPT-5.4 / 5.5 / 5.6 系列 **272K**、Grok 系列 **200K**、Gemini Pro 系列 **200K**、Qwen Plus / Flash **256K**、MiniMax M3 **512K**。各档单价以 [Explore](https://qingbo.dev/explore) 模型详情页为准。Anthropic 4.6+ 全上下文同价。
+</Note>
+
 ### OpenAI 系列
 
+* `gpt-5.6-sol` - GPT-5.6 Sol 旗舰（超过 272K 输入按长上下文档计费）
+* `gpt-5.6-terra` - GPT-5.6 Terra 均衡档
+* `gpt-5.6-luna` - GPT-5.6 Luna 轻量档
+* `gpt-5.5` - GPT-5.5
+* `gpt-5.4-pro` - GPT-5.4 Pro
+* `gpt-5.4-mini` - GPT-5.4 轻量版
+* `gpt-5.4-nano` - GPT-5.4 超轻量版
+* `gpt-5.3-codex` - GPT-5.3 Codex 编码模型
+* `gpt-5.2-pro` - GPT-5.2 Pro
+* `gpt-5.2-codex` - GPT-5.2 Codex
+* `gpt-5.1-codex-max` - GPT-5.1 Codex Max
 * `gpt-5` - GPT-5 基础模型
 * `gpt-5-mini` - GPT-5 轻量版
 * `gpt-5-nano` - GPT-5 超轻量版
@@ -493,48 +510,86 @@ public class Main {
 * `gpt-4.1-nano` - GPT-4.1 超轻量版
 * `gpt-4o` - GPT-4o 多模态模型
 * `gpt-4o-mini` - GPT-4o 轻量版
-* `o1` - OpenAI o1 推理模型
-* `o3-mini` - OpenAI o3 Mini
+* `o3` - OpenAI o3 推理模型
 * `o4-mini` - OpenAI o4 Mini
+* `o3-mini` - OpenAI o3 Mini
+* `o1` - OpenAI o1 推理模型
 
 ### Anthropic 系列
 
-* `claude-opus-4.6` - Claude 4.6 Opus 最新旗舰模型
-* `claude-sonnet-4.6` - Claude 4.6 Sonnet 最新版
-* `claude-opus-4.5` - Claude 4.5 Opus 旗舰模型
-* `claude-sonnet-4.5` - Claude 4.5 Sonnet 平衡版
-* `claude-haiku-4.5` - Claude 4.5 Haiku 快速响应版
+* `claude-fable-5` - Claude Fable 5 Mythos 级旗舰（100 万 token 上下文）
+* `claude-opus-5` - Claude Opus 5
+* `claude-sonnet-5` - Claude Sonnet 5
+* `claude-opus-4.8` - Claude Opus 4.8
+* `claude-opus-4.7` - Claude Opus 4.7
+* `claude-opus-4.6` - Claude Opus 4.6
+* `claude-sonnet-4.6` - Claude Sonnet 4.6
+* `claude-opus-4.5-20251101` - Claude 4.5 Opus 旗舰模型
+* `claude-sonnet-4.5-20250929` - Claude 4.5 Sonnet 平衡版
+* `claude-haiku-4.5-20251001` - Claude 4.5 Haiku 快速响应版
 
 ### Google 系列
 
-* `gemini-3.1-pro-preview` - Gemini 3.1 Pro 预览版
+* `gemini-3.7-flash` - Gemini 3.7 Flash（快速智能体与多步推理）
+* `gemini-3.6-flash` - Gemini 3.6 Flash（编码与 Web / App 开发）
+* `gemini-3.5-flash` - Gemini 3.5 Flash
+* `gemini-3.5-flash-lite` - Gemini 3.5 Flash-Lite 轻量档
+* `gemini-3.1-pro-preview` - Gemini 3.1 Pro 预览版（超过 200K 输入按长上下文档计费）
+* `gemini-3.1-flash-lite-preview` - Gemini 3.1 Flash-Lite 预览版
 * `gemini-3-flash-preview` - Gemini 3 Flash 预览版
-* `gemini-2.5-pro` - Gemini 2.5 专业版
+* `gemini-2.5-pro` - Gemini 2.5 专业版（超过 200K 输入按长上下文档计费）
 * `gemini-2.5-flash` - Gemini 2.5 快速版
 * `gemini-2.5-flash-lite` - Gemini 2.5 超轻量版
 
 ### DeepSeek 系列
 
+* `deepseek-v4-pro` - DeepSeek V4 Pro（100 万 token 上下文）
+* `deepseek-v4-flash` - DeepSeek V4 Flash
 * `deepseek-r1-0528` - DeepSeek R1 推理模型
 * `deepseek-v3.2` - DeepSeek V3.2
 * `deepseek-v3.2-exp` - DeepSeek V3.2 实验版
 
+### Qwen 系列
+
+* `qwen3.8-max` - Qwen3.8-Max 旗舰（100 万 token 上下文）
+* `qwen3.7-max` - Qwen3.7-Max
+* `qwen3.7-plus` - Qwen3.7-Plus 均衡档（超过 256K 输入按长上下文档计费）
+* `qwen3.6-plus` - Qwen3.6-Plus（超过 256K 输入按长上下文档计费）
+* `qwen3.6-flash` - Qwen3.6-Flash 高速低价档（超过 256K 输入按长上下文档计费）
+
 ### MiniMax 系列
 
-* `minimax-m2.1` - MiniMax M2.1
+* `minimax-m3` - MiniMax M3 多模态旗舰（100 万 token 上下文，超过 512K 输入按 2 倍计费）
+* `minimax-m2.7` - MiniMax M2.7
 * `minimax-m2.5` - MiniMax M2.5
+* `minimax-m2.1` - MiniMax M2.1
 
 ### MoonshotAI 系列
 
+* `kimi-k3` - Kimi K3 旗舰版（100 万 token 上下文）
+* `kimi-k2.7-code` - Kimi K2.7 Code 编码专用
+* `kimi-k2.7-code-highspeed` - Kimi K2.7 Code 高速版（约 180 token/s，2 倍价格）
+* `kimi-k2.6` - Kimi K2.6 多模态
 * `kimi-k2.5` - Kimi K2.5
-* `kimi-k2-thinking` - Kimi K2 思考版
+
+### xAI 系列
+
+* `grok-4.6` - Grok 4.6 旗舰模型（代码与通用任务，50 万 token 上下文）
+* `grok-4.5` - Grok 4.5 推理模型（50 万 token 上下文）
+* `grok-4.3` - Grok 4.3 快速通用模型（100 万 token 上下文）
+* `grok-build-0.1` - Grok Build 0.1 编码智能体模型（25.6 万 token 上下文）
+
+<Note>
+Grok 系列单次请求输入超过 **200K token** 时，超出部分的输入与整段输出按 **2 倍单价**计费（与 xAI 官方长上下文分档一致）。四个模型均支持图片输入、函数调用与结构化输出。
+</Note>
 
 ### Z.ai 系列
 
-* `glm-4.6` - GLM 4.6
-* `glm-4.7` - GLM 4.7
-* `glm-5` - GLM 5
-* `glm-5.1` - GLM 5.1
+* `glm-5.2` - GLM-5.2 大规模推理模型（100 万 token 上下文）
+* `glm-5.1` - GLM-5.1
+* `glm-5` - GLM-5
+* `glm-4.7` - GLM-4.7
+* `glm-4.6` - GLM-4.6
 
 ## 使用示例
 
@@ -553,7 +608,7 @@ public class Main {
 
 ```json  theme={null}
 {
-  "model": "claude-sonnet-4.5",
+  "model": "claude-sonnet-4.5-20250929",
   "messages": [
     {"role": "system", "content": "你是一位专业的Python编程导师"},
     {"role": "user", "content": "如何使用列表推导式？"}

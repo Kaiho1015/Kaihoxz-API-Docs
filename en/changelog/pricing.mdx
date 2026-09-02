@@ -6,6 +6,72 @@ title: "Pricing Updates"
 Pricing changes apply only to calls made **after** the change takes effect; historical calls are unaffected. Each model's live unit price is shown in the [Models overview](/en/docs/models) and the console "Model Market"; the cost of each call is authoritative as returned in `cost` / `usage.cost`.
 </Note>
 
+<Update label="2026-09-02" description="Billing change">
+**Image models: reference images now billed per image**
+
+For the models below, reference images (`image_urls`) are now **charged per image**, matching the vendors' official pricing (previously some models charged nothing and some charged an upper-bound tier):
+
+| Model | Per reference image |
+|---|---|
+| `seedream-5.0-pro` | $0.002571 |
+| `qwen-image-3.0` / `qwen-image-3.0-pro` | $0.002571 |
+| `grok-imagine-image` | $0.0018 |
+| `grok-imagine-image-quality` / `grok-imagine-image-2.0` | $0.009 |
+| `flux-2-pro` / `flux-2-max` / `flux-2-flex` | $0.0135 / $0.027 / $0.045 (up to 8 reference images now accepted) |
+| `gpt-image-2` / `gpt-image-1.5` | $0.0025 (gpt-image-2 previously used 1–3 / 4+ image tiers; now linear) |
+| `gpt-image-1` | $0.0031 |
+
+Cost per call = output tier price + number of reference images × unit price; calls without reference images are unaffected. Seedream 4.x / 5.0-lite, Qwen Image 2.0, Wan 2.7 Image and the Nano Banana family do not charge for reference images. Live prices are on [Explore](https://qingbo.dev/explore) and in the console "Model Market"; `POST /waveapi/public/quote` with `image_urls` returns an estimate.
+</Update>
+
+<Update label="2026-09-02" description="Pricing change">
+**Nano Banana Pro / Nano Banana 2 standard tiers — price cut**
+
+The upstream list price of the standard (`-rev`) tiers dropped; ours follow:
+
+| Model | 1K / 2K | 4K |
+|---|---|---|
+| `gemini-3-pro-image-preview-rev` (Nano Banana Pro, standard) | $0.045 → **$0.03375** | $0.073125 → **$0.045** |
+| `gemini-3.1-flash-image-preview-rev` (Nano Banana 2, standard) | 1K $0.03375 → **$0.016875**, 2K $0.045 → **$0.0225** | $0.0675 → **$0.028125** |
+
+Official direct tiers (without `-rev`) are unchanged. Effective **immediately**.
+</Update>
+
+<Update label="2026-09-02" description="Pricing change">
+**Text-model prices re-aligned to vendors' official list prices; long-context tiers added**
+
+While onboarding new text models we cross-checked existing text groups against each vendor's official pricing page:
+
+| Model | Change |
+|---|---|
+| `glm-5.1` / `glm-4.6` | Reference prices had been taken from an upstream conversion that was too low; now priced from Z.ai's official USD list (**raised**) |
+| `minimax-m2.1` | Aligned to MiniMax's official legacy tier (slight increase) |
+| `kimi-k2` | Input price had been above the official reference; **lowered** to 0.9 × reference |
+| `deepseek-r1-0528` / `deepseek-v3.2` / `deepseek-v3.2-exp` | Output prices unified at 0.9 × reference (r1-0528 **lowered**; the two v3.2 tiers slightly raised) |
+| GPT-5.6 Sol / Terra / Luna, GPT-5.5, GPT-5.4, GPT-5.4 Pro | **Long-context tier added above 272K input** (matching OpenAI; previously such requests were billed at the standard rate) |
+| Gemini 3.1 Pro / 3 Pro / 2.5 Pro | **Long-context tier added above 200K input** (matching Google) |
+| `kimi-k3` / `claude-sonnet-5` | Cached-input price added (cache hits billed at the lower rate) |
+
+Changes take effect **immediately** and apply only to calls made afterwards. Live unit prices are shown on [Explore](https://qingbo.dev/explore) and in the console "Model Market".
+</Update>
+
+<Update label="2026-09-02" description="Pricing change">
+**Existing models re-aligned to vendors' official list prices (both up and down)**
+
+While onboarding new models we cross-checked existing ones against each vendor's official pricing page. The following unit prices have been synced:
+
+| Model | Change |
+|---|---|
+| `kimi-k3` | Output price **lowered** to Moonshot's official list price |
+| `gpt-image-2` | Requests without `quality` are now billed at the `high` tier (previously a lower tier; now matches OpenAI's default) |
+| `seedream-5.0` / `seedream-5.0-lite` | All tiers synced to Volcengine's list price; `1.5K` tier added for 5.0-lite |
+| `seedance-2.0` / `2.0-fast` / `2.0-face` / `2.0-fast-face` / `2.0-mini` / `2.5` / `1.5-pro` | Image-to-video now **same price** as text-to-video (lowered); reference-video requests billed at 2× (raised); tiers previously set from promotional prices moved back to list price |
+| `wan2.6` / `wan2.7` / `wan2.7-r2v` / `wan2.7-videoedit` / `wan2.5-preview` | All tiers synced to Alibaba Cloud Model Studio list prices; video edit / reference-to-video billed at 2× |
+| `minimax-h3` | All tiers synced to MiniMax's official price list |
+
+Changes take effect **immediately** and apply only to calls made afterwards. Live unit prices are shown in the [Models overview](/en/docs/models) and the console "Model Market".
+</Update>
+
 <Update label="2026-07-11" description="Pricing change">
 **Pricing synced to official for some image / video models**
 
@@ -16,7 +82,7 @@ Following upstream official price changes, unit prices for the following models 
 | `gpt-image-2` | 1K / 2K / 4K tiers increased |
 | `gemini-3-pro-image-preview` | 4K tier increased |
 | `veo3.1-fast` / `veo3.1-lite` / `veo3.1-quality` | All resolution tiers synced to official (both increases and decreases) |
-| `veo3.1-fast-official` | All tiers decreased |
+| `veo3.1-fast` | All tiers decreased |
 | `omni-flash-ext` | Now billed by **resolution × duration** — see "Model Updates" |
 
 Effective **immediately**; applies only to calls made after the change. Current prices are shown in the [Models overview](/en/docs/models) and the console "Model Market".
@@ -25,7 +91,7 @@ Effective **immediately**; applies only to calls made after the change. Current 
 <Update label="2026-06-24" description="Pricing change">
 **Seedance 2.0 pricing synced to official**
 
-- `doubao-seedance-2.0` unit prices are now synced to official rates, and the new **4K** tier is live for billing. Current prices are shown in the [Models overview](/en/docs/models) and the console "Model Market".
+- `seedance-2.0` unit prices are now synced to official rates, and the new **4K** tier is live for billing. Current prices are shown in the [Models overview](/en/docs/models) and the console "Model Market".
 </Update>
 
 <Update label="2026-06-17" description="Pricing change">

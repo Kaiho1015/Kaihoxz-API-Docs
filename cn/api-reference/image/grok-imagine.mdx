@@ -1,70 +1,77 @@
 ---
 title: "Grok Imagine 系列"
-description: "xAI Grok Imagine 图像生成 — 文生图(1.0 / 1.5)与图像编辑(1.0-edit / 1.5-edit)"
+description: "xAI Grok Imagine 图像生成 — 官方三档(标准 / 高质量 / 2.0)与经济线(1.0 / 1.5 / 2.0)"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-xAI Grok Imagine 图像生成与编辑系列。包含两代模型,每代各拆出**文生图**与**图像编辑**两个 model:
+xAI Grok Imagine 图像生成与编辑系列,分**官方线**与**经济线**两组:
 
-- **grok-imagine-1.0** / **grok-imagine-1.5** — 文生图(`generate`),纯文本提示出图
-- **grok-imagine-1.0-edit** / **grok-imagine-1.5-edit** — 图像编辑(需传 `image_urls` 参考图)
+**官方线**(xAI 官方 API,按张计费):
 
-四个 model 统一按张计费,均为 **`$0.016875`** / 张。
+- **grok-imagine-image** — 标准档,1K / 2K 同价,最便宜的官方 Grok 出图档;文生图 + 参考图编辑
+- **grok-imagine-image-quality** — 高质量档,1K / 2K 分档计价;文生图 + 参考图编辑
+- **grok-imagine-image-2.0** — 2.0 代,1K / 2K × low / medium 分档;文生图 + 参考图编辑
+
+**经济线**(备用渠道,更便宜,能力略少):
+
+- **grok-imagine-image-2.0-rev** — 2.0 代固定质量,7 种比例,仅文生图
+- **grok-imagine-1.0-rev** / **grok-imagine-1.5-rev** — 文生图(`generate`)
+- **grok-imagine-1.0-edit-rev** / **grok-imagine-1.5-edit-rev** — 图像编辑(需传 `image_urls`)
 
 ## 定价
 
-| 模型 ID | 类型 | 单价(每张) |
-|---|---|---|
-| `grok-imagine-1.0` | 文生图 | `$0.016875` |
-| `grok-imagine-1.5` | 文生图 | `$0.016875` |
-| `grok-imagine-1.0-edit` | 图像编辑 | `$0.016875` |
-| `grok-imagine-1.5-edit` | 图像编辑 | `$0.016875` |
+<Note>
+本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
+
+**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
+**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
+</Note>
 
 ## 调用示例
 
 <CodeGroup>
 
-```bash 文生图(grok-imagine-1.5)
+```bash 文生图(grok-imagine-1.5-rev)
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.5",
+    "model": "grok-imagine-1.5-rev",
     "prompt": "赛博朋克都市夜景,霓虹倒映在雨后街道,电影质感",
     "aspect_ratio": "16:9",
     "n": 1
   }'
 ```
 
-```bash 文生图(grok-imagine-1.0)
+```bash 文生图(grok-imagine-1.0-rev)
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.0",
+    "model": "grok-imagine-1.0-rev",
     "prompt": "一只柴犬戴着宇航头盔漂浮在太空,卡通风格",
     "aspect_ratio": "1:1"
   }'
 ```
 
-```bash 图像编辑(grok-imagine-1.5-edit)
+```bash 图像编辑(grok-imagine-1.5-edit-rev)
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.5-edit",
+    "model": "grok-imagine-1.5-edit-rev",
     "prompt": "把背景换成雪山日落,人物保持不变",
     "image_urls": ["https://cdn.example.com/portrait.jpg"],
     "n": 1
   }'
 ```
 
-```bash 图像编辑(grok-imagine-1.0-edit)
+```bash 图像编辑(grok-imagine-1.0-edit-rev)
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-imagine-1.0-edit",
+    "model": "grok-imagine-1.0-edit-rev",
     "prompt": "给画面加上暖色调滤镜,增强黄昏氛围",
     "image_urls": ["https://cdn.example.com/street.jpg"]
   }'
@@ -76,7 +83,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 ```json 提交成功
 {
   "task_id": "task-wave1775290140a830128812",
-  "model": "grok-imagine-1.5",
+  "model": "grok-imagine-1.5-rev",
   "action": "generate",
   "status": "queued",
   "created_at": 1775290140120,
@@ -89,17 +96,19 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 ## 可用模型
 
-| 模型 ID | 类型 | 说明 |
-|---|---|---|
-| `grok-imagine-1.0` | 文生图 | Grok Imagine 1.0,纯文本提示生成图像,支持 5 种宽高比 |
-| `grok-imagine-1.5` | 文生图 | Grok Imagine 1.5,新一代文生图,支持 5 种宽高比 |
-| `grok-imagine-1.0-edit` | 图像编辑 | Grok Imagine 1.0 图像编辑,需传入参考图 `image_urls` |
-| `grok-imagine-1.5-edit` | 图像编辑 | Grok Imagine 1.5 图像编辑,需传入参考图 `image_urls` |
+| 模型 ID | 线路 | action | 说明 |
+|---|---|---|---|
+| `grok-imagine-image` | 官方 · 标准 | `generate` / `edit` | 1K / 2K 同价,最便宜的官方档,5 种比例 |
+| `grok-imagine-image-quality` | 官方 · 高质量 | `generate` / `edit` | 画质更高,1K 与 2K 分档计价 |
+| `grok-imagine-image-2.0` | 官方 · 2.0 | `generate` / `edit` | 1K / 2K × `quality` low / medium 分档,7 种比例 |
+| `grok-imagine-image-2.0-rev` | 经济 · 2.0 | `generate` | 固定质量,7 种比例,仅文生图 |
+| `grok-imagine-1.0-rev` / `grok-imagine-1.5-rev` | 经济 | `generate` | 纯文本提示生成图像,5 种比例 |
+| `grok-imagine-1.0-edit-rev` / `grok-imagine-1.5-edit-rev` | 经济 | `edit` | 图像编辑,需传入参考图 `image_urls` |
 
 ## 通用参数
 
 <ParamField body="model" type="string" required>
-  从 [可用模型](#可用模型) 列表中选一个。文生图用 `grok-imagine-1.0` / `grok-imagine-1.5`;图像编辑用 `grok-imagine-1.0-edit` / `grok-imagine-1.5-edit`
+  从 [可用模型](#可用模型) 列表中选一个。官方线 `grok-imagine-image` / `-quality` / `grok-imagine-image-2.0` 同时支持 `generate` 与 `edit`;经济线里文生图用 `grok-imagine-1.0-rev` / `1.5-rev` / `grok-imagine-image-2.0-rev`,图像编辑用 `grok-imagine-1.0-edit-rev` / `1.5-edit-rev`
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
@@ -120,7 +129,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 ## 模型特定参数
 
-### 文生图(grok-imagine-1.0 / grok-imagine-1.5)
+### 文生图(grok-imagine-1.0-rev / grok-imagine-1.5-rev)
 
 <ParamField body="aspect_ratio" type="string" default="1:1">
   画面宽高比,共 5 种:
@@ -129,7 +138,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   - `3:2` / `2:3` — 横/竖版相机比
 </ParamField>
 
-### 图像编辑(grok-imagine-1.0-edit / grok-imagine-1.5-edit)
+### 图像编辑(grok-imagine-1.0-edit-rev / grok-imagine-1.5-edit-rev)
 
 <ParamField body="image_urls" type="string[]" required>
   待编辑的参考图片 URL。图像编辑模型必须传入此字段
