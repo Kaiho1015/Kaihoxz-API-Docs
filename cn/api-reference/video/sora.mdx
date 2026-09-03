@@ -6,11 +6,10 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 
 OpenAI Sora 2 系列视频生成模型,以 **物理一致性 / 原生音画同步 / 镜头语言** 见长,适合 **电影感短片 / 创意广告 / 概念演示** 三类场景。支持文生视频与图生视频(单图作起始画面),异步出图。
 
-三档定位:
+两档定位:
 
 - **`sora-2`** — 标准档,日常默认首选,仅 720p,文生 / 图生通吃,性价比最高
 - **`sora-2-pro`** — 旗舰档,支持 **720p / 1024p / 1080p** 三档分辨率,画质最强,单价最高
-- **`sora-2-preview`** — 预览档,能力与价格同标准档 `sora-2` 对齐,用于尝鲜 / 灰度
 
 按 **分辨率 × 时长** 计费,**每秒单价**,时长仅支持 `4` / `8` / `12` / `16` / `20` 秒固定档位。
 
@@ -89,7 +88,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 |---|---|---|---|---|
 | `sora-2` | 720p | 4 / 8 / 12 / 16 / 20 秒 | generate | 标准档,日常首选 |
 | `sora-2-pro` | 720p / 1024p / 1080p | 4 / 8 / 12 / 16 / 20 秒 | generate | 旗舰档,画质最强 |
-| `sora-2-preview` | 720p | 4 / 8 / 12 / 16 / 20 秒 | generate | 预览档,价格同标准档 |
 
 ## 通用参数
 
@@ -106,7 +104,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="resolution" type="string" default="720p">
-  输出分辨率。`sora-2` / `sora-2-preview` 仅支持 `720p`;`sora-2-pro` 支持 `720p` / `1024p` / `1080p`
+  输出分辨率。`sora-2` 仅支持 `720p`;`sora-2-pro` 支持 `720p` / `1024p` / `1080p`
 </ParamField>
 
 <ParamField body="aspect_ratio" type="string" default="16:9">

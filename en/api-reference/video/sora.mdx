@@ -6,11 +6,10 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 
 The OpenAI Sora 2 video models are strongest at **physical consistency, native audio-video sync and camera language**, which makes them a good fit for **cinematic shorts, creative ads and concept demos**. Both text-to-video and image-to-video (a single image as the opening frame) are supported; generation is async.
 
-Three tiers:
+Two tiers:
 
 - **`sora-2`** — standard tier, the everyday default. 720p only, handles both text-to-video and image-to-video, best value
 - **`sora-2-pro`** — flagship tier, three resolutions (**720p / 1024p / 1080p**). Best image quality, highest unit price
-- **`sora-2-preview`** — preview tier, same capability and price as the standard `sora-2`. For early access and staged rollout
 
 Billed by **resolution × duration** at a **per-second rate**. Duration is limited to the fixed steps `4` / `8` / `12` / `16` / `20` seconds.
 
@@ -89,7 +88,6 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 |---|---|---|---|---|
 | `sora-2` | 720p | 4 / 8 / 12 / 16 / 20 sec | generate | Standard tier, the everyday default |
 | `sora-2-pro` | 720p / 1024p / 1080p | 4 / 8 / 12 / 16 / 20 sec | generate | Flagship tier, best image quality |
-| `sora-2-preview` | 720p | 4 / 8 / 12 / 16 / 20 sec | generate | Preview tier, priced like the standard tier |
 
 ## Common Parameters
 
@@ -106,7 +104,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="resolution" type="string" default="720p">
-  Output resolution. `sora-2` / `sora-2-preview` support `720p` only; `sora-2-pro` supports `720p` / `1024p` / `1080p`
+  Output resolution. `sora-2` supports `720p` only; `sora-2-pro` supports `720p` / `1024p` / `1080p`
 </ParamField>
 
 <ParamField body="aspect_ratio" type="string" default="16:9">
