@@ -8,7 +8,7 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 
 - **5.0 Pro** — 品质优先,电影级细节与文字准确度,1K / 1.5K / 2K(1.5K 与 1K 同价、更清晰),最多 10 张参考图,2K 单独计价
 - **5.0 Lite** — 视觉推理(CoT)+ 实时联网搜索,强身份保留(眼/下颌/比例/肤色跨风格不变),2K / 3K / 4K,性价比线
-- **4.5** — 4.x 系列精修档,文字准确度与多参考图风格融合更好,1K / 2K / 4K,最多 10 张参考图、单次最多 15 张
+- **4.5** — 4.x 系列精修档,文字准确度与多参考图风格融合更好,2K / 4K,最多 10 张参考图、单次最多 15 张
 - **4.0** — 文生图与编辑一体,图内文字渲染强,1K / 2K / 4K,最多 10 张参考图,比 5.0 早一代、价格更低
 
 按张计费。
@@ -113,7 +113,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 |---|---|
 | `seedream-5.0-pro` | 品质优先档,电影级细节,1K / 1.5K / 2K(1.5K 与 1K 同价;2K 单独计价;不传分辨率按 2K 计),最多 10 张参考图 |
 | `seedream-5.0-lite` | 视觉推理 + 联网搜索,身份保留强,2K / 3K / 4K,文生 / 编辑 / 组图统一接口 |
-| `seedream-4.5` | 4.x 精修档,文字更准、多参考图融合更好,1K / 2K / 4K |
+| `seedream-4.5` | 4.x 精修档,文字更准、多参考图融合更好,2K / 4K(不支持 1K) |
 | `seedream-4.0` | 文生图 + 编辑一体,文字渲染强,1K / 2K / 4K,价格最低 |
 
 ## 通用参数
@@ -148,6 +148,8 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 <ParamField body="resolution" type="string" default="2K">
   输出分辨率,可选 `1K` / `2K` / `4K`
+
+  `seedream-4.5` 不支持 `1K`,传了会被拒。
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">

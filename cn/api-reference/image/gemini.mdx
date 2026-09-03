@@ -173,7 +173,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 <ParamField body="resolution" type="string" default="1K">
   输出分辨率,**取决于模型**:
   - 3 Pro:`1K` / `2K` / `4K`
-  - 3.1 Flash:`0.5K` / `1K` / `2K` / `4K`
+  - 3.1 Flash:`0.5K` / `1K` / `2K` / `4K`(标准档 `gemini-3.1-flash-image-preview-rev` 不支持 `0.5K`,从 `1K` 起)
   - 2.5 Flash:仅 `1K`
 </ParamField>
 
@@ -257,11 +257,11 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
     **支持 action**:`generate` / `edit`
 
-    **resolution**:`0.5K` / `1K` / `2K` / `4K`
+    **resolution**:`1K` / `2K` / `4K`(标准档不支持 `0.5K`)
 
     **aspect_ratio**:11 种(含 `auto`)
 
-    **核心特性**:轻量快速档,延迟低、成本省,支持 `0.5K` 经济档到 `4K` 高清,适合预览、批量、迭代。**独家支持 Google 文字与图片搜索增强**,可基于实时网络信息出图。
+    **核心特性**:轻量快速档,延迟低、成本省,支持 `1K` 到 `4K` 高清,适合预览、批量、迭代。**独家支持 Google 文字与图片搜索增强**,可基于实时网络信息出图。
 
     <ParamField body="google_search" type="boolean" default="false">
       启用 Google 文字搜索增强 — 模型可基于实时联网信息生成,适合需要真实世界信息的场景
