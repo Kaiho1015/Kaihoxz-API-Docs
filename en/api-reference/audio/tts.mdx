@@ -4,6 +4,10 @@ description: "Convert text into natural, fluent speech"
 api: "POST https://www.qingbo.dev/v1/audio/speech"
 ---
 
+<Warning>
+`tts-1` and `tts-1-hd` were delisted on 2026-09-03; this page is kept for reference only. For text-to-speech, please wait for `gpt-4o-mini-tts` to launch
+</Warning>
+
 Synchronous endpoint — returns the audio stream directly when the request completes.
 
 <RequestExample>
@@ -120,15 +124,12 @@ public class Main {
 
 ## Available Models
 
-| Model ID | Description |
-|---------|------|
-| `tts-1` | Standard quality, low latency |
-| `tts-1-hd` | High-definition quality |
+`tts-1` and `tts-1-hd` are delisted, so no model is currently available — please wait for `gpt-4o-mini-tts` to launch.
 
 ## Request Parameters
 
 <ParamField body="model" type="string" required>
-  Model ID: `tts-1`, `tts-1-hd`
+  Please wait for `gpt-4o-mini-tts` to launch
 </ParamField>
 
 <ParamField body="input" type="string" required>

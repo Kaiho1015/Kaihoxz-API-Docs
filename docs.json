@@ -139,7 +139,6 @@
               {
                 "group": "音频处理",
                 "pages": [
-                  "cn/api-reference/audio/tts",
                   "cn/api-reference/audio/suno",
                   "cn/api-reference/audio/whisper-transcription"
                 ]
@@ -259,7 +258,6 @@
               {
                 "group": "Audio",
                 "pages": [
-                  "en/api-reference/audio/tts",
                   "en/api-reference/audio/suno",
                   "en/api-reference/audio/whisper-transcription"
                 ]

@@ -4,6 +4,10 @@ description: "将文本转换为自然流畅的语音"
 api: "POST https://www.qingbo.dev/v1/audio/speech"
 ---
 
+<Warning>
+`tts-1`、`tts-1-hd` 已于 2026-09-03 下架，本页仅作存档。文本转语音请等待 `gpt-4o-mini-tts` 上线
+</Warning>
+
 同步接口 — 请求完成后直接返回音频流。
 
 <RequestExample>
@@ -120,15 +124,12 @@ public class Main {
 
 ## 可用模型
 
-| 模型 ID | 说明 |
-|---------|------|
-| `tts-1` | 标准质量，延迟低 |
-| `tts-1-hd` | 高清质量 |
+`tts-1`、`tts-1-hd` 已下架，当前无可用模型 —— 请等待 `gpt-4o-mini-tts` 上线。
 
 ## 请求参数
 
 <ParamField body="model" type="string" required>
-  模型 ID：`tts-1`、`tts-1-hd`
+  请等待 `gpt-4o-mini-tts` 上线
 </ParamField>
 
 <ParamField body="input" type="string" required>
