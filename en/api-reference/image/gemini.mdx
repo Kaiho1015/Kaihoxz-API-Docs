@@ -178,7 +178,7 @@ After submitting, poll task status with [`GET /v1/tasks/{task_id}`](/en/api-refe
 <ParamField body="resolution" type="string" default="1K">
   Output resolution, **depends on model**:
   - 3 Pro: `1K` / `2K` / `4K`
-  - 3.1 Flash: `0.5K` / `1K` / `2K` / `4K`
+  - 3.1 Flash: `0.5K` / `1K` / `2K` / `4K` (the standard tier `gemini-3.1-flash-image-preview-rev` does not support `0.5K`; it starts at `1K`)
   - 2.5 Flash: `1K`
 </ParamField>
 
@@ -266,11 +266,11 @@ After submitting, poll task status with [`GET /v1/tasks/{task_id}`](/en/api-refe
 
     **Supported actions**: `generate` / `edit`
 
-    **resolution**: `0.5K` / `1K` / `2K` / `4K`
+    **resolution**: `1K` / `2K` / `4K` (the standard tier does not support `0.5K`)
 
     **aspect_ratio**: 11 options (including `auto`)
 
-    **Highlights**: Lightweight fast tier — low latency, low cost, from the `0.5K` economy tier up to `4K`, ideal for previewing, batches, and iteration. **Exclusive support for Google text and image search augmentation**, generating images grounded in real-time web information.
+    **Highlights**: Lightweight fast tier — low latency, low cost, from `1K` up to `4K`, ideal for previewing, batches, and iteration. **Exclusive support for Google text and image search augmentation**, generating images grounded in real-time web information.
 
     <ParamField body="google_search" type="boolean" default="false">
       Enable Google text search augmentation — the model can generate based on real-time web information.
