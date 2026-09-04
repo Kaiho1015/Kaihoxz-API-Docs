@@ -1,6 +1,6 @@
 ---
 title: "Vidu Q3 系列"
-description: "生数科技 Vidu Q3 — 参考生 / 文生 / 图生,智能镜头切换,1-16 秒任意整数"
+description: "生数科技 Vidu Q3 — 参考生 / 图生,智能镜头切换,1-16 秒任意整数"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
@@ -26,13 +26,14 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 
 <CodeGroup>
 
-```bash 文生视频(标准档)
+```bash 参考图生视频(标准档)
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "vidu-q3",
     "prompt": "黄昏的海滩,女孩迎着夕阳奔跑,长发飞扬,电影感光影",
+    "image_urls": ["https://cdn.example.com/girl.jpg"],
     "duration": 5,
     "resolution": "1080p"
   }'
@@ -120,7 +121,9 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 <ParamField body="action" type="string" default="generate">
   `generate` — 本模型唯一动作。
 
-  **模式不靠 action 区分,靠传什么:** 只给 `prompt` 是文生视频;带 `image_urls` 是图生视频;带 `first_frame_image` + `last_frame_image` 是首尾帧;带 `video_urls` / `audio_urls` 是参考生视频。
+  **模式不靠 action 区分,靠传什么:** 带 `image_urls` 是参考图生视频;带 `first_frame_image` + `last_frame_image` 是首尾帧;带 `video_urls` / `audio_urls` 是参考生视频。
+
+  `vidu-q3` / `vidu-q3-mix` **没有纯文生视频模式**,`image_urls` 必填。
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
