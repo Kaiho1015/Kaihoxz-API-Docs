@@ -27,6 +27,10 @@ kling v3 家族(v3 / v3-omni / video-o1)的价格按**质量模式**分档,我�
 
 按 **质量档 × 时长** 计费,**单位 `$/秒`**:实际计费 = 该档每秒单价 × `duration`。
 
+**参考视频**(`video_urls`,`kling-v3-omni` / `kling-video-o1`):换成更贵的**参考视频档**单价,只乘 **输出秒数** —— 参考视频本身不计秒。
+
+**运动控制**(`kling-v3-motion-control` / `kling-v2-6-motion-control`):输出时长 **等于参考视频时长**,参考视频不另计费;`720P` 按标准(std)档、`1080P` 按专业(pro)档单价计。
+
 ## 定价
 
 <Note>
@@ -194,7 +198,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 <ParamField body="video_urls" type="string[]">
   参考视频 URL 数组(单元素):
   - **视频参考**(omni / o1):一段参考视频,沿用其镜头 / 运动特征
-  - **运动控制**(两个 `*-motion-control`):**必填**,运动来源视频,让参考角色复刻其动作
+  - **运动控制**(两个 `*-motion-control`):**必填**,运动来源视频,让参考角色复刻其动作。**缺少时提交即被拒,不预扣。**
 </ParamField>
 
 <ParamField body="seed" type="integer">
@@ -260,11 +264,11 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 `kling-v3-motion-control` / `kling-v2-6-motion-control` 必须同时提供:
 
 <ParamField body="image_urls" type="string[]" required>
-  角色参考图(1 张),决定生成视频中的角色形象
+  角色参考图(1 张),**必填**,决定生成视频中的角色形象。**缺少时提交即被拒,不预扣。**
 </ParamField>
 
 <ParamField body="video_urls" type="string[]" required>
-  运动来源视频(1 段),生成视频会让参考角色复刻这段视频的动作 / 镜头
+  运动来源视频(1 段),**必填**,生成视频会让参考角色复刻这段视频的动作 / 镜头。**缺少时提交即被拒,不预扣。**
 </ParamField>
 
 <Note>

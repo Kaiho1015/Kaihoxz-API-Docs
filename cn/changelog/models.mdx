@@ -2,6 +2,23 @@
 title: "模型动态"
 ---
 
+<Update label="2026-09-04" description="模型上架">
+**gpt-4o-mini-tts 上线 · 文字转语音**
+
+- **模型 ID**:`gpt-4o-mini-tts`
+- 接替已下架的 `tts-1` / `tts-1-hd`。11 种音色(`alloy` / `ash` / `ballad` / `coral` / `echo` / `fable` / `onyx` / `nova` / `sage` / `shimmer` / `verse`),新增 `instructions` 参数,可用自然语言指定语气 / 语速 / 情绪。
+- 按**输入文本字符数**计费,$13.5 / 百万字符,不收输出费用。走 `/v1/audio/speech`。
+- **文档**:[TTS 文字转语音](/cn/api-reference/audio/tts)
+</Update>
+
+<Update label="2026-09-04" description="能力更新">
+**seedance-2.0-fast 开放参考视频**
+
+- `seedance-2.0-fast` 现已支持 `video_urls`(参考视频),与 `seedance-2.0` / `seedance-2.0-mini` 一致。
+- 计费按 (参考视频秒数 + 输出秒数) × 参考视频档单价,参考视频最长 15 秒。
+- **文档**:[Seedance 系列](/cn/api-reference/video/seedance)
+</Update>
+
 <Update label="2026-09-03" description="模型下架">
 **7 个模型下架**
 

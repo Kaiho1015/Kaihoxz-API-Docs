@@ -2,6 +2,23 @@
 title: "Model Updates"
 ---
 
+<Update label="2026-09-04" description="Model launch">
+**gpt-4o-mini-tts is live · Text-to-speech**
+
+- **Model ID**: `gpt-4o-mini-tts`
+- Replaces the delisted `tts-1` / `tts-1-hd`. Eleven voices (`alloy` / `ash` / `ballad` / `coral` / `echo` / `fable` / `onyx` / `nova` / `sage` / `shimmer` / `verse`), plus a new `instructions` parameter for setting tone, pace and emotion in plain language.
+- Billed by **input text characters** at $13.5 per million characters, with no output charge. Served via `/v1/audio/speech`.
+- **Docs**: [Text-to-speech](/en/api-reference/audio/tts)
+</Update>
+
+<Update label="2026-09-04" description="Capability update">
+**seedance-2.0-fast now accepts reference videos**
+
+- `seedance-2.0-fast` now supports `video_urls` (reference video), matching `seedance-2.0` and `seedance-2.0-mini`.
+- Billed as (reference-video seconds + output seconds) × the video-reference rate; a reference video may be at most 15 seconds.
+- **Docs**: [Seedance series](/en/api-reference/video/seedance)
+</Update>
+
 <Update label="2026-09-03" description="Model delisted">
 **Seven models delisted**
 

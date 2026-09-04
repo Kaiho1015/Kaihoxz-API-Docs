@@ -31,7 +31,7 @@ MiniMax H3 是 MiniMax 2026 年 7 月发布的全模态视频模型。一个 end
 | `minimax-h3-max` | `480p` / `768p` | 4–15 任意整数 | ✅ 原生 | 更快更省的低分辨率档,能力与 H3 相同 |
 | `minimax-h3-regeneration` | `2k` | 4–15 任意整数 | ✅ 原生 | 把已有的 768p H3 成片按原生 2K 重渲染,`video_urls` 必传 |
 
-按 **分辨率 × 时长** 计费,`2k` 档更贵。**传参考视频(`video_urls`)时按 2× 单价计**:上游按输入视频时长 + 输出时长收,这是过渡折算;`minimax-h3-regeneration` 的单价已含输入部分,不再翻倍。参考图前 5 张免费,之后上游按张加收,我们目前**不另计**。
+按 **分辨率 × 时长** 计费,`2k` 档更贵。**传参考视频(`video_urls`)时,参考视频秒数与输出秒数叠加后按同一档单价计费**(不换档、不翻倍),`minimax-h3-regeneration` 同此口径。参考视频最长 **15 秒**。参考图前 5 张免费,之后上游按张加收,我们目前**不另计**。
 
 ## 调用示例
 
@@ -122,7 +122,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="video_urls" type="string[]">
-  参考视频,提供运镜、节奏与风格参考
+  参考视频,提供运镜、节奏与风格参考。最长 **15 秒**;`minimax-h3-regeneration` **必传**,**缺少时提交即被拒,不预扣。**
 </ParamField>
 
 <ParamField body="audio_urls" type="string[]">

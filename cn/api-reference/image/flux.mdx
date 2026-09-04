@@ -11,6 +11,8 @@ Black Forest Labs 出品的 FLUX 图像模型系列,共 **5 个模型**,分为�
 
 按张计费,异步任务,提交后轮询任务状态获取结果。
 
+**FLUX.2 按百万像素(MP)档计价**:输出图按其像素落入的 MP 档收费 —— `1K`(1024×1024 ≈ 1.05 MP)落在 **2 MP 档**,不是 1 MP 档。参考图另计:**只传 1 张**时按该图**实际像素**所在的 MP 档(1 / 2 / 3 / 4 MP)加价;**传 2 张及以上**时每张按 **1 MP 档**加价。三个档位(`pro` / `max` / `flex`)各有一组 MP 档单价。
+
 <Warning>
 `flux-kontext-pro` 与 `flux-kontext-max` 是**图像编辑模型**,调用时必须提供参考图 `image_urls`(并配合编辑指令 `prompt`),否则任务会失败。需要纯文本生成图像请改用 `flux-2-pro` / `flux-2-flex`。
 </Warning>
@@ -213,7 +215,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 | 项目 | 限制 |
 |---|---|
 | 参考图片(Kontext) | 必填,`flux-kontext-pro` / `flux-kontext-max` 使用 `image_urls` |
-| 参考图片(FLUX.2) | 不支持,`flux-2-pro` / `flux-2-flex` 为纯文生图 |
+| 参考图片(FLUX.2) | 可选,最多 8 张(输出图与全部参考图总像素 ≤ 9MP),按 MP 档加价 |
 | 输出分辨率 | FLUX.2 支持 `1K` / `2K`;Kontext 沿用模型默认 |
 | 单张图片大小 | ≤ 30MB,支持 JPG/PNG/WEBP |
 | 宽高比 | 7 种:`1:1` / `16:9` / `9:16` / `4:3` / `3:4` / `3:2` / `2:3` |

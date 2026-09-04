@@ -17,6 +17,8 @@ Billed by **resolution × duration**, with two tiers — Fast / Std:
 
 Both tiers share the same parameters and capabilities (actions / ref_images / ref_videos / mid_frame_images / voiceprint) — they only differ in sampling depth. Recommended workflow: prototype with fast, render the final cut with std.
 
+**Reference video surcharge.** Passing `video_urls` moves the call to the pricier **video-reference tier** (the upstream's "uploaded videos" tier); without it you pay the ordinary tier for that resolution. Either way the price is multiplied by **output seconds only** — the reference clip itself is not billed by the second. Fast and std each have their own video-reference rates.
+
 ## Pricing
 
 <Note>

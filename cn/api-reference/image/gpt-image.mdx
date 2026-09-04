@@ -136,9 +136,9 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 | `gpt-image-1` | 官方 | `generate` / `edit` | 多模态文本+图像理解,适合高质量生成与编辑,按比例计费 |
 
 <Note>
-**不传 `quality` 时按 `high` 档计费。** `quality` 的默认值是 `auto`,由模型自行决定画质
-—— 上游对 `auto` 就是按最高档收费的,我们照此计价。要省钱请**显式**传
-`quality: "low"` 或 `"medium"`。
+**不传 `quality` 时按各模型的缺省档生成并计费**(与 OpenAI 默认一致):`gpt-image-2` 按
+**low**,`gpt-image-1` / `gpt-image-1.5` 按 **medium**。要高画质请**显式**传
+`quality: "high"`;显式传 `auto` 仍按最高档计费。
 </Note>
 
 ## 通用参数

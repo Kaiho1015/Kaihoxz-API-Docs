@@ -6,6 +6,30 @@ title: "Pricing Updates"
 Pricing changes apply only to calls made **after** the change takes effect; historical calls are unaffected. Each model's live unit price is shown in the [Models overview](/en/docs/models) and the console "Model Market"; the cost of each call is authoritative as returned in `cost` / `usage.cost`.
 </Note>
 
+<Update label="2026-09-04" description="Pricing change">
+**Reference-video billing realigned per vendor; gpt-image default quality; FLUX.2 reference images by MP tier**
+
+Calls carrying a reference video used to be approximated as "output seconds × 2× the unit price", which did not match how the upstreams actually charge. They are now billed per vendor, in four shapes:
+
+| Shape | Applies to | Formula |
+|---|---|---|
+| Reference seconds counted, tier switched | Seedance 2.x, Wan 2.7 R2V / VideoEdit | (reference-video seconds + output seconds) × the **video-reference** rate |
+| Reference seconds counted, same tier | MiniMax H3 / H3-Max / H3-Regeneration | (reference-video seconds + output seconds) × the same tier's rate |
+| Tier switched, reference seconds free | Kling Omni / Video-O1, SkyReels V4 | output seconds × the **video-reference** rate |
+| Whole-clip price + per reference second | Omni-Flash-Ext | clip price + reference-video seconds × a per-second rate |
+
+For Kling's two `*-motion-control` models the reference video carries no separate charge; output duration equals the reference video's duration, and `720P` bills at the standard tier, `1080P` at the professional tier.
+
+**Price cuts in this batch**: `seedance-2.0` family with a reference video (480p $0.082 → **$0.045** per second, other tiers reduced proportionally — the video-reference rate is below the text-to-video rate) and Kling `motion-control` at 720P.
+
+Two more changes:
+
+- **`gpt-image-2` without `quality`** now generates and bills at **`low`** instead of `high` (`gpt-image-1` / `gpt-image-1.5` use `medium`), matching OpenAI's own defaults — this is a **price cut**. Passing `auto` explicitly still bills at the top tier.
+- **FLUX.2 reference images are charged by MP tier**: with exactly one reference image the surcharge follows that image's actual MP tier (1–4 MP); with two or more, each is charged at the 1 MP tier.
+
+Effective **immediately**, for calls made after the change. Live prices are in [Explore](https://qingbo.dev/explore) and the console's Model Market; `POST /waveapi/public/quote` with `video_urls` / `image_urls` returns an estimate.
+</Update>
+
 <Update label="2026-09-03" description="Pricing change">
 **whisper-1 price change**
 

@@ -135,7 +135,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  参考图片 URL 数组,触发 **I2V** 模式;支持公网 URL 或 Base64
+  参考图片 URL 数组,触发 **I2V** 模式;支持公网 URL 或 Base64。`minimax-hailuo-2.3-fast` 走图生视频时**必填**,**缺少时提交即被拒,不预扣。**
 </ParamField>
 
 <ParamField body="callback_url" type="string">

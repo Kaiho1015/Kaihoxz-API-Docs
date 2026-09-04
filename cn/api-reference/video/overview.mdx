@@ -98,6 +98,10 @@ POST https://www.qingbo.dev/v1/tasks
 
 <ParamField body="video_urls" type="string[]">
   参考视频 URL 数组,**单元素即可**(视频续写 / R2V 视频参考 / 视频编辑用)
+
+  <Note>
+  **参考视频计费因厂商而异**,详见各模型页:有的把参考视频秒数计入(Seedance / Wan / MiniMax),有的只换档不计秒(Kling / SkyReels),有的在整片价外另加秒费(Omni)。`POST /waveapi/public/quote` 传 `video_urls` 可预估;探测不到参考视频时长时按该模型的输入上限预扣,完成后按实际时长退差。
+  </Note>
 </ParamField>
 
 <ParamField body="audio_urls" type="string[]">

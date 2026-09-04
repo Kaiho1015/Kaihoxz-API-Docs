@@ -31,7 +31,7 @@ Prices are not listed here — they follow upstream changes, and anything writte
 | `minimax-h3-max` | `480p` / `768p` | any integer 4–15 | ✅ native | Faster, cheaper low-resolution tier with the same capabilities as H3 |
 | `minimax-h3-regeneration` | `2k` | any integer 4–15 | ✅ native | Re-renders an existing 768p H3 clip at native 2K; `video_urls` required |
 
-Billed by **resolution × duration**; `2k` costs more. **A reference video (`video_urls`) is billed at 2× the unit price** — the upstream charges input-video seconds plus output seconds, and this is an interim approximation; `minimax-h3-regeneration`'s unit price already includes the input, so it is not doubled. The first 5 reference images are free; beyond that the upstream charges per image, which we currently **do not** pass on.
+Billed by **resolution × duration**; `2k` costs more. **With a reference video (`video_urls`), reference seconds and output seconds are added together and billed at the same tier** — no tier switch, no doubling; `minimax-h3-regeneration` follows the same rule. A reference video may be at most **15 seconds**. The first 5 reference images are free; beyond that the upstream charges per image, which we currently **do not** pass on.
 
 ## Examples
 
@@ -122,7 +122,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="video_urls" type="string[]">
-  Reference video — supplies camera movement, pacing and style
+  Reference video — supplies camera movement, pacing and style. At most **15 seconds**; **required** for `minimax-h3-regeneration` — If it is missing, the request is rejected at submission and nothing is held.
 </ParamField>
 
 <ParamField body="audio_urls" type="string[]">

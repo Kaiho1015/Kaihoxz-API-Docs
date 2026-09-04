@@ -26,7 +26,9 @@ Prices are not listed here — they follow upstream changes, and anything writte
 
 **Billing tiers: by output resolution; reference video is extra.** The whole family is billed by **output resolution × output seconds**. **Text-to-video and image-to-video cost the same** — passing `image_urls` does not change the unit price (the upstream does not charge for input images).
 
-The one exception is a **reference video** (`video_urls`): the upstream charges for input-video seconds plus output seconds, which we currently approximate as **2× the unit price** per output second. When the reference video is much longer than the output, actual cost can exceed this — it is an interim rule and will move to exact input-duration billing.
+A **reference video** (`video_urls`) switches to a different tier: you are billed **(reference-video seconds + output seconds) × the video-reference unit price**. That reference tier is **cheaper** than the text-to-video tier, so sending a reference video does not make a call more expensive. Without `video_urls` it is simply **output seconds × the base tier**.
+
+A reference video may be at most **15 seconds** (30 seconds for `seedance-2.5`).
 
 ## Mode Routing
 
@@ -38,7 +40,7 @@ The whole series shares a field-routing convention — the backend automatically
 | `+ first_frame_image` | **image2video** (I2V) | First-frame driven; follows the first frame's aspect |
 | `+ first_frame_image + last_frame_image` | **first_last_frame** | Interpolation constrained by first + last frame |
 | `+ image_urls` | **reference** | Multi-image character / style consistency |
-| `+ video_urls` (2.0) | **reference_video** | Video clip reference (2.0 only) |
+| `+ video_urls` | **reference_video** | Video clip reference (`2.0` / `2.0-fast` / `2.0-mini`) |
 | `+ audio_urls` (2.0) | **reference_audio** | Audio-driven (2.0 only) |
 
 <Warning>
@@ -137,8 +139,8 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 | Model ID | Resolution | Duration (sec) | Notes |
 |---|---|---|---|
 | `seedance-2.0` | 480p / 720p / 1080p / 4K | any integer 4-15 | 2.0 standard tier, text / image, reference video supported |
-| `seedance-2.0-fast` | 480p / 720p | any integer 4-15 | Fast tier, faster and cheaper |
-| `seedance-2.0-mini` | 480p / 720p | any integer 4-15 | Mini tier, lowest cost, same capabilities as standard |
+| `seedance-2.0-fast` | 480p / 720p | any integer 4-15 | Fast tier, faster and cheaper, reference video supported |
+| `seedance-2.0-mini` | 480p / 720p | any integer 4-15 | Mini tier, lowest cost, same capabilities as standard, reference video supported |
 | `seedance-2.0-face` | 480p / 720p / 1080p | any integer 4-15 | Face / digital-human scenes |
 | `seedance-2.0-fast-face` | 480p / 720p | any integer 4-15 | Fast, lower-priced face tier |
 | `seedance-1.5-pro` | 480p / 720p / 1080p | any integer 4-12 | Joint audio-video generation, lip sync, multilingual dialogue |
@@ -199,7 +201,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="video_urls" type="string[]">
-  Array of reference-video URLs (**2.0 series only**), up to 3 clips; triggers **reference_video** mode. **Billing uses the "video-reference subprice" table above in place of the base price** (significantly lower than pure generation)
+  Array of reference-video URLs (`2.0` / `2.0-fast` / `2.0-mini`), up to 3 clips, each at most **15 seconds** (30 seconds for `seedance-2.5`); triggers **reference_video** mode. **Billing uses the video-reference tier in place of the base price** (cheaper than pure generation), applied to reference seconds plus output seconds
 </ParamField>
 
 <ParamField body="audio_urls" type="string[]">
@@ -313,7 +315,7 @@ No model-specific parameters; uses common parameters only.
 |---|---|
 | Reference images (`image_urls`) | Up to 9, ≤ 30MB each, JPG / PNG / WEBP |
 | First/last frame (`first_frame_image` / `last_frame_image`) | ≤ 30MB each, JPG / PNG / WEBP |
-| Reference videos (`video_urls`, 2.0 only) | Up to 3 clips, MP4 / MOV, ≤ 100MB per clip |
+| Reference videos (`video_urls`) | `2.0` / `2.0-fast` / `2.0-mini`, up to 3 clips, ≤ 15 sec each (30 sec for `2.5`), MP4 / MOV, ≤ 100MB per clip |
 | Reference audio (`audio_urls`, 2.0 only) | Up to 3 tracks, WAV / MP3, ≤ 15MB per track |
 | Output | MP4, link valid for 24 hours |
 

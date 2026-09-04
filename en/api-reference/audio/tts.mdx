@@ -4,11 +4,9 @@ description: "Convert text into natural, fluent speech"
 api: "POST https://www.qingbo.dev/v1/audio/speech"
 ---
 
-<Warning>
-`tts-1` and `tts-1-hd` were delisted on 2026-09-03; this page is kept for reference only. For text-to-speech, please wait for `gpt-4o-mini-tts` to launch
-</Warning>
-
 Synchronous endpoint — returns the audio stream directly when the request completes.
+
+Billed by **input text characters** at $13.5 per million characters; there is no output charge.
 
 <RequestExample>
 ```bash cURL
@@ -16,7 +14,7 @@ curl https://www.qingbo.dev/v1/audio/speech \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "tts-1",
+    "model": "gpt-4o-mini-tts",
     "voice": "nova",
     "input": "欢迎使用 清波 API 文字转语音服务。"
   }' \
@@ -32,7 +30,7 @@ client = OpenAI(
 )
 
 response = client.audio.speech.create(
-    model="tts-1",
+    model="gpt-4o-mini-tts",
     voice="nova",
     input="欢迎使用 清波 API 文字转语音服务。"
 )
@@ -50,7 +48,7 @@ const client = new OpenAI({
 });
 
 const response = await client.audio.speech.create({
-  model: 'tts-1',
+  model: 'gpt-4o-mini-tts',
   voice: 'nova',
   input: '欢迎使用 清波 API 文字转语音服务。'
 });
@@ -72,7 +70,7 @@ import (
 
 func main() {
     payload := map[string]string{
-        "model": "tts-1",
+        "model": "gpt-4o-mini-tts",
         "voice": "nova",
         "input": "欢迎使用 清波 API 文字转语音服务。",
     }
@@ -100,7 +98,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String payload = """
         {
-          "model": "tts-1",
+          "model": "gpt-4o-mini-tts",
           "voice": "nova",
           "input": "欢迎使用 清波 API 文字转语音服务。"
         }
@@ -124,12 +122,14 @@ public class Main {
 
 ## Available Models
 
-`tts-1` and `tts-1-hd` are delisted, so no model is currently available — please wait for `gpt-4o-mini-tts` to launch.
+| Model ID | Description |
+|---------|------|
+| `gpt-4o-mini-tts` | OpenAI's current-generation text-to-speech: 11 voices, with `instructions` for setting tone, pace and emotion in plain language |
 
 ## Request Parameters
 
 <ParamField body="model" type="string" required>
-  Please wait for `gpt-4o-mini-tts` to launch
+  Model ID: `gpt-4o-mini-tts`
 </ParamField>
 
 <ParamField body="input" type="string" required>
@@ -137,7 +137,11 @@ public class Main {
 </ParamField>
 
 <ParamField body="voice" type="string" default="alloy">
-  Voice: `alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer`
+  Voice, 11 options: `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `onyx`, `nova`, `sage`, `shimmer`, `verse`
+</ParamField>
+
+<ParamField body="instructions" type="string">
+  Set tone, pace and emotion in plain language, e.g. "speak gently and slowly". Optional; omitted, the model reads with its default delivery
 </ParamField>
 
 ## Response
