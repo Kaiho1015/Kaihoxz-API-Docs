@@ -88,7 +88,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
     "prompt": "把场景改为雪天",
     "video_urls": ["https://cdn.example.com/source.mp4"],
     "audio_setting": "origin",
-    "duration": 0,
+    "duration": 5,
     "resolution": "1080p"
   }'
 ```
@@ -133,7 +133,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="duration" type="integer" default="5">
-  视频时长(秒),范围 3-15 任意整数;EDIT 模式可传 `0` 表示跟随源视频
+  视频时长(秒),范围 3-15 任意整数。**不接受 `0`** —— `0 = 跟随源视频时长` 是 `wan2.7-videoedit` 的约定,本模型不适用
 </ParamField>
 
 <ParamField body="resolution" type="string" default="720p">

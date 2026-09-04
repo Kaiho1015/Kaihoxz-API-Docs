@@ -88,7 +88,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
     "prompt": "Change the scene to a snowy day",
     "video_urls": ["https://cdn.example.com/source.mp4"],
     "audio_setting": "origin",
-    "duration": 0,
+    "duration": 5,
     "resolution": "1080p"
   }'
 ```
@@ -133,7 +133,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="duration" type="integer" default="5">
-  Video duration in seconds, any integer in 3-15. In EDIT mode, `0` means follow the source video's duration
+  Video duration in seconds, any integer in 3-15. **`0` is not accepted** — `0 = follow the source duration` is a `wan2.7-videoedit` convention and does not apply to this model
 </ParamField>
 
 <ParamField body="resolution" type="string" default="720p">
