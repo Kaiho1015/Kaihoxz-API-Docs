@@ -137,7 +137,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  Reference image URL array; triggers **I2V** mode. Public URL or Base64
+  Reference image URL array; triggers **I2V** mode. Public URL or Base64. **Required** for `minimax-hailuo-2.3-fast` when doing image-to-video — If it is missing, the request is rejected at submission and nothing is held.
 </ParamField>
 
 <ParamField body="callback_url" type="string">

@@ -138,8 +138,8 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   视频时长(秒),范围 **1-16** 任意整数
 </ParamField>
 
-<ParamField body="image_urls" type="string[]">
-  参考图片 URL 数组,作为主体 / 风格参考(R2V),或作为首帧 / 混剪素材
+<ParamField body="image_urls" type="string[]" required>
+  参考图片 URL 数组,作为主体 / 风格参考(R2V),或作为首帧 / 混剪素材。`vidu-q3` / `vidu-q3-mix` 均**必填**,**缺少时提交即被拒,不预扣。**
 </ParamField>
 
 <ParamField body="callback_url" type="string">

@@ -27,7 +27,7 @@ No unit prices on this page — prices track upstream changes, and anything writ
 **Actual cost of one call:** every response carries `cost` / `usage.cost` — that is the number to trust.
 </Note>
 
-**Video editing and reference-to-video bill the input video too.** For `wan2.7-videoedit` and `wan2.7-r2v` the upstream charges for source-video seconds plus output seconds. We currently approximate this as **2× the unit price** per output second; when the source is much longer than the output, actual cost can exceed this. This is an interim rule and will move to exact input-duration billing.
+**Video editing and reference-to-video count the input video too.** `wan2.7-r2v` and `wan2.7-videoedit` are billed **(source-video seconds + output seconds) × the video-reference unit price**, which is lower than the text-to-video tier. The source video may be at most **15 seconds** (`wan2.7-r2v`) or **10 seconds** (`wan2.7-videoedit`).
 
 ## Examples
 
@@ -166,10 +166,12 @@ Resolution casing differs by model: `wan2.7` / `wan2.7-r2v` / `wan2.7-videoedit`
   - `wan2.5-preview`: passing it switches to image mode (image-to-video)
   - `wan2.7-r2v`: **required**, as subject / style reference (R2V)
   - `wan2.7-videoedit`: optional style / content reference images, **up to 4**
+
+  For the tiers marked **required** (`wan2.6-i2v` / `wan2.6-i2v-flash` / `wan2.7-r2v`): If it is missing, the request is rejected at submission and nothing is held.
 </ParamField>
 
 <ParamField body="video_urls" type="string[]">
-  Source video URL (single element). **Required** for `wan2.7-videoedit`; base64 is not accepted — must be a publicly downloadable link
+  Source video URL (single element). **Required** for `wan2.7-videoedit` — If it is missing, the request is rejected at submission and nothing is held. At most 10 seconds; base64 is not accepted — must be a publicly downloadable link
 </ParamField>
 
 <ParamField body="resolution" type="string">
@@ -185,7 +187,7 @@ Resolution casing differs by model: `wan2.7` / `wan2.7-r2v` / `wan2.7-videoedit`
   - `wan2.6` / `wan2.6-i2v` / `wan2.6-i2v-flash`: `5` / `10` / `15` only (default `5`)
   - `wan2.5-preview`: `5` / `10` only (default `5`)
 
-  `wan2.7-videoedit` is settled on the output duration you specify.
+  `wan2.7-videoedit` is settled on the output duration you specify; `0` keeps the source video's duration, in which case the hold is taken at the cap and settled on the actual duration.
 </ParamField>
 
 <ParamField body="aspect_ratio" type="string" default="16:9">

@@ -11,6 +11,8 @@ Black Forest Labs' FLUX image model series, **5 models** in two families:
 
 Per-image pricing, async tasks — submit, then poll task status for the result.
 
+**FLUX.2 is priced by megapixel (MP) tier.** The output image is charged at the MP tier its pixel count falls into — `1K` (1024×1024 ≈ 1.05 MP) lands in the **2 MP tier**, not the 1 MP tier. Reference images are charged separately: with **exactly one** reference image, the surcharge follows that image's **actual** MP tier (1 / 2 / 3 / 4 MP); with **two or more**, each is charged at the **1 MP tier**. `pro`, `max` and `flex` each have their own set of MP-tier rates.
+
 <Warning>
 `flux-kontext-pro` and `flux-kontext-max` are **image editing models**. A call must provide reference images in `image_urls` (together with an edit instruction in `prompt`), or the task fails. For text-only generation, use `flux-2-pro` / `flux-2-flex` instead.
 </Warning>
@@ -213,7 +215,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 | Item | Limit |
 |---|---|
 | Reference images (Kontext) | Required — `flux-kontext-pro` / `flux-kontext-max` take `image_urls` |
-| Reference images (FLUX.2) | Not supported — `flux-2-pro` / `flux-2-flex` are text-to-image only |
+| Reference images (FLUX.2) | Optional, up to 8 (output plus all reference images ≤ 9MP total), surcharged by MP tier |
 | Output resolution | FLUX.2 supports `1K` / `2K`; Kontext uses the model default |
 | Single image size | ≤ 30MB, supports JPG/PNG/WEBP |
 | Aspect ratio | 7 options: `1:1` / `16:9` / `9:16` / `4:3` / `3:4` / `3:2` / `2:3` |

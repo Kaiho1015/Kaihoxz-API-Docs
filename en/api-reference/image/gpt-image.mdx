@@ -116,9 +116,10 @@ After submitting, poll task status with [`GET /v1/tasks/{task_id}`](/en/api-refe
 | `gpt-image-1` | Official | `generate` / `edit` | Multimodal text + image understanding, suited for high-quality generation and editing |
 
 <Note>
-**Omitting `quality` bills at the `high` rate.** The default for `quality` is `auto`, which
-lets the model pick — and the upstream charges `auto` at its top tier, so we price it the
-same way. To pay less, pass `quality: "low"` or `"medium"` **explicitly**.
+**Omitting `quality` generates and bills at each model's default tier** (matching OpenAI's
+own defaults): **low** for `gpt-image-2`, **medium** for `gpt-image-1` / `gpt-image-1.5`.
+For top quality, pass `quality: "high"` **explicitly**; passing `auto` explicitly is still
+billed at the top tier.
 </Note>
 
 ## Common Parameters

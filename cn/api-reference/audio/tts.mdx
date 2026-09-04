@@ -4,11 +4,9 @@ description: "将文本转换为自然流畅的语音"
 api: "POST https://www.qingbo.dev/v1/audio/speech"
 ---
 
-<Warning>
-`tts-1`、`tts-1-hd` 已于 2026-09-03 下架，本页仅作存档。文本转语音请等待 `gpt-4o-mini-tts` 上线
-</Warning>
-
 同步接口 — 请求完成后直接返回音频流。
+
+按**输入文本字符数**计费,$13.5 / 百万字符,不收输出费用。
 
 <RequestExample>
 ```bash cURL
@@ -16,7 +14,7 @@ curl https://www.qingbo.dev/v1/audio/speech \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "tts-1",
+    "model": "gpt-4o-mini-tts",
     "voice": "nova",
     "input": "欢迎使用 清波 API 文字转语音服务。"
   }' \
@@ -32,7 +30,7 @@ client = OpenAI(
 )
 
 response = client.audio.speech.create(
-    model="tts-1",
+    model="gpt-4o-mini-tts",
     voice="nova",
     input="欢迎使用 清波 API 文字转语音服务。"
 )
@@ -50,7 +48,7 @@ const client = new OpenAI({
 });
 
 const response = await client.audio.speech.create({
-  model: 'tts-1',
+  model: 'gpt-4o-mini-tts',
   voice: 'nova',
   input: '欢迎使用 清波 API 文字转语音服务。'
 });
@@ -72,7 +70,7 @@ import (
 
 func main() {
     payload := map[string]string{
-        "model": "tts-1",
+        "model": "gpt-4o-mini-tts",
         "voice": "nova",
         "input": "欢迎使用 清波 API 文字转语音服务。",
     }
@@ -100,7 +98,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String payload = """
         {
-          "model": "tts-1",
+          "model": "gpt-4o-mini-tts",
           "voice": "nova",
           "input": "欢迎使用 清波 API 文字转语音服务。"
         }
@@ -124,12 +122,14 @@ public class Main {
 
 ## 可用模型
 
-`tts-1`、`tts-1-hd` 已下架，当前无可用模型 —— 请等待 `gpt-4o-mini-tts` 上线。
+| 模型 ID | 说明 |
+|---------|------|
+| `gpt-4o-mini-tts` | OpenAI 当代文字转语音,11 种音色,支持用 `instructions` 自然语言指定语气 / 语速 / 情绪 |
 
 ## 请求参数
 
 <ParamField body="model" type="string" required>
-  请等待 `gpt-4o-mini-tts` 上线
+  模型 ID:`gpt-4o-mini-tts`
 </ParamField>
 
 <ParamField body="input" type="string" required>
@@ -137,7 +137,11 @@ public class Main {
 </ParamField>
 
 <ParamField body="voice" type="string" default="alloy">
-  语音类型：`alloy`、`echo`、`fable`、`onyx`、`nova`、`shimmer`
+  音色,11 种可选:`alloy`、`ash`、`ballad`、`coral`、`echo`、`fable`、`onyx`、`nova`、`sage`、`shimmer`、`verse`
+</ParamField>
+
+<ParamField body="instructions" type="string">
+  用自然语言指定语气 / 语速 / 情绪,例如「用温柔缓慢的语气」。可选,不传按模型默认朗读
 </ParamField>
 
 ## 响应

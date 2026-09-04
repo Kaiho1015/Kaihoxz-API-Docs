@@ -15,6 +15,10 @@ Kuaishou Kling video generation series.
 
 Billed in `$/second`. Audio, a video reference and 4K each switch to a higher tier.
 
+**Reference video** (`video_urls`, on `kling-v3-omni` / `kling-video-o1`): switches to the pricier **video-reference tier**, multiplied by **output seconds only** — the reference clip itself is not billed by the second.
+
+**Motion control** (`kling-v3-motion-control` / `kling-v2-6-motion-control`): output duration **equals the reference video's duration**, and the reference video carries no separate charge; `720P` bills at the standard (std) tier and `1080P` at the professional (pro) tier.
+
 ## Pricing
 
 <Note>
@@ -165,7 +169,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="video_urls" type="string[]">
-  Reference video URL array (single element). Omni / O1 only — the clip supplies the motion and style reference.
+  Reference video URL array (single element). Omni / O1 — the clip supplies the motion and style reference. For the two `*-motion-control` models it is **required** as the motion source — If it is missing, the request is rejected at submission and nothing is held.
 </ParamField>
 
 <ParamField body="callback_url" type="string">

@@ -6,6 +6,30 @@ title: "价格调整"
 价格调整仅对**调整生效后**的调用计费，历史调用不受影响。各模型实时单价以 [模型总览](/cn/docs/models) 与控制台「模型市场」为准；每次费用以接口返回的 `cost` / `usage.cost` 为准。
 </Note>
 
+<Update label="2026-09-04" description="价格调整">
+**参考视频计费按厂商口径重算;gpt-image 缺省画质;FLUX.2 参考图按像素档**
+
+此前带参考视频的任务统一按「输出秒数 × 2 倍单价」折算,与上游实际收法对不上。现按各厂商真实口径重算,分四类:
+
+| 口径 | 适用 | 算法 |
+|---|---|---|
+| 参考秒数计入、换参考档 | Seedance 2.x、Wan 2.7 R2V / VideoEdit | (参考视频秒数 + 输出秒数) × **参考视频档**单价 |
+| 参考秒数计入、不换档 | MiniMax H3 / H3-Max / H3-Regeneration | (参考视频秒数 + 输出秒数) × 同档单价 |
+| 只换档、参考秒数不计 | Kling Omni / Video-O1、SkyReels V4 | 输出秒数 × **参考视频档**单价 |
+| 整片价 + 参考秒费 | Omni-Flash-Ext | 整片价 + 参考视频秒数 × 每秒单价 |
+
+Kling 两个 `*-motion-control` 的参考视频不另计费,输出时长等于参考视频时长,`720P` 按标准档、`1080P` 按专业档计。
+
+**本次为降价的**:`seedance-2.0` 系带参考视频(480p 每秒 $0.082 → **$0.045**,其余档同比例下调,参考视频档单价低于文生档)、Kling `motion-control` 720P 档。
+
+另外两项:
+
+- **`gpt-image-2` 不传 `quality`** 从按 `high` 计价改为按 **`low`** 计价并按 `low` 生成(`gpt-image-1` / `gpt-image-1.5` 为 `medium`),与 OpenAI 默认一致 —— 这是**降价**。显式传 `auto` 仍按最高档。
+- **FLUX.2 参考图按像素档**:只传 1 张时按该图实际像素落入的 MP 档(1–4 MP)加价,传 2 张及以上时每张按 1 MP 档加价。
+
+调整**即日生效**,仅对生效后的调用计费。实时单价以 [Explore](https://qingbo.dev/explore) 与控制台「模型市场」为准,`POST /waveapi/public/quote` 传 `video_urls` / `image_urls` 可预估。
+</Update>
+
 <Update label="2026-09-03" description="价格调整">
 **whisper-1 调价**
 

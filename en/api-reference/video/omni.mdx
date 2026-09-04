@@ -6,6 +6,8 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 
 Omni-Flash-Ext is a single video model covering **text-to-video** and **video extension** — pass one source clip in `video_urls` and the model builds on it, carrying its motion and style while the prompt steers the look. Three resolutions (720p / 1080p / 4k) and fixed durations of `4` / `6` / `8` / `10` seconds. A good fit for **creative shorts, style transfer and extending existing footage**. Generation is async.
 
+Billed by **resolution × duration** as a whole-clip price. Passing a **reference video** (`video_urls`) adds a charge **per reference-video second** on top of that clip price, at one rate for 720p / 1080p and a higher one for 4K. A reference video may be at most **10 seconds**.
+
 ## Pricing
 
 <Note>

@@ -138,8 +138,8 @@ After submitting, poll [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status
   Video length in seconds — any integer from **1 to 16**
 </ParamField>
 
-<ParamField body="image_urls" type="string[]">
-  Array of reference image URLs, used as subject / style reference (R2V), as the first frame, or as remix material
+<ParamField body="image_urls" type="string[]" required>
+  Array of reference image URLs, used as subject / style reference (R2V), as the first frame, or as remix material. **Required** for both `vidu-q3` and `vidu-q3-mix`. If it is missing, the request is rejected at submission and nothing is held.
 </ParamField>
 
 <ParamField body="callback_url" type="string">

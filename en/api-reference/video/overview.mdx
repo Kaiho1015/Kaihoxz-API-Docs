@@ -89,6 +89,10 @@ For the full async flow see [Task System](/en/docs/task-system) — Submit → S
 
 <ParamField body="video_urls" type="string[]">
   Array of reference video URLs — **a single element is sufficient** (used for video continuation / R2V video reference / video editing)
+
+  <Note>
+  **Reference-video billing differs by vendor** — see each model page: some count reference-video seconds (Seedance / Wan / MiniMax), some only switch tier without billing those seconds (Kling / SkyReels), and some add a per-second charge on top of a whole-clip price (Omni). `POST /waveapi/public/quote` with `video_urls` returns an estimate; when the reference video's duration cannot be probed, the hold is taken at that model's input cap and the difference is refunded once the actual duration is known.
+  </Note>
 </ParamField>
 
 <ParamField body="audio_urls" type="string[]">
