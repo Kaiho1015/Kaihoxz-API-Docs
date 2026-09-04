@@ -111,7 +111,18 @@ Requests that carry `video_urls` (reference video / video editing / motion contr
 
 **What happens if it cannot be read** — if the header cannot be parsed (unusual format, unreachable URL, and so on) the request is **rejected** with `400 input_video_duration_unknown` and **nothing is charged** — it is not estimated at a cap and billed. Use a directly downloadable URL in a common container format (mp4 / webm).
 
-**Estimating before you submit** — `POST /waveapi/public/quote` with `video_urls` returns the exact price for that call, including the input seconds it probed.
+**Estimating before you submit** — `POST https://www.qingbo.dev/waveapi/quote` with `video_urls` returns the exact price for that call, including the input seconds it probed.
+
+This is a **public utility endpoint and needs no API key**. It replies in the standard envelope `{code, message, data}`, where `data` carries:
+
+| Field | Meaning |
+|---|---|
+| `total_usd` | Total price for this call, in USD |
+| `unit` | Billing unit (seconds / images / characters, and so on) |
+| `billed_quantity` | The quantity actually billed — the probed input-video seconds show up here |
+| `multipliers` | Multipliers in effect (user-group ratio and the like) |
+
+When a request is rejected, `errorKey` carries the specific reason (such as `input_video_duration_unknown`) and `message` holds text you can show to the user directly.
 
 How the reference video then enters the price (counted as seconds, only switching tier, or replacing the clip price) depends on the vendor — see the billing section on each model page.
 
