@@ -29,7 +29,7 @@ kling v3 家族(v3 / v3-omni / video-o1)的价格按**质量模式**分档,我�
 
 **参考视频**(`video_urls`,`kling-v3-omni` / `kling-video-o1`):换成更贵的**参考视频档**单价,只乘 **输出秒数** —— 参考视频本身不计秒。
 
-**运动控制**(`kling-v3-motion-control` / `kling-v2-6-motion-control`):输出时长 **等于参考视频时长**,参考视频不另计费;`720P` 按标准(std)档、`1080P` 按专业(pro)档单价计。
+**运动控制**(`kling-v3-motion-control` / `kling-v2-6-motion-control`):按 **参考视频秒数 × 每秒档价** 计费,`720P` 按标准(std)档、`1080P` 按专业(pro)档;参考视频本身不另外计费。输出时长由参考视频决定,与参考片等长 —— 这两个模型**没有 `duration` 参数**。
 
 ## 定价
 
@@ -124,7 +124,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
     "prompt": "保持角色一致,跟随参考视频做转身挥手动作,电影感光影",
     "image_urls": ["https://cdn.example.com/character.jpg"],
     "video_urls": ["https://cdn.example.com/ref-motion.mp4"],
-    "duration": 5,
+    "duration": 0,
     "resolution": "1080P"
   }'
 ```
@@ -155,8 +155,8 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 | `kling-v2-6` | 720P / 1080P | 5 / 10 秒 | ✅ 仅 1080P | — | 经典稳定版 |
 | `kling-video-o1` | 720P / 1080P | 5 / 10 秒 | — | ✅ `video_urls` | 推理增强,物理一致性最优 |
 | `kling-3.0-turbo` | 720P / 1080P | 5 / 10 秒 | — | — | 极速档,生成最快、单价最低 |
-| `kling-v3-motion-control` | 720P / 1080P | 5 / 10 秒 | — | 必填(运动源) | 运动控制(v3) |
-| `kling-v2-6-motion-control` | 720P / 1080P | 5 / 10 秒 | — | 必填(运动源) | 运动控制(v2.6) |
+| `kling-v3-motion-control` | 720P / 1080P | 跟随参考视频(3-30 秒) | — | 必填(运动源) | 运动控制(v3),无 `duration` 参数 |
+| `kling-v2-6-motion-control` | 720P / 1080P | 跟随参考视频(3-30 秒) | — | 必填(运动源) | 运动控制(v2.6),无 `duration` 参数 |
 
 所有模型均支持 `generate` action;`model` ID 即上表取值。
 
@@ -178,7 +178,9 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="duration" type="integer" default="5">
-  视频时长(秒)。取值 `5` 或 `10`
+  视频时长(秒)。取值 `5` 或 `10`。
+
+  两个 `*-motion-control` **不接受该参数** —— 输出时长由参考视频决定,调用时传 `0`(表示「跟随参考视频时长」)或不传
 </ParamField>
 
 <ParamField body="aspect_ratio" type="string" default="16:9">
@@ -268,11 +270,13 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="video_urls" type="string[]" required>
-  运动来源视频(1 段),**必填**,生成视频会让参考角色复刻这段视频的动作 / 镜头。**缺少时提交即被拒,不预扣。**
+  运动来源视频(1 段),**必填**,生成视频会让参考角色复刻这段视频的动作 / 镜头。长度 **3-30 秒**。**缺少时提交即被拒,不预扣。**
 </ParamField>
 
 <Note>
-运动控制要求**参考图与参考视频同时存在**;参考视频建议 MP4 / MOV,≥ 3 秒。
+运动控制要求**参考图与参考视频同时存在**;参考视频 MP4 / MOV,3-30 秒。
+
+**没有 `duration` 参数**(上游不接受):输出时长由参考视频决定,与参考片等长,调用时 `duration` 传 `0` 或不传。计费按 **参考视频秒数 × 每秒档价**(`720P` 标准档 / `1080P` 专业档)。
 </Note>
 
 </Tab>
@@ -312,7 +316,7 @@ Omni / O1 提供了图时若 `prompt` 未含任何 `<<<image_N>>>`,系统会自�
 |---|---|
 | 参考图片(单张) | ≤ 30MB,JPG / PNG / WEBP |
 | 参考图片(数量) | 图生 / 首尾帧:1-2 张;Omni / O1 多模态:多张;运动控制:1 张 |
-| 参考视频(`video_urls`) | MP4 / MOV,≥ 3 秒,运动控制 ≤ 100MB;视频参考分辨率 720px-2160px |
+| 参考视频(`video_urls`) | MP4 / MOV,运动控制 3-30 秒且 ≤ 100MB;视频参考 ≥ 3 秒、分辨率 720px-2160px |
 | 提示词 | ≤ 2500 字符 |
 | 输出 | MP4,链接 24 小时有效 |
 

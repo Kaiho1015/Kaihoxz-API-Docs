@@ -198,6 +198,10 @@ Switch generation modes via the `action` field (or the corresponding media field
 
 <ParamField body="video_urls" type="string[]">
   Reference video URL array (simplified mode), one of `video_urls` or `ref_videos`. For complex cases (need to specify tag / type=reference|extend) use `ref_videos`
+
+  <Warning>
+  When you pass reference videos, the prompt **must reference them with `@video_1` / `@video_2`** (e.g. `follows the motion in @video_1`). Without that reference the upstream rejects the request with `Reference video tag @video_1 must be in prompt`, and the request is not billed.
+  </Warning>
 </ParamField>
 
 <ParamField body="audio_urls" type="string[]">

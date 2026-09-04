@@ -1,6 +1,6 @@
 ---
 title: "Kling Series"
-description: "Kuaishou Kling video generation — v2.6 / v3 / v3-omni / video-o1 / motion control, covering text-to-video, image-to-video, first/last frame, multimodal reference, video reference and motion control"
+description: "Kuaishou Kling video generation — v2.6 / v3 / v3-omni / video-o1 / 3.0-turbo / motion control, covering text-to-video, image-to-video, first/last frame, multimodal reference, video reference and motion control"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
@@ -12,13 +12,14 @@ Kuaishou Kling video generation series.
 - **kling-v3** — Next-generation base model, adds **4K resolution**, T2V duration extended to **15 seconds**, native audio support
 - **kling-v3-omni** — Unified **multimodal interface** for the v3 family — T2V, I2V, and video reference all share one endpoint, with `<<<image_N>>>` reference syntax in the prompt
 - **kling-video-o1** — First **reasoning-enhanced** video model, performs deep planning over the prompt and reference assets before generation, delivering best-in-class physical consistency, complex motion, and long-form motion semantic adherence
+- **kling-3.0-turbo** — Fast tier, plain resolutions 720P / 1080P; quickest generation and the lowest unit price, good for previews and batches
 - **kling-v3-motion-control** / **kling-v2-6-motion-control** — **Motion control**: one reference image (the character) plus one reference video (the motion) makes the character reproduce the motion from that video
 
 Billed in `$/second`. Audio, a video reference and 4K each switch to a higher tier.
 
 **Reference video** (`video_urls`, on `kling-v3-omni` / `kling-video-o1`): switches to the pricier **video-reference tier**, multiplied by **output seconds only** — the reference clip itself is not billed by the second.
 
-**Motion control** (`kling-v3-motion-control` / `kling-v2-6-motion-control`): output duration **equals the reference video's duration**, and the reference video carries no separate charge; `720P` bills at the standard (std) tier and `1080P` at the professional (pro) tier.
+**Motion control** (`kling-v3-motion-control` / `kling-v2-6-motion-control`): billed as **reference-video seconds × the per-second tier rate**, `720P` at the standard (std) tier and `1080P` at the professional (pro) tier; the reference video carries no separate charge on top. Output duration is set by the reference video and matches it — these two models have **no `duration` parameter**.
 
 ## Pricing
 
@@ -106,7 +107,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
     "prompt": "Keep the character consistent, follow the reference video turning and waving, cinematic lighting",
     "image_urls": ["https://cdn.example.com/character.jpg"],
     "video_urls": ["https://cdn.example.com/ref-motion.mp4"],
-    "duration": 5,
+    "duration": 0,
     "resolution": "1080P"
   }'
 ```
@@ -137,8 +138,8 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 | `kling-v3` | 720P / 1080P / 4K | 3-15 sec | `generate` · `image2video` · `first_last_frame` | 4K + native audio |
 | `kling-v2-6` | 720P / 1080P | 5 / 10 sec | `generate` · `image2video` · `first_last_frame` | 1080P with optional audio, top stability |
 | `kling-3.0-turbo` | 720P / 1080P | 5 / 10 sec | `generate` · `image2video` | Fast tier — quickest generation and the lowest unit price, good for previews and batches |
-| `kling-v3-motion-control` | 720P / 1080P | 5 / 10 sec | `generate` (reference video **required** as the motion source) | Motion control (v3) |
-| `kling-v2-6-motion-control` | 720P / 1080P | 5 / 10 sec | `generate` (reference video **required** as the motion source) | Motion control (v2.6) |
+| `kling-v3-motion-control` | 720P / 1080P | follows the reference video (3-30 sec) | `generate` (reference video **required** as the motion source) | Motion control (v3), no `duration` parameter |
+| `kling-v2-6-motion-control` | 720P / 1080P | follows the reference video (3-30 sec) | `generate` (reference video **required** as the motion source) | Motion control (v2.6), no `duration` parameter |
 
 ## Common Parameters
 
@@ -171,12 +172,14 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="duration" type="integer" default="5">
-  Video duration in seconds. v2.6 / o1 accept only `5` or `10`; v3 / omni accept any integer from 3-15
+  Video duration in seconds. v2.6 / o1 accept only `5` or `10`; v3 / omni accept any integer from 3-15.
+
+  The two `*-motion-control` models **do not accept this parameter** — output duration is set by the reference video; pass `0` (meaning "follow the reference video's duration") or omit it
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
   Reference image URL array:
-  - **I2V / first-last frame** (v3 / v2.6 / o1): a **single-element array** triggers I2V
+  - **I2V / first-last frame** (v3 / v2.6 / o1 / 3.0-turbo): a **single-element array** triggers I2V
   - **Multimodal reference** (Omni / O1): multiple images, referenceable via `<<<image_N>>>`
   - **Motion control** (the two `*-motion-control` models): **required**, 1 image as the character reference. If it is missing, the request is rejected at submission and nothing is held.
 </ParamField>
@@ -255,6 +258,12 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 </Tab>
 
+<Tab title="kling-3.0-turbo">
+
+The fast tier has no model-specific parameters; everything else is in [Common Parameters](#common-parameters). It does not support audio or video reference.
+
+</Tab>
+
 <Tab title="motion-control">
 
 `kling-v3-motion-control` / `kling-v2-6-motion-control` must be given both of:
@@ -264,11 +273,13 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="video_urls" type="string[]" required>
-  The motion-source video (1 clip), **required** — the generated video makes the referenced character reproduce its motion and camera work. If it is missing, the request is rejected at submission and nothing is held.
+  The motion-source video (1 clip), **required** — the generated video makes the referenced character reproduce its motion and camera work. **3-30 seconds.** If it is missing, the request is rejected at submission and nothing is held.
 </ParamField>
 
 <Note>
-Motion control requires **both the reference image and the reference video**; the reference video should be MP4 / MOV and at least 3 seconds. Output duration equals the reference video's duration and the reference video carries no separate charge; `720P` bills at the standard (std) tier, `1080P` at the professional (pro) tier.
+Motion control requires **both the reference image and the reference video**; the reference video must be MP4 / MOV, 3-30 seconds.
+
+**There is no `duration` parameter** (the upstream does not accept one): output duration is set by the reference video and matches it — pass `duration: 0` or omit it. Billing is **reference-video seconds × the per-second tier rate** (`720P` standard tier / `1080P` professional tier).
 </Note>
 
 </Tab>
@@ -299,7 +310,7 @@ Corresponding `image_urls`:
 ```
 
 <Note>
-Non-Omni / O1 models (v2.6 / v3) do not parse `<<<image_N>>>` placeholders and forward them to the model as literal text.
+Non-Omni / O1 models (v2.6 / v3 / 3.0-turbo) do not parse `<<<image_N>>>` placeholders and forward them to the model as literal text.
 </Note>
 
 ## Resource Limits
@@ -308,7 +319,7 @@ Non-Omni / O1 models (v2.6 / v3) do not parse `<<<image_N>>>` placeholders and f
 |---|---|
 | Reference image (per file) | ≤ 30MB, JPG / PNG / WEBP |
 | Reference image (count) | I2V: 1; Omni / O1 multimodal: ≤ 4 recommended; motion control: 1 |
-| Reference video (`video_urls`) | MP4 / MOV, ≥ 3 sec, ≤ 100MB for motion control, **at most 1 clip**; video reference accepts 720px-2160px |
+| Reference video (`video_urls`) | MP4 / MOV, **at most 1 clip**; motion control 3-30 sec and ≤ 100MB; video reference ≥ 3 sec, 720px-2160px |
 | Prompt | ≤ 2500 characters |
 | Output | MP4, link valid for 24 hours |
 
