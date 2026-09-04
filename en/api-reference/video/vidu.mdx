@@ -1,6 +1,6 @@
 ---
 title: "Vidu Q3 Series"
-description: "ShengShu Vidu Q3 — reference-to-video / text-to-video / image-to-video, smart shot transitions, any integer 1-16 sec"
+description: "ShengShu Vidu Q3 — reference-to-video / image-to-video, smart shot transitions, any integer 1-16 sec"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
@@ -26,13 +26,14 @@ No unit prices on this page — prices track upstream changes, and anything writ
 
 <CodeGroup>
 
-```bash Text-to-video (standard)
+```bash Reference-image to video (standard)
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "vidu-q3",
     "prompt": "A girl running toward the sunset on a beach at dusk, hair flying, cinematic lighting",
+    "image_urls": ["https://cdn.example.com/girl.jpg"],
     "duration": 5,
     "resolution": "1080p"
   }'
@@ -120,7 +121,9 @@ After submitting, poll [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status
 <ParamField body="action" type="string" default="generate">
   `generate` — the only action for this model.
 
-  **Mode is not selected by `action`, it follows what you send:** `prompt` alone is text-to-video; adding `image_urls` makes it image-to-video; `first_frame_image` + `last_frame_image` makes it first/last frame; `video_urls` / `audio_urls` make it reference-to-video.
+  **Mode is not selected by `action`, it follows what you send:** `image_urls` makes it reference-image-to-video; `first_frame_image` + `last_frame_image` makes it first/last frame; `video_urls` / `audio_urls` make it reference-to-video.
+
+  `vidu-q3` / `vidu-q3-mix` have **no pure text-to-video mode** — `image_urls` is required.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>

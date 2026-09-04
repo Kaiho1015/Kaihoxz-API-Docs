@@ -11,6 +11,7 @@ ByteDance Doubao Seedance video generation series, covering the full range from 
 | **1.0 Pro Fast** | Flagship fast tier, balanced quality and speed; about 3x faster than Pro Quality |
 | **1.0 Pro Quality** | Flagship high-quality tier, 1080P multi-shot storytelling, suited for final delivery |
 | **1.5 Pro** | New-generation audio-enabled video, joint audio-video generation, multilingual dialogue + lip sync |
+| **2.5** | 480p-1080p, 4-30 seconds, with multimodal input: reference images / reference video / reference audio |
 | **2.0** | Multimodal flagship, unified architecture for text + images (≤9) + videos (≤3) + audio (≤3); `@image1`/`@video2`/`@audio3` reference syntax |
 | **2.0 Face** | 2.0 with enhanced face/identity reference, suited for digital-human shorts and lip-sync content |
 | **2.0 Fast / Fast Face** | 2.0 fast tier, no 1080P, trades quality for faster output and lower cost |
@@ -40,8 +41,8 @@ The whole series shares a field-routing convention — the backend automatically
 | `+ first_frame_image` | **image2video** (I2V) | First-frame driven; follows the first frame's aspect |
 | `+ first_frame_image + last_frame_image` | **first_last_frame** | Interpolation constrained by first + last frame |
 | `+ image_urls` | **reference** | Multi-image character / style consistency |
-| `+ video_urls` | **reference_video** | Video clip reference (`2.0` / `2.0-fast` / `2.0-mini`) |
-| `+ audio_urls` (2.0) | **reference_audio** | Audio-driven (2.0 only) |
+| `+ video_urls` | **reference_video** | Video clip reference (`2.5` / `2.0` / `2.0-fast` / `2.0-mini`) |
+| `+ audio_urls` | **reference_audio** | Audio-driven (`2.5` / 2.0 series) |
 
 <Warning>
 **`image_urls` semantics change (upstream, effective 2026-07-09)** — for `seedance-2.0`, `seedance-2.0-fast` and `seedance-2.0-mini`:
@@ -138,6 +139,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 | Model ID | Resolution | Duration (sec) | Notes |
 |---|---|---|---|
+| `seedance-2.5` | 480p / 720p / 1080p | any integer 4-30 | 2.5 generation, multimodal input (reference images / video / audio) |
 | `seedance-2.0` | 480p / 720p / 1080p / 4K | any integer 4-15 | 2.0 standard tier, text / image, reference video supported |
 | `seedance-2.0-fast` | 480p / 720p | any integer 4-15 | Fast tier, faster and cheaper, reference video supported |
 | `seedance-2.0-mini` | 480p / 720p | any integer 4-15 | Mini tier, lowest cost, same capabilities as standard, reference video supported |
@@ -171,7 +173,9 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
   - `4:3` — landscape
   - `3:4` — portrait
   - `21:9` — ultrawide
-  - `adaptive` — adaptive (**2.0 series only**, follows the reference asset)
+  - `adaptive` — adaptive (**2.0 series and 2.5 only**, follows the reference asset)
+
+  `seedance-2.5` accepts `adaptive` / `1:1` / `16:9` / `9:16` / `4:3` / `3:4`.
 </ParamField>
 
 <ParamField body="resolution" type="string" default="720p">
@@ -179,6 +183,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
   - `480p`
   - `720p`
   - `1080p` (not supported by Lite-i2v / 2.0-fast / 2.0-fast-face)
+  - `seedance-2.5`: `480p` / `720p` / `1080p`
 </ParamField>
 
 <ParamField body="duration" type="integer" default="5">
@@ -186,6 +191,7 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
   - 1.0 series: 2-12
   - 1.5 Pro: 4-12
   - 2.0 series: 4-15
+  - 2.5: 4-30
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
@@ -201,11 +207,11 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="video_urls" type="string[]">
-  Array of reference-video URLs (`2.0` / `2.0-fast` / `2.0-mini`), up to 3 clips, each at most **15 seconds** (30 seconds for `seedance-2.5`); triggers **reference_video** mode. **Billing uses the video-reference tier in place of the base price** (cheaper than pure generation), applied to reference seconds plus output seconds
+  Array of reference-video URLs (`2.5` / `2.0` / `2.0-fast` / `2.0-mini`), up to 3 clips, each at most **15 seconds** (**30 seconds** for `seedance-2.5`); triggers **reference_video** mode. **Billing uses the video-reference tier in place of the base price** (cheaper than pure generation), applied to reference seconds plus output seconds
 </ParamField>
 
 <ParamField body="audio_urls" type="string[]">
-  Array of reference-audio URLs (**2.0 series only**), up to 3 tracks; triggers **reference_audio** mode
+  Array of reference-audio URLs (**2.0 series and `seedance-2.5`**), up to 3 tracks; triggers **reference_audio** mode
 </ParamField>
 
 <ParamField body="callback_url" type="string">
@@ -219,6 +225,16 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 ## Model-Specific Parameters
 
 <Tabs>
+
+<Tab title="2.5">
+
+<ParamField body="watermark" type="boolean" default="false">
+  Whether to watermark the output video. This is 2.5's only model-specific parameter; everything else is in [Common Parameters](#common-parameters). Accepts `image_urls` / `video_urls` / `audio_urls` as reference material.
+</ParamField>
+
+**Specs**: 480p / 720p / 1080p, any integer 4-30 seconds, aspect `adaptive` / `1:1` / `16:9` / `9:16` / `4:3` / `3:4`; a reference video may be up to 30 seconds.
+
+</Tab>
 
 <Tab title="2.0 Fast / 2.0 Fast Face">
 
@@ -315,8 +331,8 @@ No model-specific parameters; uses common parameters only.
 |---|---|
 | Reference images (`image_urls`) | Up to 9, ≤ 30MB each, JPG / PNG / WEBP |
 | First/last frame (`first_frame_image` / `last_frame_image`) | ≤ 30MB each, JPG / PNG / WEBP |
-| Reference videos (`video_urls`) | `2.0` / `2.0-fast` / `2.0-mini`, up to 3 clips, ≤ 15 sec each (30 sec for `2.5`), MP4 / MOV, ≤ 100MB per clip |
-| Reference audio (`audio_urls`, 2.0 only) | Up to 3 tracks, WAV / MP3, ≤ 15MB per track |
+| Reference videos (`video_urls`) | `2.5` / `2.0` / `2.0-fast` / `2.0-mini`, up to 3 clips, ≤ 15 sec each (30 sec for `2.5`), MP4 / MOV, ≤ 100MB per clip |
+| Reference audio (`audio_urls`, 2.0 series and 2.5) | Up to 3 tracks, WAV / MP3, ≤ 15MB per track |
 | Output | MP4, link valid for 24 hours |
 
 ## Related Docs

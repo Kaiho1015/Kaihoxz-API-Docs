@@ -10,9 +10,10 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 这是 **视频** 模型 Seedance(动态视频),请勿与豆包的图像模型 **Seedream**(静态图像)混淆,两者是不同产品线。
 </Note>
 
-五个档位:
+六个档位:
 
 - **`seedance-1.5-pro`** — 1.5 代有声档,音视频联合生成,支持多语言对白 + 口型同步,可用首帧 / 尾帧约束镜头,480p / 720p / 1080p,5 / 10 秒
+- **`seedance-2.5`** — 2.5 代,480p–1080p,4–30 秒,支持参考图 / 参考视频 / 参考音频多模态输入
 - **`seedance-2.0`** — 2.0 标准档,文生 / 图生,480p / 720p / 1080p,4-15 秒任意整数
 - **`seedance-2.0-fast`** — 2.0 加速档,更快更便宜,480p / 720p(无 1080p),4-15 秒,支持参考视频
 - **`seedance-2.0-face`** — 2.0 人脸档,面向人脸 / 数字人场景,480p / 720p / 1080p,4-15 秒
@@ -144,10 +145,11 @@ Seedance 全系仅支持 `generate` 一种 action,后端按传入的媒体字段
 | 不传媒体字段 | 文生视频,画面比例由 `aspect_ratio` 控制 | 文生档 |
 | `image_urls` | 图生视频。**2.0 / fast / mini**:全部作参考图(2026-07-09 起);**1.5 Pro / face 系列**:1 张作首帧、2 张作首尾帧 | 与文生同价 |
 | `image_with_roles` | 显式指定首帧 / 尾帧,不受上述语义变更影响。**推荐用于首尾帧约束** | 图生档 |
-| `video_urls` | 参考视频(`2.0` / `2.0-fast` / `2.0-mini`) | 参考视频档 |
+| `video_urls` | 参考视频(`2.5` / `2.0` / `2.0-fast` / `2.0-mini`) | 参考视频档 |
+| `audio_urls` | 参考音频(`2.5`) | 参考视频档 |
 
 <Note>
-`video_urls`(参考视频)支持 `seedance-2.0` / `2.0-fast` / `2.0-mini`(`2.0-fast` 自 2026-09-04 起开放);`face` / `fast-face` 仅支持图像输入。
+`video_urls`(参考视频)支持 `seedance-2.5` / `2.0` / `2.0-fast` / `2.0-mini`(`2.0-fast` 自 2026-09-04 起开放);`face` / `fast-face` 仅支持图像输入。`audio_urls`(参考音频)仅 `seedance-2.5` 支持。
 </Note>
 
 ## 可用模型
@@ -157,6 +159,7 @@ Seedance 全系仅支持 `generate` 一种 action,后端按传入的媒体字段
 | `seedance-1.5-pro` | 480p / 720p / 1080p | 4-12 任意整数 | 音视频联合生成,口型同步,多语言对白 |
 | `seedance-1.0-pro` | 480p / 720p / 1080p | 5 / 10 | 1.0 高质量模式,多镜头叙事,1.x 稳定旗舰,价格低于 1.5 / 2.x |
 | `seedance-1.0-pro-fast` | 480p / 720p / 1080p | 5 / 10 | 1.0 极速模式,约快 3 倍,最便宜的 Seedance 视频档 |
+| `seedance-2.5` | 480p / 720p / 1080p | 4-30 任意整数 | 2.5 代,多模态输入(参考图 / 参考视频 / 参考音频) |
 | `seedance-2.0` | 480p / 720p / 1080p / 4K | 4-15 任意整数 | 2.0 标准档,文生 / 图生,支持参考视频 |
 | `seedance-2.0-fast` | 480p / 720p | 4-15 任意整数 | 加速档,更快更便宜,支持参考视频 |
 | `seedance-2.0-mini` | 480p / 720p | 4-15 任意整数 | 迷你档,成本最低,能力与标准版一致,支持参考视频 |
@@ -177,11 +180,12 @@ Seedance 全系仅支持 `generate` 一种 action,后端按传入的媒体字段
   视频时长(秒):
   - `seedance-1.5-pro`:`5` / `10`
   - 2.0 家族:`4`-`15` 任意整数
+  - `seedance-2.5`:`4`-`30` 任意整数
 </ParamField>
 
 <ParamField body="resolution" type="string" default="720p">
   输出分辨率,各模型档位见 [可用模型](#可用模型) 表:
-  - `1.5-pro` / `2.0` / `2.0-face`:`480p` / `720p` / `1080p`
+  - `1.5-pro` / `2.0` / `2.0-face` / `2.5`:`480p` / `720p` / `1080p`
   - `2.0-fast` / `2.0-fast-face`:`480p` / `720p`
 </ParamField>
 
@@ -190,6 +194,8 @@ Seedance 全系仅支持 `generate` 一种 action,后端按传入的媒体字段
   - `16:9` — 横版宽屏
   - `9:16` — 竖版长屏
   - `1:1` — 正方形
+
+  `seedance-2.5` 另支持 `adaptive`(跟随参考素材)/ `4:3` / `3:4`
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
@@ -199,7 +205,7 @@ Seedance 全系仅支持 `generate` 一种 action,后端按传入的媒体字段
 </ParamField>
 
 <ParamField body="video_urls" type="string[]">
-  参考视频 URL 数组,支持 `seedance-2.0` / `2.0-fast` / `2.0-mini`。最长 **15 秒**(`seedance-2.5` 为 30 秒)。需公网可下载链接
+  参考视频 URL 数组,支持 `seedance-2.5` / `2.0` / `2.0-fast` / `2.0-mini`。最长 **15 秒**(`seedance-2.5` 为 **30 秒**)。需公网可下载链接
 </ParamField>
 
 <ParamField body="seed" type="integer">
@@ -227,6 +233,12 @@ Seedance 全系仅支持 `generate` 一种 action,后端按传入的媒体字段
     </ParamField>
   </Tab>
 
+  <Tab title="seedance-2.5">
+    <ParamField body="watermark" type="boolean" default="false">
+      是否给输出视频加水印。2.5 的唯一特定参数,其余可选项见 [通用参数](#通用参数);支持 `image_urls` / `video_urls` / `audio_urls` 三种参考素材
+    </ParamField>
+  </Tab>
+
   <Tab title="seedance-2.0">
     2.0 标准档无额外特定参数,所有可选项见 [通用参数](#通用参数)。文生 / 图生由是否传 `image_urls` 自动判定,另支持 `video_urls` 参考视频。
   </Tab>
@@ -251,7 +263,7 @@ Seedance 全系仅支持 `generate` 一种 action,后端按传入的媒体字段
 | 参考图(`image_urls`) | 最多 2 张(首帧 + 尾帧),JPG / PNG / WEBP,需公网可下载 |
 | 参考视频(`video_urls`) | `2.0` / `2.0-fast` / `2.0-mini`,最长 15 秒(`2.5` 为 30 秒),MP4 / MOV,需公网可下载 |
 | Prompt 长度 | 建议详细描述场景 / 动作 / 对白 |
-| 视频时长 | `1.5-pro`:5 / 10 秒;2.0 家族:4-15 秒 |
+| 视频时长 | `1.5-pro`:5 / 10 秒;2.0 家族:4-15 秒;`2.5`:4-30 秒 |
 | 输出 | MP4,链接 24 小时有效 |
 
 ## 相关文档
