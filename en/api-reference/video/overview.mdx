@@ -91,7 +91,7 @@ For the full async flow see [Task System](/en/docs/task-system) — Submit → S
   Array of reference video URLs — **a single element is sufficient** (used for video continuation / R2V video reference / video editing)
 
   <Note>
-  **Reference-video billing differs by vendor** — see each model page: some count reference-video seconds (Seedance / Wan / MiniMax), some only switch tier without billing those seconds (Kling / SkyReels), and some add a per-second charge on top of a whole-clip price (Omni). `POST /waveapi/public/quote` with `video_urls` returns an estimate; when the reference video's duration cannot be probed, the hold is taken at that model's input cap and the difference is refunded once the actual duration is known.
+  **Reference-video billing differs by vendor** — see each model page, and [Input video duration and billing](#input-video-duration-and-billing) below.
   </Note>
 </ParamField>
 
@@ -102,6 +102,18 @@ For the full async flow see [Task System](/en/docs/task-system) — Submit → S
 <ParamField body="callback_url" type="string">
   Webhook callback URL, invoked when the task reaches a terminal state. See [Task System](/en/docs/task-system#webhook)
 </ParamField>
+
+## Input Video Duration and Billing
+
+Requests that carry `video_urls` (reference video / video editing / motion control) follow these three rules.
+
+**How seconds are counted** — the gateway reads the video's file header for its real duration and **truncates to whole seconds** (10.9 seconds counts as 10); anything under 1 second counts as 1. This matches the upstream's own accounting.
+
+**What happens if it cannot be read** — if the header cannot be parsed (unusual format, unreachable URL, and so on) the request is **rejected** with `400 input_video_duration_unknown` and **nothing is charged** — it is not estimated at a cap and billed. Use a directly downloadable URL in a common container format (mp4 / webm).
+
+**Estimating before you submit** — `POST /waveapi/public/quote` with `video_urls` returns the exact price for that call, including the input seconds it probed.
+
+How the reference video then enters the price (counted as seconds, only switching tier, or replacing the clip price) depends on the vendor — see the billing section on each model page.
 
 ## Submit Response Example
 

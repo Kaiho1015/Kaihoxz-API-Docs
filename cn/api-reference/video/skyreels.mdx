@@ -150,6 +150,10 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 <ParamField body="video_urls" type="string[]">
   参考视频 URL 数组,传入后进入 **参考视频** 模式,以视频引导运动 / 风格。**传入即触发参考视频加价档**(见 [定价](#定价))。需公网可下载链接
+
+  <Warning>
+  传参考视频时,**prompt 里必须用 `@video_1` / `@video_2` 引用它们**(例:`follows the motion in @video_1`)。未引用时上游会拒绝请求并返回 `Reference video tag @video_1 must be in prompt`,该请求不计费。
+  </Warning>
 </ParamField>
 
 <ParamField body="seed" type="integer">

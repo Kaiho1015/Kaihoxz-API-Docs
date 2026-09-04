@@ -12,11 +12,13 @@ title: "Model Updates"
 </Update>
 
 <Update label="2026-09-04" description="Capability update">
-**seedance-2.0-fast now accepts reference videos**
+**Reference-video input is now available across the video models**
 
-- `seedance-2.0-fast` now supports `video_urls` (reference video), matching `seedance-2.0` and `seedance-2.0-mini`.
-- Billed as (reference-video seconds + output seconds) × the video-reference rate; a reference video may be at most 15 seconds.
-- **Docs**: [Seedance series](/en/api-reference/video/seedance)
+- **Reference video supported**: `kling-v3-omni` · `kling-video-o1` · `skyreels-v4-fast` · `skyreels-v4-std` · `gemini-omni-1.1-flash-ext`
+- **Relisted**: `kling-v2-6-motion-control` · `kling-v3-motion-control`
+- **`seedance-2.0-fast` now accepts reference videos**, matching `seedance-2.0` and `seedance-2.0-mini`.
+- Input video duration is billed on the **real file duration** (truncated to whole seconds); when it cannot be parsed the request is **rejected and not billed**. How each vendor folds the reference video into the price is on the model pages; the shared rules are in [Input video duration and billing](/en/api-reference/video/overview#input-video-duration-and-billing).
+- **Docs**: [Kling series](/en/api-reference/video/kling) · [SkyReels V4](/en/api-reference/video/skyreels) · [Omni-Flash-Ext](/en/api-reference/video/omni) · [Seedance series](/en/api-reference/video/seedance)
 </Update>
 
 <Update label="2026-09-03" description="Model delisted">

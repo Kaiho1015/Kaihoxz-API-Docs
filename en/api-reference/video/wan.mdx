@@ -187,7 +187,7 @@ Resolution casing differs by model: `wan2.7` / `wan2.7-r2v` / `wan2.7-videoedit`
   - `wan2.6` / `wan2.6-i2v` / `wan2.6-i2v-flash`: `5` / `10` / `15` only (default `5`)
   - `wan2.5-preview`: `5` / `10` only (default `5`)
 
-  `wan2.7-videoedit` is settled on the output duration you specify; `0` keeps the source video's duration, in which case the hold is taken at the cap and settled on the actual duration.
+  `wan2.7-videoedit` is settled on the output duration you specify; `0` keeps the source video's duration and is settled on the probed source duration (see [Input video duration and billing](/en/api-reference/video/overview#input-video-duration-and-billing)).
 </ParamField>
 
 <ParamField body="aspect_ratio" type="string" default="16:9">

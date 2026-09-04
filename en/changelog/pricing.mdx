@@ -16,7 +16,7 @@ Calls carrying a reference video used to be approximated as "output seconds × 2
 | Reference seconds counted, tier switched | Seedance 2.x, Wan 2.7 R2V / VideoEdit | (reference-video seconds + output seconds) × the **video-reference** rate |
 | Reference seconds counted, same tier | MiniMax H3 / H3-Max / H3-Regeneration | (reference-video seconds + output seconds) × the same tier's rate |
 | Tier switched, reference seconds free | Kling Omni / Video-O1, SkyReels V4 | output seconds × the **video-reference** rate |
-| Whole-clip price + per reference second | Omni-Flash-Ext | clip price + reference-video seconds × a per-second rate |
+| Reference seconds only, no clip price | Omni-Flash-Ext | reference-video seconds × a per-second rate ($0.09 at 720p / 1080p, $0.27 at 4K); the clip price is not charged |
 
 For Kling's two `*-motion-control` models the reference video carries no separate charge; output duration equals the reference video's duration, and `720P` bills at the standard tier, `1080P` at the professional tier.
 

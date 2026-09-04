@@ -187,7 +187,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   - `wan2.6` / `wan2.6-i2v` / `wan2.6-i2v-flash`:仅 `5` / `10` / `15`(默认 `5`)
   - `wan2.5-preview`:仅 `5` / `10`(默认 `5`)
 
-  `wan2.7-videoedit` 按用户指定的输出时长结算;传 `0` 表示保留源视频时长,此时按上限预扣、完成后按实际时长结算。
+  `wan2.7-videoedit` 按用户指定的输出时长结算;传 `0` 表示保留源视频时长,按探测到的源视频时长结算(探测规则见 [输入视频的时长与计费](/cn/api-reference/video/overview#输入视频的时长与计费))。
 </ParamField>
 
 <ParamField body="aspect_ratio" type="string" default="16:9">
