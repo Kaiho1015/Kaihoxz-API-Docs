@@ -1,6 +1,6 @@
 ---
 title: "Kling Series"
-description: "Kuaishou Kling video generation — v2.6 / v3 / v3-omni / video-o1, four generations covering text-to-video, image-to-video, first/last frame, multimodal reference, and reasoning-enhanced"
+description: "Kuaishou Kling video generation — v2.6 / v3 / v3-omni / video-o1 / motion control, covering text-to-video, image-to-video, first/last frame, multimodal reference, video reference and motion control"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
@@ -12,6 +12,7 @@ Kuaishou Kling video generation series.
 - **kling-v3** — Next-generation base model, adds **4K resolution**, T2V duration extended to **15 seconds**, native audio support
 - **kling-v3-omni** — Unified **multimodal interface** for the v3 family — T2V, I2V, and video reference all share one endpoint, with `<<<image_N>>>` reference syntax in the prompt
 - **kling-video-o1** — First **reasoning-enhanced** video model, performs deep planning over the prompt and reference assets before generation, delivering best-in-class physical consistency, complex motion, and long-form motion semantic adherence
+- **kling-v3-motion-control** / **kling-v2-6-motion-control** — **Motion control**: one reference image (the character) plus one reference video (the motion) makes the character reproduce the motion from that video
 
 Billed in `$/second`. Audio, a video reference and 4K each switch to a higher tier.
 
@@ -96,6 +97,20 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   }'
 ```
 
+```bash Motion control (reference image + reference video)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "kling-v3-motion-control",
+    "prompt": "Keep the character consistent, follow the reference video turning and waving, cinematic lighting",
+    "image_urls": ["https://cdn.example.com/character.jpg"],
+    "video_urls": ["https://cdn.example.com/ref-motion.mp4"],
+    "duration": 5,
+    "resolution": "1080P"
+  }'
+```
+
 </CodeGroup>
 
 <ResponseExample>
@@ -121,6 +136,8 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 | `kling-v3-omni` | 720P / 1080P / 4K | 3-15 sec | `generate` · `image2video` · `reference` · `reference_video` | Unified multimodal endpoint |
 | `kling-v3` | 720P / 1080P / 4K | 3-15 sec | `generate` · `image2video` · `first_last_frame` | 4K + native audio |
 | `kling-v2-6` | 720P / 1080P | 5 / 10 sec | `generate` · `image2video` · `first_last_frame` | 1080P with optional audio, top stability |
+| `kling-v3-motion-control` | 720P / 1080P | 5 / 10 sec | `generate` (reference video **required** as the motion source) | Motion control (v3) |
+| `kling-v2-6-motion-control` | 720P / 1080P | 5 / 10 sec | `generate` (reference video **required** as the motion source) | Motion control (v2.6) |
 
 ## Common Parameters
 
@@ -157,7 +174,10 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  Reference image URL array. A **single-element array** triggers I2V; multiple images feed the multimodal reference for Omni / O1 (referenceable via `<<<image_N>>>`)
+  Reference image URL array:
+  - **I2V / first-last frame** (v3 / v2.6 / o1): a **single-element array** triggers I2V
+  - **Multimodal reference** (Omni / O1): multiple images, referenceable via `<<<image_N>>>`
+  - **Motion control** (the two `*-motion-control` models): **required**, 1 image as the character reference. If it is missing, the request is rejected at submission and nothing is held.
 </ParamField>
 
 <ParamField body="first_frame_image" type="string">
@@ -169,7 +189,9 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 </ParamField>
 
 <ParamField body="video_urls" type="string[]">
-  Reference video URL array (single element). Omni / O1 — the clip supplies the motion and style reference. For the two `*-motion-control` models it is **required** as the motion source — If it is missing, the request is rejected at submission and nothing is held.
+  Reference video URL array (single element):
+  - **Video reference** (Omni / O1): the clip supplies the camera and motion characteristics
+  - **Motion control** (the two `*-motion-control` models): **required**, the motion-source video the referenced character reproduces. If it is missing, the request is rejected at submission and nothing is held.
 </ParamField>
 
 <ParamField body="callback_url" type="string">
@@ -232,6 +254,24 @@ After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference
 
 </Tab>
 
+<Tab title="motion-control">
+
+`kling-v3-motion-control` / `kling-v2-6-motion-control` must be given both of:
+
+<ParamField body="image_urls" type="string[]" required>
+  The character reference image (1 image), **required** — it determines the character's appearance in the generated video. If it is missing, the request is rejected at submission and nothing is held.
+</ParamField>
+
+<ParamField body="video_urls" type="string[]" required>
+  The motion-source video (1 clip), **required** — the generated video makes the referenced character reproduce its motion and camera work. If it is missing, the request is rejected at submission and nothing is held.
+</ParamField>
+
+<Note>
+Motion control requires **both the reference image and the reference video**; the reference video should be MP4 / MOV and at least 3 seconds. Output duration equals the reference video's duration and the reference video carries no separate charge; `720P` bills at the standard (std) tier, `1080P` at the professional (pro) tier.
+</Note>
+
+</Tab>
+
 </Tabs>
 
 ## Special Syntax
@@ -266,8 +306,8 @@ Non-Omni / O1 models (v2.6 / v3) do not parse `<<<image_N>>>` placeholders and f
 | Item | Limit |
 |---|---|
 | Reference image (per file) | ≤ 30MB, JPG / PNG / WEBP |
-| Reference image (count) | I2V: 1; Omni / O1 multimodal: ≤ 4 recommended |
-| Reference video (`video_urls`) | MP4 / MOV, ≤ 100MB, 2-30 sec, **at most 1 clip** |
+| Reference image (count) | I2V: 1; Omni / O1 multimodal: ≤ 4 recommended; motion control: 1 |
+| Reference video (`video_urls`) | MP4 / MOV, ≥ 3 sec, ≤ 100MB for motion control, **at most 1 clip**; video reference accepts 720px-2160px |
 | Prompt | ≤ 2500 characters |
 | Output | MP4, link valid for 24 hours |
 
