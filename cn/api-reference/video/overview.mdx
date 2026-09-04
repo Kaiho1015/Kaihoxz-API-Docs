@@ -120,7 +120,18 @@ POST https://www.qingbo.dev/v1/tasks
 
 **算不出来会怎样** —— 若文件头无法解析(格式特殊、URL 不可达等),请求会被**拒绝**并返回 `400 input_video_duration_unknown`,**不会扣费**,而不是按上限估算收费。请改用常见容器格式(mp4 / webm)的可直接下载 URL。
 
-**提交前可预估** —— `POST /waveapi/public/quote` 传入 `video_urls` 会返回这一单的准确价格,含探测到的输入秒数。
+**提交前可预估** —— `POST https://www.qingbo.dev/waveapi/quote` 传入 `video_urls` 会返回这一单的准确价格,含探测到的输入秒数。
+
+这是**公开工具接口,不需要 API key**。返回走标准信封 `{code, message, data}`,`data` 里是:
+
+| 字段 | 含义 |
+|---|---|
+| `total_usd` | 这一单的总价(美元) |
+| `unit` | 计费单位(秒 / 张 / 字符 等) |
+| `billed_quantity` | 实际计费数量,输入视频的探测秒数体现在这里 |
+| `multipliers` | 生效的倍率(用户组倍率等) |
+
+被拒时 `errorKey` 会带具体原因(如 `input_video_duration_unknown`),`message` 里是可直接展示给用户的说明。
 
 参考视频具体怎么进价格(计入秒数、只换档、还是替代整片价),按厂商不同,见各模型页的计费段。
 
