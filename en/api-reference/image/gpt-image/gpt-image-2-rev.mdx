@@ -77,10 +77,20 @@ Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/stat
 </ParamField>
 
 <ParamField body="n" type="integer" default="1">
-  Fixed at `1`; each task generates one image.
+  Number of images. This line returns one image per request.
 </ParamField>
 
-This line does not accept `quality`, `mask_url`, `background`, `output_format`, `output_compression`, `moderation`, or `seed`. Undeclared parameters are rejected before submission.
+See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key`, and the maximum-cost header.
+
+**This line does not accept `quality`, `mask_url`, `background`, `output_format`, `output_compression`, `moderation`, or `seed`** — those belong to the official line. Undeclared parameters are rejected **before any quota is reserved** (HTTP 400, no charge).
+
+## Limits
+
+| Condition | Limit |
+|---|---|
+| Per request | One image |
+| `action: "edit"` | At least one reference image is required |
+| Reference images | Up to 15 |
 
 ## Pricing
 
@@ -92,7 +102,9 @@ Successful tasks are billed at a fixed price:
 | `2k` | $0.01575 |
 | `4k` | $0.023625 |
 
-`generate` and `edit` use the same price, and reference images do not add a fee. Failed, cancelled, and zero-output tasks are fully refunded. Check the model catalog for the current quote; the completed task's `cost` is authoritative.
+`generate` and `edit` use the same price, and reference images do not add a fee. Resolution is the only billing dimension — unlike the official line, neither aspect ratio nor prompt length changes the price, so **you know what a call costs before you send it**.
+
+A request whose resolution does not match the table above settles at the fallback price of $0.0095625 (the same as `1k`). Failed and cancelled tasks, and upstream successes that carry no deliverable image, refund the reservation **in full**. The task response's `cost` is the final amount, and it is an integer quota rather than dollars (500,000 quota = 1 USD).
 
 ## Response
 

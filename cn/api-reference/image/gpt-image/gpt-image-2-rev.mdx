@@ -77,10 +77,20 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="n" type="integer" default="1">
-  固定为 `1`，每个任务生成一张图片。
+  生成数量。本线路每次请求只出 1 张。
 </ParamField>
 
-本线路不接受 `quality`、`mask_url`、`background`、`output_format`、`output_compression`、`moderation` 或 `seed`。未声明的参数会在提交前被拒绝。
+通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
+
+**本线路不接受 `quality`、`mask_url`、`background`、`output_format`、`output_compression`、`moderation` 或 `seed`**——这些是官方线路独有的参数。未声明的参数会在**额度预扣前**被拒绝（HTTP 400，不计费）。
+
+## 限制
+
+| 条件 | 限制 |
+|---|---|
+| 每次请求 | 只出 1 张 |
+| `action: "edit"` | 必须提供至少一张参考图 |
+| 参考图张数 | 最多 15 张 |
 
 ## 计费
 
@@ -92,7 +102,9 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 | `2k` | $0.01575 |
 | `4k` | $0.023625 |
 
-`generate` 与 `edit` 使用同一张价，参考图不加价。任务失败、取消或没有返回可交付图片时自动全额退款。提交前可在模型市场查看当前报价，任务完成后以响应中的 `cost` 为准。
+`generate` 与 `edit` 使用同一张价，参考图不加价。分辨率之外没有其他计费维度——不像官方线路，这里画幅和提示词长度都不影响单张价格，**提交前就能确定这一单花多少**。
+
+如果请求里的分辨率没有命中上表，按兜底价 $0.0095625（与 `1k` 同价）结算。任务失败、取消，或上游返回成功但没有可交付图片时，预扣**全额退回**。最终费用以任务响应中的 `cost` 为准；`cost` 是整数 quota，不是美元（500,000 quota = 1 USD）。
 
 ## 响应
 

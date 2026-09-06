@@ -102,7 +102,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="n" type="integer" default="1">
-  当前固定为 `1`，每个任务生成一张图片。
+  生成数量。**首批验收期间固定为 `1`**，每个任务出一张图；这是当前接入的限制，不是模型能力上限。
 </ParamField>
 
 <ParamField body="background" type="string" default="auto">
@@ -121,7 +121,20 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   内容审核强度：`auto` 或 `low`。
 </ParamField>
 
-通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。未在本页声明的模型参数会在提交前被拒绝。
+通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
+
+**本线路不接受 `seed`。** 未在本页声明的参数会在**额度预扣前**被拒绝（HTTP 400，不计费），不要从其他模型页照抄字段。
+
+## 限制
+
+| 条件 | 限制 |
+|---|---|
+| 每次请求 | 只出 1 张（首批验收期间的限制） |
+| `action: "edit"` | 必须提供至少一张参考图 |
+| 使用 `mask_url` | 必须同时提供 `image_urls`，且掩码与第一张参考图尺寸一致 |
+| `background: "transparent"` | `output_format` 只能是 `png` 或 `webp` |
+| 使用 `output_compression` | `output_format` 必须显式设为 `jpeg` 或 `webp` |
+| 参考图张数 | 最多 16 张 |
 
 ## 计费
 
@@ -137,7 +150,25 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 图片输入包括参考图和掩码。缓存费率仅在上游返回可用于结算的缓存用量时生效；没有缓存用量时只按普通输入和图片输出计费。
 
-提交时会预留本次任务的最大预计费用，任务完成后按实际用量结算并退回差额。最终费用以任务查询响应中的 `cost` 为准。完整字段说明见[任务状态](/cn/api-reference/task/status)。
+### 预扣与结算
+
+提交时先按估算预留额度，任务完成后按实际用量结算、退回差额。**预扣不是最终价格。** 估算口径：
+
+- **输出**：按 `画幅 × 分辨率 × 画质` 查表得到预计输出 token 数
+- **文本输入**：不足 32 token 按 32 计
+- **参考图**：每张按 4,096 token 估算（掩码同样计入图片输入）
+
+输出 token 的量级差异很大，下面是 `1:1` 的预估值，其余画幅同理（横幅比方图少，`16:9` 1K high 为 4,312）：
+
+| 画质 | 1K | 2K | 4K |
+|---|---:|---:|---:|
+| `low` | 196 | 397 | 659 |
+| `medium` | 1,756 | 3,568 | 5,930 |
+| `high` | 7,024 | 14,272 | 23,719 |
+
+按 $27 / 100 万 token 折算，`1:1 1K low` 的输出约 $0.005，`1:1 4K high` 约 $0.64——**画质档是这条线路最大的成本变量**，不确定时先用 `low` 试。
+
+任务失败、取消，或上游返回成功但没有可交付图片时，预扣**全额退回**。最终费用以任务查询响应中的 `cost` 为准；`cost` 是整数 quota，不是美元（500,000 quota = 1 USD）。完整字段说明见[任务状态](/cn/api-reference/task/status)。
 
 ## 响应
 
@@ -161,16 +192,6 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 ```
 
 `result.images` 返回生成图片。任务失败或取消时预留费用自动退回；如果上游返回成功但没有可交付图片，任务会按失败处理并退款。
-
-## 模型限制
-
-| 项目 | 限制 |
-|---|---|
-| 每次输出 | 1 张 |
-| 参考图 | 最多 16 张；`edit` 至少 1 张 |
-| 掩码 | 需与第一张参考图尺寸一致 |
-| 分辨率 | `1k`、`2k`、`4k` |
-| 输出格式 | `png`、`jpeg`、`webp` |
 
 ## 相关文档
 

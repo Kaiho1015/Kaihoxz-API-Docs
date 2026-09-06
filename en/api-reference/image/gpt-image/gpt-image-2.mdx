@@ -102,7 +102,7 @@ The submission response contains a `task_id`. Retrieve the image with [`GET /v1/
 </ParamField>
 
 <ParamField body="n" type="integer" default="1">
-  Currently fixed at `1`; each task generates one image.
+  Number of images. **Fixed at `1` during initial acceptance** — one image per task. This is a limit of the current integration, not the model's ceiling.
 </ParamField>
 
 <ParamField body="background" type="string" default="auto">
@@ -121,7 +121,20 @@ The submission response contains a `task_id`. Retrieve the image with [`GET /v1/
   Moderation level: `auto` or `low`.
 </ParamField>
 
-See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key`, and the maximum-cost header. Model parameters not declared on this page are rejected before submission.
+See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key`, and the maximum-cost header.
+
+**This line does not accept `seed`.** Parameters not declared on this page are rejected **before any quota is reserved** (HTTP 400, no charge) — do not copy fields across from another model's page.
+
+## Limits
+
+| Condition | Limit |
+|---|---|
+| Per request | One image (a limit of the initial acceptance period) |
+| `action: "edit"` | At least one reference image is required |
+| Using `mask_url` | `image_urls` is required, and the mask must match the first reference image's dimensions |
+| `background: "transparent"` | `output_format` must be `png` or `webp` |
+| Using `output_compression` | `output_format` must be explicitly set to `jpeg` or `webp` |
+| Reference images | Up to 16 |
 
 ## Pricing
 
@@ -137,7 +150,25 @@ The official line is billed from actual token usage in USD per one million token
 
 Image input includes reference images and masks. Cached rates apply only when the upstream response reports cache usage that can be settled. Otherwise, billing uses ordinary input and image-output usage.
 
-QWave reserves the maximum estimated cost when the task is submitted, then settles from actual usage and refunds the difference. The task response's `cost` is the final amount. See [Task status](/en/api-reference/task/status) for the billing fields.
+### Reservation and settlement
+
+Submitting reserves an estimated amount, and the task settles from actual usage with the difference refunded. **The reservation is not the final price.** The estimate is built from:
+
+- **Output** — expected output tokens looked up by `aspect ratio × resolution × quality`
+- **Text input** — a floor of 32 tokens
+- **Reference images** — 4,096 tokens each (masks count as image input too)
+
+Output token counts vary enormously. Here are the estimates for `1:1`; other ratios follow the same pattern (wider frames cost less — `16:9` 1K high is 4,312):
+
+| Quality | 1K | 2K | 4K |
+|---|---:|---:|---:|
+| `low` | 196 | 397 | 659 |
+| `medium` | 1,756 | 3,568 | 5,930 |
+| `high` | 7,024 | 14,272 | 23,719 |
+
+At $27 per million tokens, the output for `1:1 1K low` is about $0.005 and `1:1 4K high` about $0.64 — **quality is by far the biggest cost lever on this line**, so start with `low` when unsure.
+
+Failed and cancelled tasks, and upstream successes that carry no deliverable image, refund the reservation **in full**. The task response's `cost` is the final amount, and it is an integer quota rather than dollars (500,000 quota = 1 USD). See [Task status](/en/api-reference/task/status) for the billing fields.
 
 ## Response
 
@@ -161,16 +192,6 @@ QWave reserves the maximum estimated cost when the task is submitted, then settl
 ```
 
 Generated images are returned in `result.images`. Failed and cancelled tasks refund their reservation. If an upstream success response contains no deliverable image, QWave marks the task as failed and refunds it.
-
-## Limits
-
-| Item | Limit |
-|---|---|
-| Output count | 1 image per task |
-| Reference images | Up to 16; at least 1 for `edit` |
-| Mask | Must match the first reference image dimensions |
-| Resolution | `1k`, `2k`, `4k` |
-| Output format | `png`, `jpeg`, `webp` |
 
 ## Related
 

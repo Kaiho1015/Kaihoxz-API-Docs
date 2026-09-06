@@ -2,6 +2,17 @@
 title: "Model Updates"
 ---
 
+<Update label="2026-09-06" description="Model launch">
+**GPT Image 2 is live · official and reverse lines**
+
+- **Model IDs**: `gpt-image-2` (official) · `gpt-image-2-rev` (reverse)
+- Both are served on `POST /v1/tasks` with `generate` and `edit`, fifteen aspect ratios, `1k` / `2k` / `4k` resolutions, one image per request, and no `seed` support.
+- **The official line** adds masked inpainting (`mask_url`), quality tiers (`low` / `medium` / `high`) and transparent-background and output-format control (`background` / `output_format` / `output_compression` / `moderation`), with up to 16 reference images. It **settles from actual token usage**: the reservation is estimated from aspect ratio × resolution × quality, and the difference is refunded on completion.
+- **The reverse line** accepts none of those line-specific parameters and takes up to 15 reference images. It bills a **fixed price per image by output resolution** (1K $0.0095625 / 2K $0.01575 / 4K $0.023625), so the cost of a call is known before you send it.
+- The two lines never switch automatically — pin the model ID in your configuration as a product choice.
+- **Docs**: [GPT Image family](/en/api-reference/image/gpt-image/overview) · [Official line](/en/api-reference/image/gpt-image/gpt-image-2) · [Reverse line](/en/api-reference/image/gpt-image/gpt-image-2-rev)
+</Update>
+
 <Update label="2026-09-04" description="Model launch">
 **gpt-4o-mini-tts is live · Text-to-speech**
 

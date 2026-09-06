@@ -2,6 +2,17 @@
 title: "模型动态"
 ---
 
+<Update label="2026-09-06" description="模型上架">
+**GPT Image 2 上架 · 官方与逆向两条线路**
+
+- **模型 ID**：`gpt-image-2`（官方线路）　·　`gpt-image-2-rev`（逆向线路）
+- 两条线路都走 `POST /v1/tasks`，支持 `generate` 文生图与 `edit` 参考图编辑，15 种画幅、`1k` / `2k` / `4k` 分辨率，每次请求出 1 张，均不支持 `seed`。
+- **官方线路**独有掩码局部重绘（`mask_url`）、画质档（`low` / `medium` / `high`）、透明背景与输出格式控制（`background` / `output_format` / `output_compression` / `moderation`），最多 16 张参考图；**按实际 token 用量结算**，提交时按画幅 × 分辨率 × 画质预扣，完成后退回差额。
+- **逆向线路**不接受上述专有参数，最多 15 张参考图；**按输出分辨率固定张价**结算（1K $0.0095625 / 2K $0.01575 / 4K $0.023625），提交前即可确定单张成本。
+- 两条线路不会自动互相切换，模型 ID 请作为产品选择固化在配置里。
+- **文档**：[GPT Image 模型家族](/cn/api-reference/image/gpt-image/overview) · [官方线路](/cn/api-reference/image/gpt-image/gpt-image-2) · [逆向线路](/cn/api-reference/image/gpt-image/gpt-image-2-rev)
+</Update>
+
 <Update label="2026-09-04" description="模型上架">
 **gpt-4o-mini-tts 上线 · 文字转语音**
 
