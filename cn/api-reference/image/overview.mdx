@@ -45,6 +45,23 @@ POST https://www.qingbo.dev/v1/tasks
   </Card>
 </CardGroup>
 
+## 两条调用路径
+
+图像有两个入口，**计费同源**（都按模型组的价格配置结算），差别在能力校验和返回方式：
+
+| | `POST /v1/tasks` | `POST /v1/images/generations` · `/v1/images/edits` |
+|---|---|---|
+| 返回 | 异步，先拿 `task_id` 再查结果（可用 `Prefer: wait` 在一次调用里等） | 同步，直接返回图片 |
+| 请求形状 | 本站统一字段：`action` / `aspect_ratio` / `resolution` / `image_urls` | OpenAI 原生形状：`size` / `quality` / `n` / `response_format` |
+| 能力校验 | **完整**——动作、画幅、分辨率、画质、参考图张数与各模型的 `constraints` 都在**额度预扣前**校验，不合规直接拒绝且不计费 | 走 OpenAI 兼容层，**不做模型组能力校验**：参数不合规不会被提前拦下，而是原样送到上游 |
+| 适合 | 新接入、需要掩码重绘 / 画质档 / 分辨率档 / 多图参考的场景 | 已有 OpenAI SDK 的项目，改 `base_url` 就能跑 |
+
+<Note>
+用 OpenAI SDK 迁移时，把 `base_url` 指向 `https://www.qingbo.dev/v1`，`model` 换成本站的模型 ID 即可。
+各模型独有的能力（掩码 `mask_url`、`1k` / `2k` / `4k` 分辨率档、参考图张数上限等）以任务接口的文档为准，
+本站的模型页描述的都是任务接口的参数。
+</Note>
+
 ## 通用参数(全系列共有)
 
 > 各模型实际支持范围不同,**详见各 vendor 文档**。

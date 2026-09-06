@@ -33,14 +33,12 @@ APIMart 直接代理各家原生端点，一个 action 就是一个 URL，所以
 | **`GET /v1/dashboard/billing/subscription`** | ✅ | 🔴 **无** | account/user-balance |
 | **`GET /v1/dashboard/billing/usage`** | ✅ | 🔴 **无** | account/token-balance |
 | **`GET /v1/dashboard/billing/balance`** | ✅ | 🔴 **无** | account/token-balance |
-| `POST /v1/images/generations` · `/v1/images/edits` · `/v1/edits` | ✅ | 🟡 只在 [同步与异步](../cn/docs/sync-async.mdx) 列了一行，**没有 API 参考页** | images/*/generation |
+| `POST /v1/images/generations` · `/v1/images/edits` · `/v1/edits` | ✅ **对外开放**（供 OpenAI SDK 使用，2026-09-06 Kaiho 确认） | 🟡 已在[图像生成概述](../cn/api-reference/image/overview.mdx)加「两条调用路径」对照；**完整参考页待定，见 §五** | images/*/generation |
 | `POST /v1/completions`（legacy 补全） | ✅ | 🟡 无（可能是有意不宣传） | 无 |
 | 图片上传 | ❓ 未在路由里找到 | 无 | uploads/images |
 
 **优先级判断**：`dashboard/billing` 三个端点是**开发者自助查余额和用量**的唯一途径，
-既已实现又零依赖，是当前最划算的一块补白。`/v1/images/*` 那条同步图像线要先确认
-是否对外开放（有没有模型组真的走 `RelayFormatOpenAIImage`），确认了再决定写不写——
-现在文档主线是"图像走 `/v1/tasks`"，两条路并存会让人不知道该用哪条。
+既已实现又零依赖，是当前最划算的一块补白。
 
 ---
 
@@ -87,16 +85,43 @@ SkyReels / PixVerse / HappyHorse / Omni / Grok Imagine Video。
 |---|---|
 | suno（30 个 action + overview） | ✅ Suno 音乐生成（单页） |
 | tts · whisper-1 | ✅ TTS · 语音识别与翻译 |
-| **flow-music（Lyria 3.5，14 个端点：music / cover / extend / replace / stems / lyrics / video-clip / upload / download）** | 🔴 **整条产品线没有** |
+| **flow-music（Lyria 3.5，14 个端点：music / cover / extend / replace / stems / lyrics / video-clip / upload / download）** | ⏳ **音乐模型尚未接入**（2026-09-06 Kaiho），接入后再写 |
 
-`flow-music` 是 APIMart 音频侧比我们多出来的一整块。本地后台音频组 7 个也全部 0 承接，
-同样等上架再说。
+`flow-music` 是 APIMart 音频侧比我们多出来的一整块，我们**还没接入**。本地后台音频组
+7 个也全部 0 承接，等接入后按 SOP 走一遍。
 
 ---
 
+## 五、`/v1/images/*` 同步端点：已确认的与待确认的
+
+**已确认（读 `router/relay-router.go` · `relay/image_handler.go` · `service/quota.go`）**
+
+- 端点开放，走 `middleware.Distribute()` → 模型组 → 渠道，与任务接口同一套路由。
+- **计费同源**：`postConsumeQuota` 见到 `WavePriceConfig` 就转 `service.PostWaveConsumeQuota`，
+  用的是同一份模型组 `price_config`。不存在"这条路不计费"或"另一套价"。
+- **不做模型组能力校验**：`relay/helper/valid_request.go` 的 `GetAndValidOpenAIImageRequest`
+  只有 `dall-e-2` / `dall-e-3` / `gpt-image-1` 三个硬编码分支，没有调用
+  `supported_actions` / `aspect_ratios` / `resolutions` / `qualities` / `max_image_inputs` /
+  `constraints` 的任何校验。任务接口那套预扣前拒绝在这条路上不生效。
+
+**待确认（挡住完整参考页的三个问题）**
+
+1. **`resolution` 怎么传？** `dto.ImageRequest` 里只有 `size`（OpenAI 形状）和 `aspect_ratio`，
+   **没有 `resolution` 字段**。那么 `gpt-image-2` 的 `1k` / `2k` / `4k` 档在同步端点上
+   要怎么指定——用 `size` 的像素值？还是只能走 `extra_params` 透传？还是这条路只出默认档？
+   这直接决定同步端点的计费落在哪一档，是最要紧的一条。
+2. **掩码重绘支不支持？** DTO 里没有 `mask_url`。`/v1/images/edits` 的 multipart 分支只取
+   `prompt` / `model` / `n` / `quality` / `size` / `image` / `watermark`，掩码没有入口。
+   如果确实不支持，文档要写清"掩码只能走任务接口"。
+3. **不做能力校验是有意为之还是欠账？** 有意 → 文档写成"OpenAI 兼容层不预校验，参数错误由上游返回"；
+   欠账 → 等补上校验再写，否则文档会描述一个即将改变的行为。
+
+这三条答复之前，图像概述里只放了两条路径的**对照说明**，不写参数表——参数映射靠反推代码不可靠。
+
 ## 四、结论
 
-1. **能立刻做的只有一件**：补 `GET /v1/dashboard/billing/*` 三个端点的文档（余额 / 用量 / 订阅）。
-2. **要先确认再决定的一件**：`/v1/images/generations` 这条同步图像线是否对外开放。
-3. 其余都是**模型上架的下游**——视频、音频两条线在本地后台一个承接都没有，
+1. **能立刻做的**：补 `GET /v1/dashboard/billing/*` 三个端点的文档（余额 / 用量 / 订阅）。
+2. **等三个答复就能做的**：`/v1/images/*` 同步端点的完整参考页，见 §五。
+3. **等接入的**：音乐（flow-music / Lyria 3.5）。
+4. 其余都是**模型上架的下游**——视频、音频在本地后台一个承接都没有，
    在上架之前写任何东西都是猜。按 SOP 一组一组来。
