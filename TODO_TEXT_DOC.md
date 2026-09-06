@@ -1,80 +1,112 @@
-# 文本类文档 · 核对记录与待办（2026-09-06）
+# 文本类文档 · 核对记录与移交清单（2026-09-06）
 
-文本类已按「一入口一页 + `text/overview` 目录总览」收敛（提交 `53e1513`），
-74 个单模型页原文保留在 WIP 快照 `375692f`。
+文本类已收敛完毕。真相源是**模型组**，不是任何一份手写清单：
 
-## 0. 已用模型组目录核对（结案）
+- 公开目录 `GET /v1/models`（无需 Key）—— 模型 ID、`tags`、`price_config`
+- 管理端 `GET /admin/waveapi/model-groups`（后台会话）—— `capabilities`
+  （`supported_protocols` / `streaming` / `tool_calling` / `structured_output` /
+  `input_token_limit` / `output_token_limit`）
 
-真相源 = 网关 `GET /v1/models`（本地 40081，公开、无需 Key），返回 77 个文本模型。
-逐项比对 overview：**模型 ID、输入/输出价、缓存价、长上下文阈值、函数调用/结构化输出
-能力位，零差异**。原 A/B/C 三项存疑全部结案：
+77 个启用文本组已逐项比对，文档与模型组**零差异**。模型上下架后重新导出即可，不要手改表。
 
-- **模型 ID 用连字符**：目录里就是 `claude-opus-4-8` / `claude-sonnet-4-6` /
-  `claude-haiku-4-5`，5.x 为 `claude-opus-5` / `claude-sonnet-5` / `claude-fable-5` /
-  `claude-fable-5-1`。main 上 `general-chat.mdx` 的点号 + 日期写法
-  （`claude-opus-4.8`、`claude-opus-4.5-20251101`）**是错的**，已随该清单删除。
-- **集合差异**：`gpt-4o` / `gpt-4o-mini` / `gpt-5.2-codex` / `gpt-5.1-codex-max` /
-  `gemini-2.5-flash` / `gemini-3.1-flash-lite-preview` / `kimi-k2.5` 已下架，目录里没有，
-  文档不写。目录新增的 10 个（`gpt-6-astra`、`gpt-5-pro`、`o3-pro`、`gemini-3.8-flash`、
-  `deepseek-v3.1-terminus`、`grok-4.20-0309-*`、`mimo-v2.5-pro`、`step-3.7-flash` 等）已收录。
-- **分档阈值**：Grok 全系 `input_tier_threshold = 199999`（即达到 200,000 切档），
-  Gemini 两个 Pro 是 `200000`（即超过 200,000 才切档）——**差一个 token 是真的**，不是笔误。
-  MiniMax M3 目录里为纯两项计价，**没有** main 提过的 512K 分档。
+---
 
-后续模型上下架，以 `GET /v1/models` 为准重新生成 overview 的表，不要手改。
+## 一、已结案的核对项
 
-## A. 缓存：价格已分四档，行为待确认
+### 模型 ID 写法（2026-09-06 Kaiho 拍：Anthropic 保持连字符）
 
-目录 `price_config` 把缓存能力分得很清楚，**价格层面已足够写一节缓存文档**：
+后台模型组里 Anthropic 全系 ID 是连字符、展示名是点号：`Claude Opus 4.8` / `claude-opus-4-8`、
+`Claude Fable 5.1` / `claude-fable-5-1`。点号形式在网关里不存在——`GET /v1/models/claude-opus-4.8`
+返回 `model_not_found`。
 
-| 档 | 判据 | 型号 |
-|---|---|---|
-| 无缓存优惠 | `cache_billing: "input_output"` | 55 个 |
-| 只有缓存读 | 有 `cache_read`，无 `cache_write` | `gpt-5.5` `gpt-5.4` `grok-4.6` `gemini-3.6/3.7/3.8-flash` `kimi-k3` `qwen3.8-max` |
-| 缓存读 + 写 | 加 `cache_write` | `gpt-5.6-luna/terra/sol` `gpt-6-astra` |
-| 缓存读 + 5 分钟写 + 1 小时写 | 再加 `cache_write_1h` | `claude-opus-5` `claude-sonnet-5` `claude-fable-5` `claude-fable-5-1` |
-| 时段缓存价 | `text_schedule.windows[].rates.cache_read` | `deepseek-v4-pro` `deepseek-v4-flash` |
+**这不是不一致，是"每家跟随各自官方写法"**：OpenAI 官方是 `gpt-5.6`、Google 是 `gemini-3.6`、
+Qwen 是 `qwen3.8`（点号），而 Anthropic 官方本来就是连字符（网关渠道层能解析出
+`claude-sonnet-4-5-20250929`、`claude-opus-4-1-20250805`，全是上游原样）。**决定：不改**，
+改 ID 是破坏性变更，且改了反而与 Anthropic 官方文档对不上。
 
-⏳ **待确认（目录看不出来，需要 Go 源码或实打）**：网关是否透传显式 `cache_control`
-（含 `ttl: "1h"` 与 `anthropic-beta: extended-cache-ttl-2025-04-11`）。
-`cache_write_1h` 这一档单价**只有显式 TTL 缓存才用得到**，所以 Claude 那四个型号很可能
-已放开；但单模型页的验收记录写的是「缓存价已配置，命中与 TTL 写入尚未验收」，两者需要对齐。
-确认放开后，参考 APIMart `texts/general/claude-context-cache` 的结构写一节：
-使用场景 / Messages 写法 / OpenAI 兼容写法 / 命中条件 / 计费口径 / 排查清单。
+### 模型集合
 
-## B. 多模态：目录未声明，且 `openai-multimodal.mdx` 超额宣称 🔴
+已下架、文档不写：`gpt-4o` `gpt-4o-mini` `gpt-5.2-codex` `gpt-5.1-codex-max` `gemini-2.5-flash`
+`gemini-3.1-flash-lite-preview` `kimi-k2.5`（后台是"停用"组，`GET /v1/models` 不列，
+但 `GET /v1/models/{id}` 仍能解析到停用组——以列表为准）。
 
-目录里 77 个文本模型的 `tags` 只有四种：文本生成 / 流式输出 / 函数调用 / 结构化输出。
-**没有任何多模态或视觉标签。**
+已上架、文档已收：`gpt-6-astra` `gpt-5-pro` `o3-pro` `gemini-3.8-flash` `deepseek-v3.1-terminus`
+`grok-4.20-0309-*` `mimo-v2.5-pro` `step-3.7-flash` 等 10 个。
 
-而 `cn|en/api-reference/text/openai-multimodal.mdx`（本次未动，从 main 继承）写着：
+### 长上下文阈值
 
-- 模型清单为 `gpt-5-codex` / `gpt-5.1-codex` / `gpt-5.1-codex-mini` / `gpt-5.2-codex`
-  —— **目录里一个都没有**。目录里只走 Responses 的型号是 `gpt-5-pro` / `gpt-5.2-pro` /
-  `gpt-5.3-codex` / `gpt-5.4-pro` / `o3-pro`，且它们的能力位只有「流式输出」。
-- 完整写了 `web_search` / `file_search` / `remote_mcp` 三个托管工具的用法，
-  而 overview 明确写这些在预扣前拒绝。
-- 写了 `input_image` / `input_video` 多模态输入、图像格式与大小限制。
+Grok 全系 `input_tier_threshold = 199999`（达到 200,000 切档），Gemini 两个 Pro 是 `200000`
+（超过 200,000 才切档）——**差一个 token 是真的**。MiniMax M3 为纯两项计价，没有 512K 分档。
 
-⏳ **待办**：按目录重写该页（模型清单、工具章节、多模态章节三处），或在放开多模态后
-重新验收再写。这是目前文档里最大的一处不实。
+### 协议归属（`supported_protocols`）
 
-## C. `POST /waveapi/public/quote` 是管理端接口 🔴
+- 只走 Responses：`gpt-5-pro` `gpt-5.2-pro` `gpt-5.4-pro` `gpt-5.3-codex` `o3-pro`（且这五个
+  `tool_calling` / `structured_output` 均为 false）
+- 走 Gemini 原生的八个：`gemini-2.5-flash-lite` `gemini-2.5-pro` `gemini-3-flash-preview`
+  `gemini-3.1-pro-preview` `gemini-3.5-flash` `gemini-3.6-flash` `gemini-3.7-flash`
+  `gemini-3.8-flash`（`gemini-3.5-flash-lite` 只走 Chat）
+- 走 Claude 原生 Messages 的只有两个：`claude-sonnet-5` `claude-opus-5`
 
-实打返回 `401 {"message":"缺少管理鉴权 token (HMAC 或 Bearer)"}`，
-开发者拿 WaveAPI Key 调不通。文档里把它写成给用户估价用的位置：
+### 显式缓存放行范围
 
-- `cn|en/api-reference/video/overview.mdx`（媒体类，本批暂停）
-- `cn|en/changelog/pricing.mdx` 两处（媒体类）
+依据 `service/text_billing_capabilities.go` 的 `validateTextBillingExtras`：
+`cache_control` 在**两项计价组、全部 `gemini-*`、`qwen3.8-max`** 上预扣前拒绝，其余放行。
+真正用得上的是配了 `cache_write_1h` 的四个：`claude-opus-5` `claude-sonnet-5`
+`claude-fable-5` `claude-fable-5-1`。`provider/claude/adaptor.go` 确认 `anthropic-beta`
+头原样透传，1 小时 TTL 链路通。
 
-文本类的两处引用已改掉。媒体类那三处待一并处理：改成管理端说明，或删除。
+⚠️ **仍缺一次实测**：缓存命中与 TTL 写入没做过验收，文档里保留了"先小请求核对再放量"的提示。
+探测脚本在 `~/Echo/Claude outputs/waveapi-探测-缓存与多模态-20260906.sh`（跑 1/2/3 即可）。
 
-## D. 其他遗留
+---
+
+## 二、移交给专人处理（非文档，本次只记录不动）
+
+### T1 · 文本视觉能力缺一个声明位 🔴
+
+`service/wave_capabilities.go` 的 `Capabilities` 里有 `streaming` / `tool_calling` /
+`structured_output` / `supported_protocols` / `input_token_limit`，还有 `max_image_inputs`——
+但 `max_image_inputs` 是**图像生成组的参考图张数**，不是文本模型能不能吃图。
+
+结果是**文本视觉能力在系统里没有真相源**：模型组没字段、`/v1/models` 的 tags 没有、
+网关也不校验。实际行为是"不拦截"，请求原样打到上游，预扣走 `service/token_counter.go`
+那套图像 token 估算。
+
+**建议**：加 `vision *bool`，语义与 `tool_calling` / `structured_output` 完全同款
+（nil 未知 / false 预扣前拒 / true 放行），逐模型验收后回填。在那之前文档一律写"未开放"。
+
+### T2 · `/api/public/*` 是内部投影，文档里被当成开发者接口 🔴
+
+`router/api-router.go` 里整个 `/public` 组挂 `middleware.VinEndAuth()`，注释写明是
+"前端安全投影，VinEnd HMAC 调用后转发开发者站"。实打 `POST /waveapi/public/quote`
+返回 `401 缺少管理鉴权 token (HMAC 或 Bearer)`。
+
+文本类的两处引用已删。**剩余三处待改**（媒体批）：
+`cn|en/api-reference/video/overview.mdx`、`cn|en/changelog/pricing.mdx` ×2。
+要么改成"控制台估价"，要么删。
+
+### T3 · changelog 里留着从未生效的模型 ID
+
+`cn|en/changelog/models.mdx` 有 `gpt-5-codex` `gpt-5.1-codex` `gpt-5.1-codex-max`
+`gpt-5.2-codex` `kimi-k2.5` `gemini-3.1-flash-lite-preview` `claude-opus-4.8`
+`claude-opus-4.5-20251101` 等条目——这些 ID 在模型组里**从来不存在**（点号形式）
+或**已下架**。changelog 是历史记录可以保留事件，但写错的 ID 会被当成可调用模型抄走。
+建议：统一为模型组 ID，或在该页顶部加一句"历史条目中的模型 ID 以当前模型目录为准"。
+
+### T4 · 已撤回的误报（存档，不用查）
+
+先前怀疑"两项计价的 Claude 走原生 `/v1/messages`，`system[].cache_control` 绕过拒绝导致
+计费漏损"。**不成立**：两项计价的 Claude 组没有声明 `anthropic_messages` 协议，
+`validateDeclaredTextProtocol` 会在更早一步拒掉；声明了原生协议的只有
+`claude-sonnet-5` / `claude-opus-5`，而这两个本来就允许显式缓存。
+
+---
+
+## 三、其他遗留
 
 - `cn/index.mdx` / `en/index.mdx` 三条死链：`api-reference/image/gpt4o-image`、
   `api-reference/task/get-status`、`api-reference/video/veo3`（媒体类，本批暂停）。
-- 文本页的 `api:` 字段与示例已回到 `https://www.qingbo.dev/v1`（原 74 个单模型页的
-  `http://localhost:40081` 随页面一起删除）。若要保留一处本地联调地址，
-  建议只写在 `guides/quickstart.mdx`。
-- overview 的表由脚本从 `GET /v1/models` 生成，生成脚本尚未入仓（目前在本机 `~/work/`）。
+- overview 的表由脚本从模型组导出生成，生成脚本尚在本机 `~/work/`，未入仓。
   长期应放进仓内 `tools/`，模型上下架后重跑。
+- 文本页 URL 已统一 `https://www.qingbo.dev/v1`。若要留一处本地联调地址，
+  建议只写在 `guides/quickstart.mdx`。

@@ -16,7 +16,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="gpt-5.6-luna",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 
@@ -32,7 +32,7 @@ const client = new OpenAI({
 });
 
 const response = await client.chat.completions.create({
-  model: 'gpt-4o',
+  model: 'gpt-5.6-luna',
   messages: [{ role: 'user', content: 'Hello!' }]
 });
 
@@ -44,7 +44,7 @@ curl https://www.qingbo.dev/v1/chat/completions \
   -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-luna",
     "messages": [{"role": "user", "content": "Hello!"}]
   }'
 ```
