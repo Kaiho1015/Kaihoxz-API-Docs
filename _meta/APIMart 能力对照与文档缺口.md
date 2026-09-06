@@ -147,6 +147,38 @@ SkyReels / PixVerse / HappyHorse / Omni / Grok Imagine Video。
   但措辞可以统一成「线路」，与 GPT Image 的「官方线路 / 逆向线路」对齐
 - `image/grok-imagine.mdx` · `midjourney.mdx` —— 「备用渠道」「同一渠道」各一处
 
+## 七、校对轮记下的待确认项（2026-09-06 第二轮）
+
+按 SOP §7 逐页校对文本五页与 GPT Image 组时新发现的，都不是文案问题，**留给做修改的人核**：
+
+1. **Responses 页的 `temperature` / `max_tokens` 是不是真能传。**
+   `cn|en/api-reference/text/openai-multimodal.mdx` 的「请求参数」里列了这两个字段
+   （存量内容，不是本轮加的）。但这五个模型（`gpt-5-pro` / `gpt-5.2-pro` /
+   `gpt-5.4-pro` / `gpt-5.3-codex` / `o3-pro`）都是思考模型，OpenAI 官方对
+   `temperature` 是拒绝的；`max_tokens` 在 Responses 协议里也不是有效字段
+   （对应字段是 `max_output_tokens`，页面里另有一条）。
+   需要照模型组的 `supported_common_params` 核一遍，多余的删掉。
+
+2. **Responses 上的 `reasoning: {effort}` 有没有放行。**
+   文本总览写了 GPT-5 及之后用 `reasoning_effort` 选推理档位，那是 Chat 的字段名；
+   Responses 协议对应的是 `reasoning` 对象。目前 openai-multimodal 的参数表里两个都没有，
+   本轮写「使用示例」时因此避开了这个字段。确认后补进参数表。
+
+3. **文本模型的图像输入没有能力位。**（与前文重复记一次，因为这轮又撞上了）
+   `claude-messages.mdx` 开头原先写「支持文本、图像等多模态内容」，正文却写
+   「本接口不支持多轮工具流程与图像输入」，自相矛盾，本轮按正文改了。
+   `general-chat.mdx` 的 `content` 字段原写「支持字符串或多模态内容数组」，
+   同样无从校验，本轮改成中性的「字符串，或内容块数组」。
+   模型组补上 `vision *bool` 之后，这两处才能写准。
+
+4. **`cn|en/index.mdx` 六个失效链接本轮修了三对**（`image/gpt4o-image`、`video/veo3`、
+   `task/get-status` → 各自的 overview / status），卡片文案里的 `gpt-4o` 也换成了在架模型。
+   这页整体仍是存量结构，重写首页时一并处理。
+
+5. **存量视频页仍带「本页不列单价 —— 价格会随上游调整，写在文档里迟早和实际对不上」**
+   共 10 处。这句解释的是我们的决定而不是产品事实，按 SOP §7 应当只留前半句。
+   等各组重写时删。
+
 ## 四、结论
 
 1. ✅ **已做**：`GET /v1/dashboard/billing/*` 三个端点 →「账户与用量」三页。

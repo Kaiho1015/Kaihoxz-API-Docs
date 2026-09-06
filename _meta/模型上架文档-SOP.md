@@ -81,7 +81,7 @@ cn/api-reference/<模态>/<家族>/
 | 情况 | 中文 | English | 例 |
 |---|---|---|---|
 | 家族有 2 个及以上模型 | `XX 系列` | `XX Series` | `Seedream 系列` / `FLUX 系列` / `GPT Image 系列` |
-| 只有一个型号 | 直接写型号名 | 同 | `Imagen 4.0` / `MiniMax H3` / `Z.ai Image` |
+| 只有一个模型 | 直接写模型名 | 同 | `Imagen 4.0` / `MiniMax H3` / `Z.ai Image` |
 
 家族目录用 `docs.json` 的 `group` + `root` 表达，`group` 的字面值就是上表的标签，
 `root` 指向 `overview`——这样侧边栏的组名本身可点击，不需要额外的入口页：
@@ -107,7 +107,7 @@ cn/api-reference/<模态>/<家族>/
 | 1 个模型 | **不建** | 组里只有一页，overview 就是它的复制品。`docs.json` 里直接写成一个 page，不建 group |
 | 2–3 个模型，且彼此差异小 | **不建** | 差异写在各模型页顶部的交叉提示里即可 |
 | 2–3 个模型，但**计费模型或参数集合差异大** | **建** | 用户需要一个中立的地方选型（GPT Image 官方 vs 逆向差 36 倍成本，属于这一类） |
-| ≥4 个模型，或家族内有多个 action 页 | **建** | 没有入口页会让侧边栏变成一串看不出关系的型号 |
+| ≥4 个模型，或家族内有多个 action 页 | **建** | 没有入口页会让侧边栏变成一串看不出关系的模型名 |
 
 > 参照：APIMart 的 `images/` 下 20 多个家族**只有 `audios/suno` 一个 overview**——因为他们的
 > 家族页是按端点拆的，用户从模型列表直接点到具体端点，不存在"同家族选哪个 ID"的问题。
@@ -165,31 +165,95 @@ APIMart 的 `midjourney/` 有 17 页、`audios/suno/` 有 30 页，是因为**�
 ### 4.1 家族 `overview.mdx`（仅在 §2.2 判定需要时）
 
 ```
-frontmatter: title（家族名）· description
-一句话：本家族统一走哪个端点，选模型只改 model ID
-## 当前可用模型      CardGroup，每个模型一张卡：ID + 一句话能力 + 计费方式
-## 如何选            表格：需求 → 推荐模型 → 原因
-## 家族共同点        所有模型都一样的部分（端点 / 画幅集合 / 分辨率 / n 的限制 / 参考图语义）
-## 统一调用方式      一个最小可跑的 curl
+frontmatter: title（「XX 系列」）· description
+一段散文（见 §4.4）：本组统一走哪个端点，选模型只改 model ID
+## 可用模型          CardGroup，每个模型一张卡：ID + 一句话能力 + 计费方式
+## 如何选择          表格：需求 → 推荐模型 → 原因
+## 共同点            所有模型都一样的部分（端点 / 画幅集合 / 分辨率 / n 的限制 / 参考图语义）
+                    两个模型时写「两条线路的共同点」
+## 统一调用方式      一个最小可跑的 curl + 一句「提交成功后返回 task_id……」
+## 相关文档          见 §4.5
 ```
 
 ### 4.2 模型页 `<model-id>.mdx`
 
 ```
 frontmatter: title · description · api（写全 URL，Mintlify 的 Try it 读这个字段）
-一句话定位（来自模型组 descriptions）+ 与同家族其他模型的关系提示
+一段散文（见 §4.4）：本模型定位 + 与同组其他模型的关系
 ## 快速开始          按 supported_actions 出 CodeGroup，每个 action 一个可直接跑的 curl
+                    收尾一句：提交成功后返回 task_id，用 GET /v1/tasks/{task_id} 查询……
 ## 请求参数          ParamField：先通用后专有，逐个带 enum / default / 范围
-                    末尾一句：本组不接受哪些参数 + 未声明参数在预扣前拒绝
+                    末尾一句：本组不接受哪些参数 +「以上之外的参数会返回 400，不计费」
 ## 限制              constraints 逐条（用 message_i18n 原文）+ 上限表
 ## 计费              见 §5 模板
-## 响应              一个真实形状的完成态 JSON
-## 相关文档          提交任务 / 查询状态 / 任务系统 / 同家族其他页
+## 响应              一个真实形状的完成态 JSON + 一句 result 字段说明
+## 相关文档          见 §4.5
 ```
 
 **媒体类模型页不重复写任务系统**：提交、轮询、`Prefer: wait`、`Idempotency-Key`、
 `callback_url` 一律链到 [提交任务](../cn/api-reference/task/submit) 与
 [任务系统](../cn/docs/task-system)，模型页只写本模型独有的部分。
+
+### 4.3 小节名固定用这一套
+
+新页只能从这张表里挑小节名，不自造。用不上的小节直接不要，但**顺序不能变**：
+
+| 顺序 | 中文 | English | 何时出现 |
+|---|---|---|---|
+| 1 | 鉴权 | Authorizations | 该接口的请求头与 Chat 不同时必写（例：`x-api-key`、`x-goog-api-key`） |
+| 2 | 快速开始 | Quickstart | 媒体类模型页；按 `supported_actions` 出 CodeGroup |
+| 3 | 请求参数 | Body | 必写 |
+| 4 | 限制 | Limits | 有 `constraints` 时 |
+| 5 | 计费 | Pricing | 媒体类必写；文本类合并进「用量与计费」 |
+| 6 | 响应 | Response | 必写 |
+| 7 | 可用模型 | Available models | 一页覆盖多个模型，或该入口只服务部分模型时 |
+| 8 | 使用示例 | Examples | 请求体值得单独举例时（多轮、流式、参数组合） |
+| 9 | 流式 | Streaming | 流式事件与非流式响应结构不同时 |
+| 10 | 用量与计费 | Usage and billing | 文本类必写 |
+| 11 | 当前不支持 | Not supported | 有会返回 400 的请求形状时；写成列表，收尾一句「以上请求返回 `400`，不计费」 |
+| 12 | 与官方线路的区别 | Official vs reverse | 逆向线路页 |
+| 13 | 相关文档 | Related | 必写 |
+
+### 4.4 开头一段的写法
+
+frontmatter 之后、第一个 `##` 之前只放**一段散文**，不放要点列表。这一段要回答三件事：
+这个入口是什么、服务哪些模型、什么时候不该用它（指向该去的页面）。
+
+```mdx
+Anthropic 原生 Messages 接口，为已有 Anthropic SDK 的应用保留，只服务 `claude-sonnet-5`
+与 `claude-opus-5`。本接口不提供 Chat 之外的额外能力，新接入建议直接用[通用对话接口](...)。
+```
+
+`description` 与这一段不要重复同一句话。
+
+### 4.5 「相关文档」用列表，不用 CardGroup
+
+全站统一 `- [页面名](路径)`。顺序：**同组页面 → 本组入口 → 通用接口**。
+
+```mdx
+## 相关文档
+
+- [GPT Image 系列](/cn/api-reference/image/gpt-image/overview)
+- [GPT Image 2 逆向版](/cn/api-reference/image/gpt-image/gpt-image-2-rev)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)
+```
+
+链接文案用**目标页的 title 原文**。改了某页 title，必须回头改所有指向它的链接文案——
+`grep -rn "旧文案" cn en` 一遍。
+
+### 4.6 固定用词
+
+| 概念 | 全站写法 | 不要写 |
+|---|---|---|
+| 计费单位 | quota（`500,000 quota = 1 USD`） | 额度 / credits / 点数 |
+| 模型 | 模型 | 型号 |
+| 线路 | 官方版 / 逆向版 | 官方线路 / 逆向线路（作标题时）|
+| 家族 | XX 系列 | XX 模型家族 |
+
+跨页锚点先在本地站点点开验证：Mintlify 的中文锚点会去掉全角括号和冒号，
+`## 请求内等待（Prefer: wait）` 的锚点是 `#请求内等待prefer-wait`，不是 `#请求内等待-prefer-wait`。
 
 ---
 
@@ -223,15 +287,18 @@ frontmatter: title · description · api（写全 URL，Mintlify 的 Try it 读�
 
 ## 6. 上架一组时要动的地方（checklist）
 
-1. `cn|en/api-reference/<模态>/<家族>/overview.mdx` —— 新建或在「当前可用模型」加卡片
+1. `cn|en/api-reference/<模态>/<家族>/overview.mdx` —— 新建或在「可用模型」加卡片
 2. `cn|en/api-reference/<模态>/<家族>/<model-id>.mdx` —— 每个模型一页（或按 §3 合页）
 3. `cn|en/api-reference/<模态>/overview.mdx` —— 「支持的模型」加家族卡片；如果引入了新模式，
    补「模式速查」一行
 4. `docs.json` —— 对应语言的分组里加 `group` / `root` / `pages`；`group` 的字面值按 §2.1
-   命名（多模型 `XX 系列` / `XX Series`，单模型写型号名），并与 `overview` 的 `title` 一致；
+   命名（多模型 `XX 系列` / `XX Series`，单模型写模型名），并与 `overview` 的 `title` 一致；
    路径变更时补 `redirects`
-5. `cn|en/changelog/models.mdx` —— **合成一条**，不要一个模型一条；只写这次真正上架的 ID
-6. 价格有变动才动 `cn|en/changelog/pricing.mdx`；纯新上架不写价格条目
+5. 文本组变更还要改 `_meta/tools/text-overview/`（`data.py` 改模型、模板改通用口径、
+   `gen.py` 的 `VENDOR_NOTES` 改厂商段落），然后 cn / en 两版都重新生成——
+   `cn|en/api-reference/text/overview.mdx` 是生成结果，**不要直接编辑**
+6. `cn|en/changelog/models.mdx` —— **合成一条**，不要一个模型一条；只写这次真正上架的 ID
+7. 价格有变动才动 `cn|en/changelog/pricing.mdx`；纯新上架不写价格条目
 
 **收尾自查**
 
@@ -240,8 +307,13 @@ frontmatter: title · description · api（写全 URL，Mintlify 的 Try it 读�
 - [ ] 页面里**没有任何具体金额**（`grep -n '\$[0-9]'` 应当只在 changelog 里命中），
       「计费」小节带了实时价指引块
 - [ ] `docs.json` 里新增的每个 page 路径都有对应 `.mdx` 文件
-- [ ] `docs.json` 的组名与 `overview` 的 `title` 同名，且符合 §2.1 的「系列 / 型号名」惯例
+- [ ] `docs.json` 的组名与 `overview` 的 `title` 同名，且符合 §2.1 的「系列 / 模型名」惯例
 - [ ] cn 与 en 两版结构一致、模型 ID 与数字一致
+- [ ] 小节名全部出自 §4.3 的表，顺序没乱
+- [ ] 「相关文档」是列表不是 CardGroup，链接文案等于目标页 title（§4.5）
+- [ ] 改过任何页面 title 的话，`grep -rn "旧文案" cn en` 无残留
+- [ ] 跨页锚点在本地站点点开验证过（§4.6 末尾）
+- [ ] 计费单位写的是 quota，不是「额度 / credits」
 - [ ] 跑一遍 §7.4 的黑话自查与 §8 的 `$` 自查脚本，两条都应无输出
 - [ ] 本地 `http://localhost:30084` 打开新页面确认渲染（表格是否被挤出可视区、中文粗体
       `**…**` 紧贴全角标点会失效、价格的 `$` 有没有被吃掉）
@@ -254,7 +326,7 @@ frontmatter: title · description · api（写全 URL，Mintlify 的 Try it 读�
 写的是**产品事实**（支持什么、返回什么、怎么计费），不是**我们的工作过程**
 （验收到哪一步、为什么这么定、我们内部怎么叫）。
 
-### 8.1 禁用词表
+### 7.1 禁用词表
 
 左边这些是内部黑话，**不能出现在任何 API 参考页里**：
 
@@ -270,8 +342,17 @@ frontmatter: title · description · api（写全 URL，Mintlify 的 Try it 读�
 | 不承诺 X | （改成正向陈述）X 不可用 / X 由上游决定 |
 | 不要从其他模型页照抄字段 | （删。本页未列出的参数不支持，说到这里就够了） |
 | 本站文档不列具体单价，因为…… | 各模型的单价见 `GET /v1/models` 的 `price_config`。（一句话，不解释我们为什么） |
+| 不确定时先用 `low` 试 | `quality` 是影响成本最大的参数，默认值为 `low`。 |
+| 提交前就能确定这一单花多少 | 分辨率是唯一的计费维度，提交前即可确定单次费用。 |
+| 不要把 `candidatesTokenCount` 当成 `completion_tokens` | 两者语义不同：`completion_tokens` 已含思考 token。 |
+| 请走 Chat 接口 / 需要 X 请用 Y | 其余模型走 Chat 接口 / 需要 X 时用 Y |
+| 本页未列出的参数会返回 `400` | 以上之外的参数会返回 `400`，不计费。 |
+| 见上一节 / 写在表下的 / 本页表格的来源 | 见「缓存」/ 见「模型备注」（用小节名，不用方位词） |
+| 文档更新会滞后于目录 | （删。直接说目录接口是准的） |
+| 自己写代码时用本页这个更直观 | 新接入推荐本端点。 |
+| 一次拿全 / 还剩多少钱 / 就够了 | 一次请求取全 / 剩余余额 / 即可 |
 
-### 8.2 三条正面规则
+### 7.2 三条正面规则
 
 1. **陈述事实，不解释决定。** 文档不是给用户看的会议纪要。「我们没测过所以不敢写」是内部信息；
    对用户来说，能写进文档的就是支持的，没把握的**不写**（这也正是纪律 1 的意思）。
@@ -280,7 +361,7 @@ frontmatter: title · description · api（写全 URL，Mintlify 的 Try it 读�
 3. **说清后果，而不是说清机制。** 用户关心「传错了会怎样」（返回 400、不扣钱），
    不关心「我们在预扣前的哪一层校验拦下的」。
 
-### 8.3 两家参照的原句
+### 7.3 两家参照的原句
 
 抄不准的时候照这个语感：
 
@@ -295,14 +376,16 @@ frontmatter: title · description · api（写全 URL，Mintlify 的 Try it 读�
 
 都是短句、陈述、第二人称，没有一句在讲他们自己的流程。
 
-### 8.4 自查
+### 7.4 自查
 
 ```bash
 grep -rnE "验收|渠道|预扣|实测|联调|本轮|本批|模型组|不承诺|照抄" --include=*.mdx cn/api-reference
 grep -rnE "acceptance|not accepted|route-declared|quota is reserved|exercised" --include=*.mdx en/api-reference
+grep -rnE "本页未列出|见上一节|写在表下|怎么选|拿全|就够|花多少|型号|我们|本站" --include=*.mdx cn/api-reference
+grep -rnE "do not budget|when unsure|before you send it|not listed on this page" --include=*.mdx en/api-reference
 ```
 
-两条都应当无输出。（`changelog/` 里的历史条目不在此列。）
+四条都应当无输出。（`changelog/` 里的历史条目不在此列。）
 
 ## 8. 已知易错点
 
