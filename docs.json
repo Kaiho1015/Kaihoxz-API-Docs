@@ -127,7 +127,7 @@
                   "cn/api-reference/image/overview",
                   "cn/api-reference/image/gemini",
                   {
-                    "group": "GPT Image",
+                    "group": "GPT Image 系列",
                     "root": "cn/api-reference/image/gpt-image/overview",
                     "expanded": true,
                     "pages": [
@@ -256,7 +256,7 @@
                   "en/api-reference/image/overview",
                   "en/api-reference/image/gemini",
                   {
-                    "group": "GPT Image",
+                    "group": "GPT Image Series",
                     "root": "en/api-reference/image/gpt-image/overview",
                     "expanded": true,
                     "pages": [

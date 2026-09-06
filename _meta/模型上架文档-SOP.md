@@ -43,28 +43,14 @@
 
 ---
 
-## 2. 目录结构
+## 2. 目录结构与命名
 
 **一个上架组 = 一个家族目录**，即使这次只上一个模型：
 
 ```
 cn/api-reference/<模态>/<家族>/
-  overview.mdx        家族入口：可用模型卡片 · 如何选 · 统一调用 · 家族共同点
+  overview.mdx        家族入口（是否需要见 §2.2）
   <model-id>.mdx      每个模型组一页（文件名 = 模型 ID，点号换连字符）
-```
-
-`docs.json` 里对应写成带 `root` 的分组，`root` 指向 `overview`：
-
-```json
-{
-  "group": "GPT Image",
-  "root": "cn/api-reference/image/gpt-image/overview",
-  "expanded": true,
-  "pages": [
-    "cn/api-reference/image/gpt-image/gpt-image-2",
-    "cn/api-reference/image/gpt-image/gpt-image-2-rev"
-  ]
-}
 ```
 
 > **为什么单模型也建目录**：家族早晚会加第二个模型，那时把单页改成目录要改路径、
@@ -74,7 +60,61 @@ cn/api-reference/<模态>/<家族>/
 存量的单文件页（`seedream.mdx` / `midjourney.mdx` 等）暂不动，**等各自家族重新上架时顺手迁进目录**，
 迁移时在 `docs.json` 的 `redirects` 里补上旧路径 → 新 `overview` 的跳转。
 
----
+### 2.1 命名
+
+侧边栏标签与页面 `title` 必须**同名**，并沿用全库既有惯例：
+
+| 情况 | 中文 | English | 例 |
+|---|---|---|---|
+| 家族有 2 个及以上模型 | `XX 系列` | `XX Series` | `Seedream 系列` / `FLUX 系列` / `GPT Image 系列` |
+| 只有一个型号 | 直接写型号名 | 同 | `Imagen 4.0` / `MiniMax H3` / `Z.ai Image` |
+
+家族目录用 `docs.json` 的 `group` + `root` 表达，`group` 的字面值就是上表的标签，
+`root` 指向 `overview`——这样侧边栏的组名本身可点击，不需要额外的入口页：
+
+```json
+{
+  "group": "GPT Image 系列",
+  "root": "cn/api-reference/image/gpt-image/overview",
+  "expanded": true,
+  "pages": [
+    "cn/api-reference/image/gpt-image/gpt-image-2",
+    "cn/api-reference/image/gpt-image/gpt-image-2-rev"
+  ]
+}
+```
+
+### 2.2 家族 overview 建不建
+
+**不是每个家族都要**。判据：
+
+| 家族规模 | 建 overview？ | 理由 |
+|---|---|---|
+| 1 个模型 | **不建** | 组里只有一页，overview 就是它的复制品。`docs.json` 里直接写成一个 page，不建 group |
+| 2–3 个模型，且彼此差异小 | **不建** | 差异写在各模型页顶部的交叉提示里即可 |
+| 2–3 个模型，但**计费模型或参数集合差异大** | **建** | 用户需要一个中立的地方选型（GPT Image 官方 vs 逆向差 36 倍成本，属于这一类） |
+| ≥4 个模型，或家族内有多个 action 页 | **建** | 没有入口页会让侧边栏变成一串看不出关系的型号 |
+
+> 参照：APIMart 的 `images/` 下 20 多个家族**只有 `audios/suno` 一个 overview**——因为他们的
+> 家族页是按端点拆的，用户从模型列表直接点到具体端点，不存在"同家族选哪个 ID"的问题。
+> 我们不同：**一个模型组 = 一个 model ID = 用户的选择单位和计费单位**，同家族多 ID 之间
+> 要选型，所以 overview 在我们这儿承担的是 APIMart 没有的职责。按上表判断，不要一律建。
+
+overview 该写什么、不该写什么：
+
+- **要**：当前可用模型卡片（ID + 一句话能力 + 计费方式）、如何选（需求 → 推荐 → 原因）、
+  家族共同点（端点 / action / 画幅 / 分辨率 / 张数等所有模型一致的部分）、一个最小可跑的 curl
+- **不要**：把各模型页的参数表再抄一遍；"继续阅读"之类与顶部卡片重复的链接列表；
+  未上架模型的预告
+
+### 2.3 不按 action 拆页
+
+APIMart 的 `midjourney/` 有 17 页、`audios/suno/` 有 30 页，是因为**他们直接代理各家原生端点**，
+一个 action 就是一个 URL。
+
+我们的媒体类统一走 `POST /v1/tasks`，**action 是请求里的一个字段，不是端点**。所以：
+同一个模型组的多个 `supported_actions` 写在**同一页的一张 action 表**里，不拆页。
+抄 APIMart 要抄**能力覆盖**，不要抄**页面切分**——照抄会把一页能讲完的事拆成十几页。
 
 ## 3. 合页还是拆页
 
@@ -99,7 +139,7 @@ cn/api-reference/<模态>/<家族>/
 
 ## 4. 页面骨架
 
-### 4.1 家族 `overview.mdx`
+### 4.1 家族 `overview.mdx`（仅在 §2.2 判定需要时）
 
 ```
 frontmatter: title（家族名）· description
@@ -108,7 +148,6 @@ frontmatter: title（家族名）· description
 ## 如何选            表格：需求 → 推荐模型 → 原因
 ## 家族共同点        所有模型都一样的部分（端点 / 画幅集合 / 分辨率 / n 的限制 / 参考图语义）
 ## 统一调用方式      一个最小可跑的 curl
-## 继续阅读          各模型页 + 任务系统 + 认证
 ```
 
 ### 4.2 模型页 `<model-id>.mdx`
@@ -154,7 +193,9 @@ frontmatter: title · description · api（写全 URL，Mintlify 的 Try it 读�
 2. `cn|en/api-reference/<模态>/<家族>/<model-id>.mdx` —— 每个模型一页（或按 §3 合页）
 3. `cn|en/api-reference/<模态>/overview.mdx` —— 「支持的模型」加家族卡片；如果引入了新模式，
    补「模式速查」一行
-4. `docs.json` —— 对应语言的分组里加 `group` / `root` / `pages`；路径变更时补 `redirects`
+4. `docs.json` —— 对应语言的分组里加 `group` / `root` / `pages`；`group` 的字面值按 §2.1
+   命名（多模型 `XX 系列` / `XX Series`，单模型写型号名），并与 `overview` 的 `title` 一致；
+   路径变更时补 `redirects`
 5. `cn|en/changelog/models.mdx` —— **合成一条**，不要一个模型一条；只写这次真正上架的 ID
 6. 价格有变动才动 `cn|en/changelog/pricing.mdx`；纯新上架不写价格条目
 
@@ -164,6 +205,7 @@ frontmatter: title · description · api（写全 URL，Mintlify 的 Try it 读�
 - [ ] 页面里出现的每个参数都在 `supported_common_params` 或 `specific_parameters` 里
 - [ ] 页面里的每个价格都能在 `price_config` 里找到同一个数
 - [ ] `docs.json` 里新增的每个 page 路径都有对应 `.mdx` 文件
+- [ ] `docs.json` 的组名与 `overview` 的 `title` 同名，且符合 §2.1 的「系列 / 型号名」惯例
 - [ ] cn 与 en 两版结构一致、模型 ID 与数字一致
 - [ ] 本地 `http://localhost:30084` 打开新页面确认渲染（表格是否被挤出可视区、中文粗体
       `**…**` 紧贴全角标点会失效）
