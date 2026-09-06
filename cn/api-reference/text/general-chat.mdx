@@ -275,7 +275,7 @@ public class Main {
 
   完整的可用模型、价格与已验证能力见[文本模型总览](/cn/api-reference/text/overview)；实时可用性以 `GET /v1/models` 为准。
 
-  切换模型只改这一个字段。参数是否可用以该模型的已验证能力为准，不是所有 OpenAI 参数在每个模型上都可用：GPT-5 及之后的型号用 `max_completion_tokens` 和 `reasoning_effort`，Claude 用 `max_tokens`；`gpt-5-pro` / `gpt-5.2-pro` / `gpt-5.4-pro` / `gpt-5.3-codex` / `o3-pro` 只接受 [Responses 接口](/cn/api-reference/text/openai-multimodal)。
+  切换模型只改这一个字段。参数是否可用取决于具体模型，不是所有 OpenAI 参数在每个模型上都可用：GPT-5 及之后的型号用 `max_completion_tokens` 和 `reasoning_effort`，Claude 用 `max_tokens`；`gpt-5-pro` / `gpt-5.2-pro` / `gpt-5.4-pro` / `gpt-5.3-codex` / `o3-pro` 只接受 [Responses 接口](/cn/api-reference/text/openai-multimodal)。
 </ParamField>
 
 <ParamField body="messages" type="array" required>
@@ -373,19 +373,19 @@ public class Main {
 <ParamField body="response_format" type="object">
   结构化输出
 
-  `{"type": "json_schema", "json_schema": {...}}` 按 JSON Schema 约束返回，`{"type": "json_object"}` 只保证是合法 JSON。仅在总览表「已验证」列含 JSON 的模型上可用；**当前 Claude 全系拒绝**（预扣前返回 400），DeepSeek V3.2-Exp / V3.1-Terminus 不提供严格 schema。
+  `{"type": "json_schema", "json_schema": {...}}` 按 JSON Schema 约束返回，`{"type": "json_object"}` 只保证是合法 JSON。只在总览表「JSON / 工具」一列左侧为 `✓` 的模型上可用。Claude 全系不支持，会返回 `400`；`deepseek-v3.2-exp` 与 `deepseek-v3.1-terminus` 不保证严格遵循 schema。
 </ParamField>
 
 <ParamField body="tools" type="array">
   可调用的函数声明
 
-  `[{"type": "function", "function": {"name": ..., "description": ..., "parameters": {JSON Schema}}}]`。模型只生成函数名和参数并放在响应的 `tool_calls` 里，**网关不执行任何工具**，执行与结果回传由你的应用负责。仅在总览表「已验证」列含工具的模型上可用。
+  `[{"type": "function", "function": {"name": ..., "description": ..., "parameters": {JSON Schema}}}]`。模型只生成函数名和参数并放在响应的 `tool_calls` 里，**网关不执行任何工具**，执行与结果回传由你的应用负责。只在总览表「JSON / 工具」一列右侧为 `✓` 的模型上可用。
 </ParamField>
 
 <ParamField body="tool_choice" type="string or object">
   工具选择方式
 
-  `"auto"`（默认）、`"none"`，或 `{"type": "function", "function": {"name": "..."}}` 强制调用指定函数。**Claude Fable 系列只接受 `"auto"`**，`required` 或指定函数会被上游拒绝（400，预扣全额退回）。
+  `"auto"`（默认）、`"none"`，或 `{"type": "function", "function": {"name": "..."}}` 强制调用指定函数。Claude Fable 系列只接受 `"auto"`，`"required"` 或指定函数名会返回 `400`。
 </ParamField>
 
 ## Response

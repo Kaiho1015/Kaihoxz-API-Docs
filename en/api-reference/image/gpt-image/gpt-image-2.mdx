@@ -102,7 +102,7 @@ The submission response contains a `task_id`. Retrieve the image with [`GET /v1/
 </ParamField>
 
 <ParamField body="n" type="integer" default="1">
-  Number of images. **Fixed at `1` during initial acceptance** — one image per task. This is a limit of the current integration, not the model's ceiling.
+  Number of images to generate. Value: `1`. Each request returns one image.
 </ParamField>
 
 <ParamField body="background" type="string" default="auto">
@@ -123,13 +123,13 @@ The submission response contains a `task_id`. Retrieve the image with [`GET /v1/
 
 See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key`, and the maximum-cost header.
 
-**This line does not accept `seed`.** Parameters not declared on this page are rejected **before any quota is reserved** (HTTP 400, no charge) — do not copy fields across from another model's page.
+The official line does not support `seed`. Parameters not listed on this page return `400` and are not billed.
 
 ## Limits
 
 | Condition | Limit |
 |---|---|
-| Per request | One image (a limit of the initial acceptance period) |
+| Per request | One image returned |
 | `action: "edit"` | At least one reference image is required |
 | Using `mask_url` | `image_urls` is required, and the mask must match the first reference image's dimensions |
 | `background: "transparent"` | `output_format` must be `png` or `webp` |
@@ -140,28 +140,23 @@ See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback
 
 The official line is **billed from actual token usage** across five dimensions: text input, cached text input, image input, cached image input and image output.
 
-<Note>
-**This documentation does not list unit prices.** Rates change upstream and a number written into docs drifts out of date; this section covers the **billing dimensions and semantics** only.
-
-For live rates: `price_config` on `GET /v1/models`, or the console's Model Market.
-For what a call actually cost: `cost` in the task response (an integer quota, 500,000 quota = 1 USD).
-</Note>
+Per-model rates are in `price_config` on `GET /v1/models` and in the console's Model Market. What a single call actually cost is the `cost` field on the task response (an integer credit amount, 500,000 credits = 1 USD).
 
 Image input includes reference images and masks. Cached rates apply only when the upstream response reports cache usage that can be settled. Otherwise, billing uses ordinary input and image-output usage.
 
-### Reservation and settlement
+### Holds and settlement
 
-Submitting reserves an estimated amount, and the task settles from actual usage with the difference refunded. **The reservation is not the final price.** The estimate is built from:
+Submitting a task places a hold for the estimated usage; the task then settles from actual usage and the difference is released. The estimate is built from:
 
-- **Output** — expected output tokens looked up by `aspect ratio × resolution × quality`
+- **Output** — expected output tokens, looked up by aspect ratio, resolution and quality
 - **Text input** — a floor of 32 tokens
-- **Reference images** — 4,096 tokens each (masks count as image input too)
+- **Reference images** — 4,096 tokens each; masks count as image input too
 
 Output token counts vary enormously: at a given aspect ratio, `high` is estimated at roughly **36×** the tokens of `low`, and `4k` is several times `1k` again — combined, per-image cost spans two orders of magnitude. **Quality is by far the biggest cost lever on this line**, so start with `low` when unsure. Wider frames are cheaper: at the same tier, `16:9` uses noticeably fewer output tokens than `1:1`.
 
 The estimated output tokens for every aspect-ratio / resolution / quality combination are in `price_config.image_usage_reservation` on `GET /v1/models`.
 
-Failed and cancelled tasks, and upstream successes that carry no deliverable image, refund the reservation **in full**. The task response's `cost` is the final amount, and it is an integer quota rather than dollars (500,000 quota = 1 USD). See [Task status](/en/api-reference/task/status) for the billing fields.
+You are only billed for a successfully generated image. Failed and cancelled tasks, and tasks that return no usable image, are refunded in full. See [Task status](/en/api-reference/task/status) for the billing fields.
 
 ## Response
 

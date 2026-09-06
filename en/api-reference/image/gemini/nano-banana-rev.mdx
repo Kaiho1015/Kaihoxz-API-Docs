@@ -112,24 +112,24 @@ A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/
 <ParamField body="resolution" type="string" default="1k">
   Output resolution, `1k` or `2k`.
 
-  **`gemini-3.1-flash-lite-image-rev` does not accept this parameter** — it always outputs 1K, and sending it is rejected before quota is reserved.
+  `gemini-3.1-flash-lite-image-rev` does not support this parameter and always outputs 1K; sending it returns `400`.
 </ParamField>
 
 <ParamField body="n" type="integer" default="1">
-  Number of images. **Fixed at `1` during initial acceptance** — one image per task. This is a limit of the current integration, not the model's ceiling.
+  Number of images to generate. Value: `1`. Each request returns one image.
 </ParamField>
 
 See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key` and the maximum-cost header.
 
 <Warning>
-**The economy routes have no line-specific parameters.** `mask_url` (masked inpainting), `quality`, `seed`, `google_search` / `google_image_search` (search grounding) and `official_fallback` are **not accepted**; undeclared parameters are rejected **before any quota is reserved** (HTTP 400, no charge). For masked inpainting use [`gpt-image-2`](/en/api-reference/image/gpt-image/gpt-image-2).
+The economy routes have no line-specific parameters. `mask_url`, `quality`, `seed`, `google_search`, `google_image_search` and `official_fallback` are not supported; parameters not listed on this page return `400` and are not billed. For masked inpainting use [`gpt-image-2`](/en/api-reference/image/gpt-image/gpt-image-2).
 </Warning>
 
 ## Limits
 
 | Condition | Limit |
 |---|---|
-| Per request | One image (a limit of the initial acceptance period) |
+| Per request | One image returned |
 | `action: "edit"` | At least one reference image is required |
 | Reference images | Up to 14 |
 | Resolution | `1k` / `2k` on the flagship and fast tiers; the lightest tier is `1k` only and rejects `resolution` |
@@ -138,16 +138,11 @@ See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback
 
 Billed at a **fixed price per successfully generated image**. The three tiers price differently: the flagship is the most expensive and charges the same at `1k` and `2k`, the fast tier charges more at `2k` than `1k`, and the lightest is the cheapest and only offers `1k`.
 
-<Note>
-**This documentation does not list unit prices.** Rates change upstream and a number written into docs drifts out of date; this section covers the **billing dimensions and semantics** only.
-
-For live rates: `price_config` on `GET /v1/models`, or the console's Model Market.
-For what a call actually cost: `cost` in the task response (an integer quota, 500,000 quota = 1 USD).
-</Note>
+Per-model rates are in `price_config` on `GET /v1/models` and in the console's Model Market. What a single call actually cost is the `cost` field on the task response (an integer credit amount, 500,000 credits = 1 USD).
 
 `generate` and `edit` cost the same, reference images add nothing, and neither aspect ratio nor prompt length affects the price — **resolution is the only billing dimension, so the cost of a call is known before you send it**. A resolution that does not match the table settles at that model's fallback price (equal to its `1k` price).
 
-Failed and cancelled tasks, and upstream successes that carry no deliverable image, refund the reservation **in full**. The task response's `cost` is the final amount, and it is an integer quota rather than dollars (500,000 quota = 1 USD).
+You are only billed for a successfully generated image. Failed and cancelled tasks, and tasks that return no usable image, are refunded in full.
 
 ## Response
 

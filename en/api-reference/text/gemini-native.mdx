@@ -4,7 +4,7 @@ description: "Use the Google Gemini native API format"
 api: "POST https://www.qingbo.dev/v1beta/models/{model}:generateContent"
 ---
 
-The native envelope kept for existing Gemini clients. The accepted scope is native non-streaming and streaming text; this entry exposes nothing beyond what Chat offers, so new integrations should use the [General Chat API](/en/api-reference/text/general-chat).
+The native endpoint kept for existing Gemini clients, supporting non-streaming and streaming text. It exposes nothing beyond what Chat offers, so new integrations should use the [General Chat API](/en/api-reference/text/general-chat).
 
 <RequestExample>
 ```bash cURL
@@ -168,7 +168,7 @@ public class Main {
   - `gemini-2.5-flash-lite`
 
   <Note>
-  `gemini-3.5-flash-lite` is Chat-only and is rejected before quota is reserved here. Prices and verified capabilities are in the [Text Models Overview · Google Gemini](/en/api-reference/text/overview#google-gemini).
+  `gemini-3.5-flash-lite` is Chat-only and returns `400` here. How each model is billed and what it supports are in the [Text Models Overview · Google Gemini](/en/api-reference/text/overview#google-gemini).
   </Note>
 </ParamField>
 
@@ -331,13 +331,13 @@ Rates and the shared rules are in the [Text Models Overview · Billing rules](/e
 
 ## Not available
 
-The following are rejected before quota is reserved (HTTP 400, no charge):
+The following return `400` and are not billed:
 
 - **Explicit context caching** — `cachedContent` / `cached_content` / `cache_control` are rejected across the whole Gemini line; only automatic caching is open, see [Caching](/en/api-reference/text/overview#caching).
 - **Built-in tools** — grounding, hosted search and other vendor built-ins. Client-executed function tools are not in this group.
 - **`service_tier`** set to anything other than `standard` / `default`.
 
-Function calling and structured output **have not been accepted on this route in the native format** — use the
+This endpoint does not support function calling or structured output — use the
 [General Chat API](/en/api-reference/text/general-chat) when you need either.
 
 ## Related

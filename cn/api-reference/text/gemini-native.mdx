@@ -4,7 +4,7 @@ description: "使用 Google Gemini 原生 API 格式"
 api: "POST https://www.qingbo.dev/v1beta/models/{model}:generateContent"
 ---
 
-为已有 Gemini 客户端保留的原生信封。已验收范围是原生非流式与流式文本；本入口不提供 Chat 之外的额外能力，新接入建议直接用[通用对话接口](/cn/api-reference/text/general-chat)。
+为已有 Gemini 客户端保留的原生接口，支持非流式与流式文本。本接口不提供 Chat 之外的额外能力，新接入建议直接用[通用对话接口](/cn/api-reference/text/general-chat)。
 
 <RequestExample>
 ```bash cURL
@@ -168,7 +168,7 @@ public class Main {
   - `gemini-2.5-flash-lite`
 
   <Note>
-  `gemini-3.5-flash-lite` 只走 Chat，打到本接口会在额度预扣前拒绝。价格与已验证能力见[文本模型总览 · Google Gemini](/cn/api-reference/text/overview#google-gemini)。
+  `gemini-3.5-flash-lite` 只走 Chat，发到本接口会返回 `400`。各模型的计费方式与支持的能力见[文本模型总览 · Google Gemini](/cn/api-reference/text/overview#google-gemini)。
   </Note>
 </ParamField>
 
@@ -329,13 +329,13 @@ for chunk in response:
 
 ## 当前不开放
 
-以下请求在额度预扣前被拒绝（HTTP 400，不计费）：
+以下请求会返回 `400`，不计费：
 
 - **显式上下文缓存** —— `cachedContent` / `cached_content` / `cache_control` 在 Gemini 全系拒绝，只开放自动缓存，原因见[缓存](/cn/api-reference/text/overview#缓存)。
 - **内置工具** —— grounding、托管搜索等厂商内置工具；由调用方自己执行的函数工具不在此列。
 - **`service_tier`** 取 `standard` / `default` 以外的值。
 
-原生格式的函数调用与结构化输出**尚未在本渠道验收**，需要这两项请走 [通用对话接口](/cn/api-reference/text/general-chat)。
+本接口不支持函数调用与结构化输出，需要这两项请走[通用对话接口](/cn/api-reference/text/general-chat)。
 
 ## 相关文档
 

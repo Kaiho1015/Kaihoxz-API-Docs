@@ -228,7 +228,7 @@ public class Main {
 <ParamField body="model" type="string" required>
   Model ID.
 
-  **Only `claude-sonnet-5` and `claude-opus-5` declare the `anthropic_messages` protocol**, and this endpoint serves those two models alone. Every other Claude model (the Fable family and the whole 4.x line) is Chat-only and is **rejected before quota is reserved** here — use the [General Chat API](/en/api-reference/text/general-chat) instead.
+  This endpoint serves `claude-sonnet-5` and `claude-opus-5` only. Every other Claude model (the Fable family and the whole 4.x line) is Chat-only and returns `400` here — use the [General Chat API](/en/api-reference/text/general-chat) instead.
 
   Prices, cache tiers and verified capabilities for these two are in the [Text Models Overview · Anthropic](/en/api-reference/text/overview#anthropic).
 
@@ -461,7 +461,7 @@ Native `input_tokens` differs from Chat's `prompt_tokens`: the native field **ex
 
 ## Current limits
 
-Structured output is declared unsupported on both models, so its configuration is rejected before quota reservation, and this endpoint does not promise full compatibility with every Claude parameter. Explicit `cache_control` **is allowed** on these two: put the reusable long prefix in the `system` array — request shape and hit conditions are in the [Text Models Overview · Caching](/en/api-reference/text/overview#caching). Cache TTLs, context limits, native tool workflows and multimodal capabilities are verified per model against the scope shown in the overview table — official support does not make a capability accepted on this route.
+Neither model supports structured output; sending that configuration returns `400`. Explicit `cache_control` is supported: put the reusable long prefix in the `system` array — request shape and hit conditions are in the [Text Models Overview · Caching](/en/api-reference/text/overview#caching). What each model supports is in the [overview table](/en/api-reference/text/overview#anthropic). Cache TTLs, context limits, native tool workflows and multimodal capabilities are verified per model against the scope shown in the overview table — official support does not make a capability accepted on this route.
 
 Set the SDK base URL to the gateway root (`https://www.qingbo.dev`) and let the Anthropic SDK append `/v1/messages`; do not add `/v1` twice. An ecosystem login token is not a model key.
 

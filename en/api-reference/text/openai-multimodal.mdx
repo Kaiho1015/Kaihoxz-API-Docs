@@ -4,7 +4,7 @@ api: "POST https://www.qingbo.dev/v1/responses"
 ---
 
 - The OpenAI Responses protocol entry, serving only the models that declare it
-- Accepted scope: non-streaming and streaming text output
+- Supports non-streaming and streaming text output
 - Hosted tools, image input and video input are not open on this entry
 
 <RequestExample>
@@ -287,7 +287,7 @@ public class Main {
   * `o3-pro`
 
   <Note>
-  These five accept **only** this endpoint and are rejected before reservation on `/v1/chat/completions`; conversely, every other text model is Chat-only and is rejected before reservation here. Prices are in the [Text Models Overview](/en/api-reference/text/overview).
+  These five accept only this endpoint and return `400` on `/v1/chat/completions`; every other text model is Chat-only and returns `400` here. How each model is billed is in the [Text Models Overview](/en/api-reference/text/overview).
   </Note>
 </ParamField>
 
@@ -302,7 +302,7 @@ public class Main {
     </ParamField>
 
     <ParamField body="content" type="array" required>
-      Array of content parts, each with a `type`. **Only `input_text` (with a `text` field) is accepted on this entry today**; image and video input are covered under "Not available" below.
+      Array of content parts, each with a `type`. This endpoint supports `input_text` only (with a `text` field); image and video input are covered under "Not supported" below.
     </ParamField>
   </Expandable>
 </ParamField>
@@ -317,7 +317,7 @@ public class Main {
   Tool list.
 
   <Warning>
-  These five models are declared in their model groups as **not supporting tool calling or structured output**, so `tools`, `tool_choice` and `response_format` are rejected before quota is reserved (HTTP 400, no charge). For function calling, use a tool-capable model on the [Chat API](/en/api-reference/text/general-chat).
+  These five models do not support tool calling or structured output, so `tools`, `tool_choice` and `response_format` return `400` and are not billed. For function calling, pick a tool-capable model on the [Chat API](/en/api-reference/text/general-chat).
   </Warning>
 </ParamField>
 
@@ -540,18 +540,18 @@ public class Main {
 **Streaming bills from the terminal usage**: take `usage` from the `response.completed`, `response.incomplete`, `response.failed` or `response.cancelled` event. A failed or truncated response can still incur token charges; HTTP 200, partial text or `[DONE]` do not prove you received complete usage.
 
 <Warning>
-Without reliable terminal usage the reservation is held pending reconciliation. Check the existing usage record in the console before resubmitting; never retry automatically.
+If no terminal usage arrives, the held credit stays pending reconciliation. Check that call's usage record in the console before resubmitting; never retry automatically.
 </Warning>
 
-## Not available
+## Not supported
 
-The following are rejected before quota is reserved (HTTP 400, no charge):
+The following return `400` and are not billed:
 
-- **Hosted tools** — `web_search`, `file_search`, `remote_mcp` and other vendor built-ins, whose extra charge dimensions are not wired into billing.
-- **Tool calling and structured output** — declared unsupported on these five models, see the `tools` note above.
+- **Hosted tools** — `web_search`, `file_search`, `remote_mcp` and other vendor built-ins.
+- **Tool calling and structured output** — see the `tools` note above.
 - **`service_tier`** set to anything other than `standard` / `default`.
 
-**Image and video input** are not declared on any model group and have not been through acceptance, so this page makes no promise about them; wait until the capability is declared before building on it.
+**Image and video input** are not supported.
 
 ## Related
 

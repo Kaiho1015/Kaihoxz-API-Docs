@@ -275,7 +275,7 @@ public class Main {
 
   For the full list of models with prices and verified capabilities, see the [Text Models Overview](/en/api-reference/text/overview); live availability comes from `GET /v1/models`.
 
-  Switching models means changing this field only. Which parameters work depends on that model's verified capabilities — not every OpenAI option is available everywhere: GPT-5 and later use `max_completion_tokens` and `reasoning_effort`, Claude uses `max_tokens`, and `gpt-5-pro`, `gpt-5.2-pro`, `gpt-5.4-pro`, `gpt-5.3-codex` and `o3-pro` accept only the [Responses API](/en/api-reference/text/openai-multimodal).
+  Switching models means changing this field only. Which parameters work depends on the model — not every OpenAI option is available everywhere: GPT-5 and later use `max_completion_tokens` and `reasoning_effort`, Claude uses `max_tokens`, and `gpt-5-pro`, `gpt-5.2-pro`, `gpt-5.4-pro`, `gpt-5.3-codex` and `o3-pro` accept only the [Responses API](/en/api-reference/text/openai-multimodal).
 </ParamField>
 
 <ParamField body="messages" type="array" required>
@@ -373,19 +373,19 @@ public class Main {
 <ParamField body="response_format" type="object">
   Structured output.
 
-  `{"type": "json_schema", "json_schema": {...}}` constrains the reply to a JSON Schema; `{"type": "json_object"}` only guarantees valid JSON. Available only on models whose Verified column includes JSON; **the whole Claude line currently rejects it** (400 before reservation), and DeepSeek V3.2-Exp / V3.1-Terminus offer no strict schema.
+  `{"type": "json_schema", "json_schema": {...}}` constrains the reply to a JSON Schema; `{"type": "json_object"}` only guarantees valid JSON. Available only on models marked `✓` on the left of the JSON / Tools column. The whole Claude line returns `400`; `deepseek-v3.2-exp` and `deepseek-v3.1-terminus` do not guarantee strict schema adherence.
 </ParamField>
 
 <ParamField body="tools" type="array">
   Function declarations available to the model.
 
-  `[{"type": "function", "function": {"name": ..., "description": ..., "parameters": {JSON Schema}}}]`. The model only generates a function name and arguments in the response's `tool_calls`; **the gateway executes nothing** — running the tool and feeding the result back is your application's job. Available only on models whose Verified column includes tools.
+  `[{"type": "function", "function": {"name": ..., "description": ..., "parameters": {JSON Schema}}}]`. The model only generates a function name and arguments in the response's `tool_calls`; **the platform executes nothing** — running the tool and feeding the result back is your application's job. Available only on models marked `✓` on the right of the JSON / Tools column.
 </ParamField>
 
 <ParamField body="tool_choice" type="string or object">
   How tools are selected.
 
-  `"auto"` (default), `"none"`, or `{"type": "function", "function": {"name": "..."}}` to force a specific function. **The Claude Fable family accepts only `"auto"`**; `required` or a named function is rejected upstream (400, reservation fully refunded).
+  `"auto"` (default), `"none"`, or `{"type": "function", "function": {"name": "..."}}` to force a specific function. The Claude Fable family accepts only `"auto"`; `"required"` or a named function returns `400`.
 </ParamField>
 
 ## Response

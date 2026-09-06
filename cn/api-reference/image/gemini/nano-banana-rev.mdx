@@ -112,24 +112,24 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 <ParamField body="resolution" type="string" default="1k">
   输出分辨率，`1k` 或 `2k`。
 
-  **`gemini-3.1-flash-lite-image-rev` 不接受这个参数**，输出固定 1K；传了会在额度预扣前被拒绝。
+  `gemini-3.1-flash-lite-image-rev` 不支持这个参数，输出固定为 1K；传了会返回 `400`。
 </ParamField>
 
 <ParamField body="n" type="integer" default="1">
-  生成数量。**首批验收期间固定为 `1`**，每个任务出一张图；这是当前接入的限制，不是模型能力上限。
+  生成数量，取值 `1`。每次请求返回一张图。
 </ParamField>
 
 通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
 
 <Warning>
-**经济版没有任何专有参数。** `mask_url`（掩码局部重绘）、`quality`（画质档）、`seed`、`google_search` / `google_image_search`（搜索增强）、`official_fallback` 都**不被接受**，未声明的参数会在**额度预扣前**被拒绝（HTTP 400，不计费）。需要掩码重绘请用 [`gpt-image-2`](/cn/api-reference/image/gpt-image/gpt-image-2)。
+经济版没有专有参数。`mask_url`、`quality`、`seed`、`google_search`、`google_image_search`、`official_fallback` 均不支持，本页未列出的参数会返回 `400`，不计费。需要掩码局部重绘请用 [`gpt-image-2`](/cn/api-reference/image/gpt-image/gpt-image-2)。
 </Warning>
 
 ## 限制
 
 | 条件 | 限制 |
 |---|---|
-| 每次请求 | 只出 1 张（首批验收期间的限制） |
+| 每次请求 | 返回 1 张图 |
 | `action: "edit"` | 必须提供至少一张参考图 |
 | 参考图张数 | 最多 14 张 |
 | 分辨率 | 旗舰档与快速档 `1k` / `2k`；最轻档仅 `1k`，不接受 `resolution` |
@@ -138,16 +138,11 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 按成功出图的**固定张价**结算。三档单价不同：旗舰档最贵且 `1k` / `2k` 同价，快速档 `2k` 比 `1k` 贵，最轻档最便宜且只有 `1k`。
 
-<Note>
-**本站文档不列具体单价。** 单价会随上游调整，写进文档迟早和实际对不上；本节只讲**计费维度与口径**。
-
-看实时单价：`GET /v1/models` 的 `price_config`，或控制台「模型市场」。
-看这一单实际花了多少：任务响应里的 `cost`（整数 quota，500,000 quota = 1 USD）。
-</Note>
+各模型的单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。单次调用的实际花费见任务响应里的 `cost`（整数额度，500,000 额度 = 1 USD）。
 
 `generate` 与 `edit` 同价，参考图不加价，画幅和提示词长度都不影响价格——**分辨率是唯一的计费维度，提交前就能确定这一单花多少**。请求里的分辨率没有命中上表时，按各模型的兜底价结算（等于其 `1k` 价）。
 
-任务失败、取消，或上游返回成功但没有可交付图片时，预扣**全额退回**。最终费用以任务响应中的 `cost` 为准；`cost` 是整数 quota，不是美元（500,000 quota = 1 USD）。
+只有成功出图才计费。任务失败、取消，或没有返回可用图片时，全额退款。
 
 ## 响应
 

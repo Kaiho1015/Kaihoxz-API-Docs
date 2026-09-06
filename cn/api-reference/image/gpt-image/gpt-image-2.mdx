@@ -102,7 +102,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="n" type="integer" default="1">
-  生成数量。**首批验收期间固定为 `1`**，每个任务出一张图；这是当前接入的限制，不是模型能力上限。
+  生成数量，取值 `1`。每次请求返回一张图。
 </ParamField>
 
 <ParamField body="background" type="string" default="auto">
@@ -123,13 +123,13 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
 
-**本线路不接受 `seed`。** 未在本页声明的参数会在**额度预扣前**被拒绝（HTTP 400，不计费），不要从其他模型页照抄字段。
+官方线路不支持 `seed`。本页未列出的参数会返回 `400`，不计费。
 
 ## 限制
 
 | 条件 | 限制 |
 |---|---|
-| 每次请求 | 只出 1 张（首批验收期间的限制） |
+| 每次请求 | 返回 1 张图 |
 | `action: "edit"` | 必须提供至少一张参考图 |
 | 使用 `mask_url` | 必须同时提供 `image_urls`，且掩码与第一张参考图尺寸一致 |
 | `background: "transparent"` | `output_format` 只能是 `png` 或 `webp` |
@@ -140,28 +140,23 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 官方线路**按实际 token 用量计费**，共五个计费维度：文本输入、缓存文本输入、图片输入、缓存图片输入、图片输出。
 
-<Note>
-**本站文档不列具体单价。** 单价会随上游调整，写进文档迟早和实际对不上；本节只讲**计费维度与口径**。
-
-看实时单价：`GET /v1/models` 的 `price_config`，或控制台「模型市场」。
-看这一单实际花了多少：任务响应里的 `cost`（整数 quota，500,000 quota = 1 USD）。
-</Note>
+各模型的单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。单次调用的实际花费见任务响应里的 `cost`（整数额度，500,000 额度 = 1 USD）。
 
 图片输入包括参考图和掩码。缓存费率仅在上游返回可用于结算的缓存用量时生效；没有缓存用量时只按普通输入和图片输出计费。
 
-### 预扣与结算
+### 冻结与结算
 
-提交时先按估算预留额度，任务完成后按实际用量结算、退回差额。**预扣不是最终价格。** 估算口径：
+提交任务时按预估用量冻结一笔额度，任务完成后按实际用量结算，差额退回。预估用量的算法是：
 
-- **输出**：按 `画幅 × 分辨率 × 画质` 查表得到预计输出 token 数
+- **输出**：按画幅、分辨率和画质三项查表得到预计输出 token 数
 - **文本输入**：不足 32 token 按 32 计
-- **参考图**：每张按 4,096 token 估算（掩码同样计入图片输入）
+- **参考图**：每张按 4,096 token 计，掩码同样算作图片输入
 
 输出 token 的量级差异很大：同一画幅下，`high` 档的预计输出 token 约是 `low` 档的 **36 倍**，`4k` 又比 `1k` 高数倍，两者叠加后单张成本可以差两个数量级。**画质档是这条线路最大的成本变量**，不确定时先用 `low` 试。横幅比方图省，同档下 `16:9` 的输出 token 明显低于 `1:1`。
 
 各画幅 / 分辨率 / 画质组合的预估输出 token，见公开模型详情 `GET /v1/models` 的 `price_config.image_usage_reservation`。
 
-任务失败、取消，或上游返回成功但没有可交付图片时，预扣**全额退回**。最终费用以任务查询响应中的 `cost` 为准；`cost` 是整数 quota，不是美元（500,000 quota = 1 USD）。完整字段说明见[任务状态](/cn/api-reference/task/status)。
+只有成功出图才计费。任务失败、取消，或没有返回可用图片时，全额退款。完整字段说明见[任务状态](/cn/api-reference/task/status)。
 
 ## 响应
 

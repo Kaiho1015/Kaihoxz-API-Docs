@@ -135,6 +135,18 @@ SkyReels / PixVerse / HappyHorse / Omni / Grok Imagine Video。
    `n` / `quality` / `size` / `image` / `watermark`——掩码重绘在这条路上是不是根本没有入口？
 3. 不做模型组能力校验是有意为之还是欠账？
 
+## 六、存量页待清的内部黑话
+
+2026-09-06 按 SOP §7 清了一遍**我重写过的页面**。以下**存量页**还带着同类措辞，
+各自重写时一并处理，现在不动：
+
+- `task/submit.mdx` —— 「预扣」两处（其中一处解释 `reserved_quota` 响应字段，改词要连字段说明一起看）
+- `video/kling.mdx` · `veo.mdx` · `wan.mdx` · `hailuo.mdx` · `vidu.mdx` · `minimax-h3.mdx`
+  —— 「缺少时提交即被拒，不预扣」共 8 处
+- `video/veo.mdx` —— 「渠道」用作档位区分（官方直连 / 标准接入），这个是产品概念不是黑话，
+  但措辞可以统一成「线路」，与 GPT Image 的「官方线路 / 逆向线路」对齐
+- `image/grok-imagine.mdx` · `midjourney.mdx` —— 「备用渠道」「同一渠道」各一处
+
 ## 四、结论
 
 1. ✅ **已做**：`GET /v1/dashboard/billing/*` 三个端点 →「账户与用量」三页。

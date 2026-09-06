@@ -38,13 +38,13 @@ For the async flow, see [Task System](/en/docs/task-system) — Submit → Statu
 
 ## Two request paths
 
-Images have two entries. **Billing is the same on both** (settled from the model group's price config); they differ in validation and how results come back:
+Images have two entries. Billing is identical on both; they differ in parameter validation and how results come back:
 
 | | `POST /v1/tasks` | `POST /v1/images/generations` · `/v1/images/edits` |
 |---|---|---|
 | Result | Async — you get a `task_id` and poll (or wait inline with `Prefer: wait`) | Sync — the image comes back in the response |
 | Request shape | This platform's unified fields: `action` / `aspect_ratio` / `resolution` / `image_urls` | OpenAI's native shape: `size` / `quality` / `n` / `response_format` |
-| Validation | **Full** — action, aspect ratio, resolution, quality, reference-image count and each model's `constraints` are checked **before any quota is reserved**; a non-conforming request is rejected and not charged | An OpenAI compatibility layer that does **no model-group capability validation**: invalid parameters are not caught up front, they are passed upstream as-is |
+| Validation | **Full** — action, aspect ratio, resolution, quality and reference-image count are all checked; a non-conforming request returns `400` and is not billed | The compatibility layer does not run these checks, so invalid parameters are not caught up front |
 | Use it for | New integrations, and anything needing masked inpainting, quality tiers, resolution tiers or multi-image references | Existing OpenAI SDK projects — point `base_url` at us and go |
 
 <Note>

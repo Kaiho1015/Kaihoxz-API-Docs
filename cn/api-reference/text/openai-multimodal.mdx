@@ -4,7 +4,7 @@ api: "POST https://www.qingbo.dev/v1/responses"
 ---
 
 - OpenAI Responses 协议入口，只服务声明了该协议的型号
-- 已验收范围：文本非流式与流式输出
+- 支持非流式与流式文本输出
 - 托管工具、图像与视频输入在本入口未开放
 
 <RequestExample>
@@ -287,7 +287,7 @@ public class Main {
   * `o3-pro`
 
   <Note>
-  这五个型号**只**接受本接口，打到 `/v1/chat/completions` 会在预扣前拒绝；反过来，其余文本型号只走 Chat，打到本接口同样在预扣前拒绝。各型号价格见[文本模型总览](/cn/api-reference/text/overview)。
+  这五个模型只接受本接口，发到 `/v1/chat/completions` 会返回 `400`；其余文本模型只走 Chat，发到本接口同样返回 `400`。各模型的计费方式见[文本模型总览](/cn/api-reference/text/overview)。
   </Note>
 </ParamField>
 
@@ -302,7 +302,7 @@ public class Main {
     </ParamField>
 
     <ParamField body="content" type="array" required>
-      内容数组，每项包含 `type` 字段。**本入口当前只验收了 `input_text`**（需提供 `text` 字段）；图像与视频输入见页尾「当前不开放」。
+      内容数组，每项包含 `type` 字段。本接口只支持 `input_text`（需提供 `text` 字段）；图像与视频输入见页尾「当前不支持」。
     </ParamField>
   </Expandable>
 </ParamField>
@@ -317,7 +317,7 @@ public class Main {
   工具列表
 
   <Warning>
-  这五个型号在模型组里声明为**不支持工具调用与结构化输出**，因此 `tools`、`tool_choice`、`response_format` 都会在额度预扣前被拒绝（HTTP 400，不计费）。需要函数调用请用 [Chat 接口](/cn/api-reference/text/general-chat)上支持工具的型号。
+  这五个模型不支持工具调用与结构化输出，`tools`、`tool_choice`、`response_format` 都会返回 `400`，不计费。需要函数调用请在 [Chat 接口](/cn/api-reference/text/general-chat)上选支持工具的模型。
   </Warning>
 </ParamField>
 
@@ -540,18 +540,18 @@ public class Main {
 **流式计费取终态用量**：以 `response.completed`、`response.incomplete`、`response.failed` 或 `response.cancelled` 事件里的 `usage` 为准。失败或截断的响应同样可能产生 token 费用；HTTP 200、部分文本或 `[DONE]` 都不足以证明拿到了完整用量。
 
 <Warning>
-缺少可靠的终态用量时，已预扣额度会保留为待核对状态。先到控制台核对已有用量记录，不要自动重发。
+没有拿到终态用量时，冻结的额度会保留待核对。请先到控制台核对这次调用的用量记录，不要自动重发。
 </Warning>
 
-## 当前不开放
+## 当前不支持
 
-以下请求在额度预扣前被拒绝（HTTP 400，不计费）：
+以下请求会返回 `400`，不计费：
 
-- **托管工具** —— `web_search`、`file_search`、`remote_mcp` 等厂商内置工具，其额外收费维度尚未接入计费。
-- **工具调用与结构化输出** —— 这五个型号声明为不支持，见上方 `tools` 说明。
+- **托管工具** —— `web_search`、`file_search`、`remote_mcp` 等厂商内置工具。
+- **工具调用与结构化输出** —— 见上方 `tools` 说明。
 - **`service_tier`** 取 `standard` / `default` 以外的值。
 
-**图像与视频输入**当前没有在模型组里声明，也没有完成验收，因此本页不承诺可用；需要看图的场景请等待该能力正式声明后再接入。
+**图像与视频输入**当前不支持。
 
 ## 相关文档
 

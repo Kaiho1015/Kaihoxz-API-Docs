@@ -82,7 +82,7 @@ Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/stat
 
 See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key`, and the maximum-cost header.
 
-**This line does not accept `quality`, `mask_url`, `background`, `output_format`, `output_compression`, `moderation`, or `seed`** — those belong to the official line. Undeclared parameters are rejected **before any quota is reserved** (HTTP 400, no charge).
+The reverse line does not support `quality`, `mask_url`, `background`, `output_format`, `output_compression`, `moderation` or `seed` — those belong to the official line. Parameters not listed on this page return `400` and are not billed.
 
 ## Limits
 
@@ -96,16 +96,11 @@ See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback
 
 Successful images are billed at a **fixed price per image**, with a different rate at `1k`, `2k` and `4k`.
 
-<Note>
-**This documentation does not list unit prices.** Rates change upstream and a number written into docs drifts out of date; this section covers the **billing dimensions and semantics** only.
-
-For live rates: `price_config` on `GET /v1/models`, or the console's Model Market.
-For what a call actually cost: `cost` in the task response (an integer quota, 500,000 quota = 1 USD).
-</Note>
+Per-model rates are in `price_config` on `GET /v1/models` and in the console's Model Market. What a single call actually cost is the `cost` field on the task response (an integer credit amount, 500,000 credits = 1 USD).
 
 `generate` and `edit` use the same price, and reference images do not add a fee. Resolution is the only billing dimension — unlike the official line, neither aspect ratio nor prompt length changes the price, so **you know what a call costs before you send it**.
 
-A request whose resolution does not match a configured tier settles at the fallback price (the same as `1k`). Failed and cancelled tasks, and upstream successes that carry no deliverable image, refund the reservation **in full**. The task response's `cost` is the final amount, and it is an integer quota rather than dollars (500,000 quota = 1 USD).
+A resolution outside those three tiers settles at the `1k` price. You are only billed for a successfully generated image; failed and cancelled tasks, and tasks that return no usable image, are refunded in full.
 
 ## Response
 

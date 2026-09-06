@@ -242,13 +242,69 @@ frontmatter: title · description · api（写全 URL，Mintlify 的 Try it 读�
 - [ ] `docs.json` 里新增的每个 page 路径都有对应 `.mdx` 文件
 - [ ] `docs.json` 的组名与 `overview` 的 `title` 同名，且符合 §2.1 的「系列 / 型号名」惯例
 - [ ] cn 与 en 两版结构一致、模型 ID 与数字一致
-- [ ] 跑一遍上面的 `$` 自查脚本，确认没有新增中招行
+- [ ] 跑一遍 §7.4 的黑话自查与 §8 的 `$` 自查脚本，两条都应无输出
 - [ ] 本地 `http://localhost:30084` 打开新页面确认渲染（表格是否被挤出可视区、中文粗体
       `**…**` 紧贴全角标点会失效、价格的 `$` 有没有被吃掉）
 
 ---
 
-## 7. 已知易错点
+## 7. 写作口径：这是给用户看的，不是给我们自己看的
+
+**判断标准只有一条**：这句话对一个刚拿到 Key、要接我们 API 的开发者有用吗？
+写的是**产品事实**（支持什么、返回什么、怎么计费），不是**我们的工作过程**
+（验收到哪一步、为什么这么定、我们内部怎么叫）。
+
+### 8.1 禁用词表
+
+左边这些是内部黑话，**不能出现在任何 API 参考页里**：
+
+| 内部说法 | 写成 |
+|---|---|
+| 首批验收期间固定为 1，这是当前接入的限制 | 生成数量，取值 `1`。每次请求返回一张图。 |
+| 已验收 / 未验收 / 验收范围 / 尚未验收 | 支持 / 不支持 |
+| 实测 / 联调 / 本轮 / 本批 | （删掉，或改成对行为的陈述） |
+| 本渠道 / 渠道声明上限 | （删「渠道」二字）最大输入 X、最大输出 Y |
+| 模型组 / 模型组里声明 | （删，直接说这个模型支不支持） |
+| 在额度预扣前被拒绝（HTTP 400，不计费） | 返回 `400`，不计费 |
+| 预扣 / 预扣全额退回 | 冻结额度 / 全额退款；更好的说法是「只有成功出图才计费」 |
+| 不承诺 X | （改成正向陈述）X 不可用 / X 由上游决定 |
+| 不要从其他模型页照抄字段 | （删。本页未列出的参数不支持，说到这里就够了） |
+| 本站文档不列具体单价，因为…… | 各模型的单价见 `GET /v1/models` 的 `price_config`。（一句话，不解释我们为什么） |
+
+### 8.2 三条正面规则
+
+1. **陈述事实，不解释决定。** 文档不是给用户看的会议纪要。「我们没测过所以不敢写」是内部信息；
+   对用户来说，能写进文档的就是支持的，没把握的**不写**（这也正是纪律 1 的意思）。
+2. **不替读者辩解，也不教训读者。**「不要照抄」「请注意」「务必」这类祈使句尽量少用；
+   把限制写清楚，读者自己会判断。
+3. **说清后果，而不是说清机制。** 用户关心「传错了会怎样」（返回 400、不扣钱），
+   不关心「我们在预扣前的哪一层校验拦下的」。
+
+### 8.3 两家参照的原句
+
+抄不准的时候照这个语感：
+
+> **fal**：「You pay only for successful outputs, and you are never charged for server errors or
+> time spent waiting in the queue.」
+> 「Each model on fal has its own pricing and billing unit, visible on the model's page in the
+> gallery and at fal.ai/pricing.」
+
+> **APIMart**：「Number of images to generate. Value: `1`.」
+> 「Up to 15 reference images, exceeding returns `image_urls exceeds max 15`.」
+> 「Other OpenAI standard fields (`response_format`, `style`) are not supported and will be ignored.」
+
+都是短句、陈述、第二人称，没有一句在讲他们自己的流程。
+
+### 8.4 自查
+
+```bash
+grep -rnE "验收|渠道|预扣|实测|联调|本轮|本批|模型组|不承诺|照抄" --include=*.mdx cn/api-reference
+grep -rnE "acceptance|not accepted|route-declared|quota is reserved|exercised" --include=*.mdx en/api-reference
+```
+
+两条都应当无输出。（`changelog/` 里的历史条目不在此列。）
+
+## 8. 已知易错点
 
 - 🔴 **同一行出现两个 `$` 会被当成 LaTeX 数学公式**——这是最容易中招的一条，价格文档几乎行行有
   `$`。中招后 `$` 消失、中间的内容变成斜体、`**` 以字面量显示，价格直接错给用户

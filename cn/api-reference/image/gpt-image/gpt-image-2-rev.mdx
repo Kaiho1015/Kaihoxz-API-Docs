@@ -82,7 +82,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
 
-**本线路不接受 `quality`、`mask_url`、`background`、`output_format`、`output_compression`、`moderation` 或 `seed`**——这些是官方线路独有的参数。未声明的参数会在**额度预扣前**被拒绝（HTTP 400，不计费）。
+逆向线路不支持 `quality`、`mask_url`、`background`、`output_format`、`output_compression`、`moderation` 和 `seed`，这些是官方线路独有的参数。本页未列出的参数会返回 `400`，不计费。
 
 ## 限制
 
@@ -96,16 +96,11 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 按成功生成的图片**固定张价**收费，`1k` / `2k` / `4k` 三档价格不同。
 
-<Note>
-**本站文档不列具体单价。** 单价会随上游调整，写进文档迟早和实际对不上；本节只讲**计费维度与口径**。
-
-看实时单价：`GET /v1/models` 的 `price_config`，或控制台「模型市场」。
-看这一单实际花了多少：任务响应里的 `cost`（整数 quota，500,000 quota = 1 USD）。
-</Note>
+各模型的单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。单次调用的实际花费见任务响应里的 `cost`（整数额度，500,000 额度 = 1 USD）。
 
 `generate` 与 `edit` 使用同一张价，参考图不加价。分辨率之外没有其他计费维度——不像官方线路，这里画幅和提示词长度都不影响单张价格，**提交前就能确定这一单花多少**。
 
-如果请求里的分辨率没有命中已配置的档位，按兜底价结算（与 `1k` 同价）。任务失败、取消，或上游返回成功但没有可交付图片时，预扣**全额退回**。最终费用以任务响应中的 `cost` 为准；`cost` 是整数 quota，不是美元（500,000 quota = 1 USD）。
+分辨率不在上述三档内时，按 `1k` 的价格结算。只有成功出图才计费，任务失败、取消，或没有返回可用图片时全额退款。
 
 ## 响应
 
