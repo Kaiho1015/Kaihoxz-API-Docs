@@ -12,11 +12,11 @@ The economy routes are served through an aggregating supplier, not Google's offi
 
 ## Available models
 
-| Model ID | Aspect ratios | Resolutions | Price per image |
-|---|---|---|---:|
-| `gemini-3-pro-image-rev`<br/>Flagship | 11 | `1k` `2k` | $0.0375<br/>same at both |
-| `gemini-3.1-flash-image-rev`<br/>Fast | **15** | `1k` `2k` | `1k` \$0.01875<br/>`2k` \$0.025 |
-| `gemini-3.1-flash-lite-image-rev`<br/>Lightest | 11 | `1k` only | $0.015626 |
+| Model ID | Tier | Aspect ratios | Resolutions |
+|---|---|---|---|
+| `gemini-3-pro-image-rev` | Flagship | 11 | `1k` `2k` (same price) |
+| `gemini-3.1-flash-image-rev` | Fast | **15** | `1k` `2k` (`2k` costs more) |
+| `gemini-3.1-flash-lite-image-rev` | Lightest | 11 | `1k` only |
 
 All three do text-to-image and editing with up to 14 reference images, one image per request.
 
@@ -136,13 +136,14 @@ See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback
 
 ## Pricing
 
-Billed at a fixed price per successfully generated image, in dollars:
+Billed at a **fixed price per successfully generated image**. The three tiers price differently: the flagship is the most expensive and charges the same at `1k` and `2k`, the fast tier charges more at `2k` than `1k`, and the lightest is the cheapest and only offers `1k`.
 
-| Model | `1k` | `2k` |
-|---|---:|---:|
-| `gemini-3-pro-image-rev` | \$0.0375 | \$0.0375 |
-| `gemini-3.1-flash-image-rev` | \$0.01875 | \$0.025 |
-| `gemini-3.1-flash-lite-image-rev` | $0.015626 | n/a |
+<Note>
+**This documentation does not list unit prices.** Rates change upstream and a number written into docs drifts out of date; this section covers the **billing dimensions and semantics** only.
+
+For live rates: `price_config` on `GET /v1/models`, or the console's Model Market.
+For what a call actually cost: `cost` in the task response (an integer quota, 500,000 quota = 1 USD).
+</Note>
 
 `generate` and `edit` cost the same, reference images add nothing, and neither aspect ratio nor prompt length affects the price — **resolution is the only billing dimension, so the cost of a call is known before you send it**. A resolution that does not match the table settles at that model's fallback price (equal to its `1k` price).
 

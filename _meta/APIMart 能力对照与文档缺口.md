@@ -7,6 +7,20 @@
 
 ---
 
+## 〇、结构上跟 APIMart / fal 一致的地方：文档不列单价
+
+两家都不在文档里写每模型价格：
+
+- **APIMart**：`images/gpt-image-2/generation` 这类模型页**零价格数字**；唯一叫 `pricing`
+  的页（`texts/qwen3.8-max/pricing`）是**定价 API 参考**（怎么读 `data.pricing`、
+  `rates` 与 `effective_rates` 的区别），同样没有金额。
+- **fal**：`model-apis/pricing` 只讲计费机制，原文「Prices vary by model and may change.
+  Check the model's page or the pricing page for current rates.」全页唯一数字是 API
+  响应示例里的 `"unit_price": 0.025`。每模型价格在**模型库和定价页**。
+
+2026-09-06 起我们对齐这条：API 参考页只写计费维度与口径，单价指向 `GET /v1/models`
+与控制台；`changelog/pricing` 作为带日期的调价事件记录保留数字。详见 SOP 纪律 3。
+
 ## 一、结构上不抄 APIMart 的地方
 
 APIMart 直接代理各家原生端点，一个 action 就是一个 URL，所以 `midjourney/` 有 17 页、

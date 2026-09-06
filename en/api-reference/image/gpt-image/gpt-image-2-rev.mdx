@@ -94,17 +94,18 @@ See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback
 
 ## Pricing
 
-Successful tasks are billed at a fixed price:
+Successful images are billed at a **fixed price per image**, with a different rate at `1k`, `2k` and `4k`.
 
-| Resolution | Price per image |
-|---|---:|
-| `1k` | $0.0095625 |
-| `2k` | $0.01575 |
-| `4k` | $0.023625 |
+<Note>
+**This documentation does not list unit prices.** Rates change upstream and a number written into docs drifts out of date; this section covers the **billing dimensions and semantics** only.
+
+For live rates: `price_config` on `GET /v1/models`, or the console's Model Market.
+For what a call actually cost: `cost` in the task response (an integer quota, 500,000 quota = 1 USD).
+</Note>
 
 `generate` and `edit` use the same price, and reference images do not add a fee. Resolution is the only billing dimension — unlike the official line, neither aspect ratio nor prompt length changes the price, so **you know what a call costs before you send it**.
 
-A request whose resolution does not match the table above settles at the fallback price of $0.0095625 (the same as `1k`). Failed and cancelled tasks, and upstream successes that carry no deliverable image, refund the reservation **in full**. The task response's `cost` is the final amount, and it is an integer quota rather than dollars (500,000 quota = 1 USD).
+A request whose resolution does not match a configured tier settles at the fallback price (the same as `1k`). Failed and cancelled tasks, and upstream successes that carry no deliverable image, refund the reservation **in full**. The task response's `cost` is the final amount, and it is an integer quota rather than dollars (500,000 quota = 1 USD).
 
 ## Response
 

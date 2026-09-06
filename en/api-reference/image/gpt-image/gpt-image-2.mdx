@@ -138,15 +138,14 @@ See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback
 
 ## Pricing
 
-The official line is billed from actual token usage in USD per one million tokens:
+The official line is **billed from actual token usage** across five dimensions: text input, cached text input, image input, cached image input and image output.
 
-| Usage | Price |
-|---|---:|
-| Text input | $4.50 |
-| Cached text input | $1.125 |
-| Image input | $7.20 |
-| Cached image input | $1.80 |
-| Image output | $27.00 |
+<Note>
+**This documentation does not list unit prices.** Rates change upstream and a number written into docs drifts out of date; this section covers the **billing dimensions and semantics** only.
+
+For live rates: `price_config` on `GET /v1/models`, or the console's Model Market.
+For what a call actually cost: `cost` in the task response (an integer quota, 500,000 quota = 1 USD).
+</Note>
 
 Image input includes reference images and masks. Cached rates apply only when the upstream response reports cache usage that can be settled. Otherwise, billing uses ordinary input and image-output usage.
 
@@ -158,15 +157,9 @@ Submitting reserves an estimated amount, and the task settles from actual usage 
 - **Text input** — a floor of 32 tokens
 - **Reference images** — 4,096 tokens each (masks count as image input too)
 
-Output token counts vary enormously. Here are the estimates for `1:1`; other ratios follow the same pattern (wider frames cost less — `16:9` 1K high is 4,312):
+Output token counts vary enormously: at a given aspect ratio, `high` is estimated at roughly **36×** the tokens of `low`, and `4k` is several times `1k` again — combined, per-image cost spans two orders of magnitude. **Quality is by far the biggest cost lever on this line**, so start with `low` when unsure. Wider frames are cheaper: at the same tier, `16:9` uses noticeably fewer output tokens than `1:1`.
 
-| Quality | 1K | 2K | 4K |
-|---|---:|---:|---:|
-| `low` | 196 | 397 | 659 |
-| `medium` | 1,756 | 3,568 | 5,930 |
-| `high` | 7,024 | 14,272 | 23,719 |
-
-At \$27 per million tokens, the output for `1:1 1K low` is about \$0.005 and `1:1 4K high` about \$0.64 — **quality is by far the biggest cost lever on this line**, so start with `low` when unsure.
+The estimated output tokens for every aspect-ratio / resolution / quality combination are in `price_config.image_usage_reservation` on `GET /v1/models`.
 
 Failed and cancelled tasks, and upstream successes that carry no deliverable image, refund the reservation **in full**. The task response's `cost` is the final amount, and it is an integer quota rather than dollars (500,000 quota = 1 USD). See [Task status](/en/api-reference/task/status) for the billing fields.
 

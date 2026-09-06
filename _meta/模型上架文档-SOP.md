@@ -15,8 +15,22 @@
    `capabilities.specific_parameters`，其余一律不写；网关会把未声明的参数在**额度预扣前**
    拒绝（HTTP 400，不计费），文档写了就是骗用户。反向也要写清楚：**本组不接受哪些常见参数**
    （例如 `seed`、`quality`），否则用户会从别的模型页抄过来。
-3. **价格只写 `price_config` 里有的**。官方能力、上游价目表都不能替代本渠道配置；
-   没配的维度就写"不开放"，不要按官方推断。
+3. 🔴 **不写具体单价，只写计费维度与口径。**（2026-09-06 Kaiho 拍，对齐 fal 与 APIMart）
+   单价随上游调整——`changelog/pricing` 里 09-02、09-03、09-04 连着三天调价，
+   任何硬编码进文档的数字几天内就过期，而**错的价格比没有价格更糟**。
+
+   - **要写**：有哪些计费维度（输入 / 输出 / 缓存读 / 缓存写 / 按张 / 按秒 / 时段）、
+     怎么分档、什么替代什么、`cost` 是什么单位。这些是定价页给不了的，也不会漂。
+   - **不写**：任何具体金额、费率表、"约 \$0.005 一张"这类折算。
+   - 每个「计费」小节配一段固定的实时价指引（原文见下）。
+
+   > 参照：**APIMart** 的模型页一个价格数字都没有，唯一叫 pricing 的页是定价 API 参考；
+   > **fal** 的 pricing 页只讲机制，原文写「Prices vary by model and may change.
+   > Check the model's page or the pricing page for current rates.」——每模型价格在
+   > 模型库和定价页，不在文档里。
+
+   **例外**：`changelog/pricing` 保留数字——它记录的是「某日从 X 调到 Y」的**带日期事件**，
+   不是当前价声明，删掉数字这页就没意义了。但**上架公告不带价**。
 
 ---
 
@@ -194,6 +208,17 @@ frontmatter: title · description · api（写全 URL，Mintlify 的 Try it 读�
 - 失败、取消或上游成功但无可交付结果 → 预扣**全额退回**。
 - 最终费用以任务响应里的 `cost` 为准，`cost` 是**整数 quota 不是美元**（500,000 quota = 1 USD）。
 
+以及这段固定的实时价指引，直接抄进「计费」小节（英文版在 `en/` 同位置页里取）：
+
+```mdx
+<Note>
+**本站文档不列具体单价。** 单价会随上游调整，写进文档迟早和实际对不上；本节只讲**计费维度与口径**。
+
+看实时单价：`GET /v1/models` 的 `price_config`，或控制台「模型市场」。
+看这一单实际花了多少：任务响应里的 `cost`（整数 quota，500,000 quota = 1 USD）。
+</Note>
+```
+
 ---
 
 ## 6. 上架一组时要动的地方（checklist）
@@ -212,7 +237,8 @@ frontmatter: title · description · api（写全 URL，Mintlify 的 Try it 读�
 
 - [ ] 页面里出现的每个模型 ID 都能在 `GET /v1/models` 列表里查到
 - [ ] 页面里出现的每个参数都在 `supported_common_params` 或 `specific_parameters` 里
-- [ ] 页面里的每个价格都能在 `price_config` 里找到同一个数
+- [ ] 页面里**没有任何具体金额**（`grep -n '\$[0-9]'` 应当只在 changelog 里命中），
+      「计费」小节带了实时价指引块
 - [ ] `docs.json` 里新增的每个 page 路径都有对应 `.mdx` 文件
 - [ ] `docs.json` 的组名与 `overview` 的 `title` 同名，且符合 §2.1 的「系列 / 型号名」惯例
 - [ ] cn 与 en 两版结构一致、模型 ID 与数字一致
