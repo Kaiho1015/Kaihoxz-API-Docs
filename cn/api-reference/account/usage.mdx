@@ -1,0 +1,58 @@
+---
+title: "查询已用量"
+description: "OpenAI 兼容的累计用量查询"
+api: "GET https://www.qingbo.dev/v1/dashboard/billing/usage"
+---
+
+返回账号的**累计已用量**，形状与 OpenAI 的 `/dashboard/billing/usage` 一致，现成的额度查询工具可以直接对接。
+
+<Warning>
+两个容易踩的点：`total_usage` 的单位是**美分**（USD × 100），不是美元；本端点**忽略 `start_date` / `end_date`**，钱包制返回的是累计值，不按日期切片。
+</Warning>
+
+<RequestExample>
+```bash cURL
+curl https://www.qingbo.dev/v1/dashboard/billing/usage \
+  -H "Authorization: Bearer $WAVE_API_KEY"
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "object": "list",
+  "total_usage": 348.2914
+}
+```
+</ResponseExample>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  `Bearer YOUR_API_KEY`。
+</ParamField>
+
+## Response
+
+<ResponseField name="object" type="string">
+  固定为 `list`。
+</ResponseField>
+
+<ResponseField name="total_usage" type="number">
+  累计已用，**单位为美分**。除以 100 得到美元；上面的 `348.2914` 即 $3.482914。
+</ResponseField>
+
+## 算剩余余额
+
+OpenAI 的工具习惯用「总额度 − 已用」算剩余：
+
+```text
+剩余 USD = subscription.hard_limit_usd - usage.total_usage / 100
+```
+
+直接要余额的话，[查询余额](/cn/api-reference/account/balance) 的 `total_available_usd` 一个字段就够，不用两次请求相减。
+
+## 相关文档
+
+- [查询余额](/cn/api-reference/account/balance)
+- [查询总额度](/cn/api-reference/account/subscription)

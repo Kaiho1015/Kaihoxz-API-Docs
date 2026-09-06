@@ -185,6 +185,14 @@
                   "cn/api-reference/task/status",
                   "cn/api-reference/task/cancel"
                 ]
+              },
+              {
+                "group": "账户与用量",
+                "pages": [
+                  "cn/api-reference/account/balance",
+                  "cn/api-reference/account/usage",
+                  "cn/api-reference/account/subscription"
+                ]
               }
             ]
           },
@@ -313,6 +321,14 @@
                   "en/api-reference/task/submit",
                   "en/api-reference/task/status",
                   "en/api-reference/task/cancel"
+                ]
+              },
+              {
+                "group": "Account & Usage",
+                "pages": [
+                  "en/api-reference/account/balance",
+                  "en/api-reference/account/usage",
+                  "en/api-reference/account/subscription"
                 ]
               }
             ]

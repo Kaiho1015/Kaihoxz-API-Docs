@@ -30,15 +30,16 @@ APIMart 直接代理各家原生端点，一个 action 就是一个 URL，所以
 | `POST /v1/tasks` · `GET /v1/tasks/{id}` · `POST /v1/tasks/{id}/cancel` | ✅ | ✅ 任务三页 | tasks/status · tasks/webhook |
 | `POST /v1/embeddings` · `/v1/rerank` · `/v1/moderations` | ✅ | ✅ 工具三页 | moderations/* |
 | `POST /v1/audio/speech` · `/transcriptions` · `/translations` | ✅ | ✅ 音频三页 | audios/tts · whisper-1 |
-| **`GET /v1/dashboard/billing/subscription`** | ✅ | 🔴 **无** | account/user-balance |
-| **`GET /v1/dashboard/billing/usage`** | ✅ | 🔴 **无** | account/token-balance |
-| **`GET /v1/dashboard/billing/balance`** | ✅ | 🔴 **无** | account/token-balance |
+| `GET /v1/dashboard/billing/balance` | ✅ | ✅ [查询余额](../cn/api-reference/account/balance.mdx)（主推） | account/token-balance |
+| `GET /v1/dashboard/billing/usage` | ✅ | ✅ [查询已用量](../cn/api-reference/account/usage.mdx) | account/token-balance |
+| `GET /v1/dashboard/billing/subscription` | ✅ | ✅ [查询总额度](../cn/api-reference/account/subscription.mdx) | account/user-balance |
 | `POST /v1/images/generations` · `/v1/images/edits` · `/v1/edits` | ✅ **对外开放**（供 OpenAI SDK 使用，2026-09-06 Kaiho 确认） | 🟡 已在[图像生成概述](../cn/api-reference/image/overview.mdx)加「两条调用路径」对照；**完整参考页待定，见 §五** | images/*/generation |
 | `POST /v1/completions`（legacy 补全） | ✅ | 🟡 无（可能是有意不宣传） | 无 |
 | 图片上传 | ❓ 未在路由里找到 | 无 | uploads/images |
 
-**优先级判断**：`dashboard/billing` 三个端点是**开发者自助查余额和用量**的唯一途径，
-既已实现又零依赖，是当前最划算的一块补白。
+`dashboard/billing` 三个端点已于 2026-09-06 补齐，放在 API 参考的新分组
+**「账户与用量」**（跟随全库一端点一页的惯例，三页；`balance` 为主推，
+另外两个是 OpenAI 兼容形状，供既有额度查询工具对接）。
 
 ---
 
@@ -92,7 +93,7 @@ SkyReels / PixVerse / HappyHorse / Omni / Grok Imagine Video。
 
 ---
 
-## 五、`/v1/images/*` 同步端点：已确认的与待确认的
+## 五、`/v1/images/*` 同步端点：不写参考页（2026-09-06 Kaiho 拍）
 
 **已确认（读 `router/relay-router.go` · `relay/image_handler.go` · `service/quota.go`）**
 
@@ -104,24 +105,26 @@ SkyReels / PixVerse / HappyHorse / Omni / Grok Imagine Video。
   `supported_actions` / `aspect_ratios` / `resolutions` / `qualities` / `max_image_inputs` /
   `constraints` 的任何校验。任务接口那套预扣前拒绝在这条路上不生效。
 
-**待确认（挡住完整参考页的三个问题）**
+**决定：不写完整参考页。** 理由是后续会提供官方 SDK（对标 fal 的做法），新接入一律走
+自家 SDK + 任务接口，OpenAI 兼容端点只作为存量项目的迁移过渡，没必要按参考页的规格维护
+一套参数表——何况参数映射还有下面这些说不清的地方。
 
-1. **`resolution` 怎么传？** `dto.ImageRequest` 里只有 `size`（OpenAI 形状）和 `aspect_ratio`，
-   **没有 `resolution` 字段**。那么 `gpt-image-2` 的 `1k` / `2k` / `4k` 档在同步端点上
-   要怎么指定——用 `size` 的像素值？还是只能走 `extra_params` 透传？还是这条路只出默认档？
-   这直接决定同步端点的计费落在哪一档，是最要紧的一条。
-2. **掩码重绘支不支持？** DTO 里没有 `mask_url`。`/v1/images/edits` 的 multipart 分支只取
-   `prompt` / `model` / `n` / `quality` / `size` / `image` / `watermark`，掩码没有入口。
-   如果确实不支持，文档要写清"掩码只能走任务接口"。
-3. **不做能力校验是有意为之还是欠账？** 有意 → 文档写成"OpenAI 兼容层不预校验，参数错误由上游返回"；
-   欠账 → 等补上校验再写，否则文档会描述一个即将改变的行为。
+[图像生成概述](../cn/api-reference/image/overview.mdx) 里保留了一张**四行对照表**
+（返回方式 / 请求形状 / 能力校验 / 适合谁），够 OpenAI SDK 用户判断该不该走这条路，
+也把"不做能力校验"这个风险讲清楚了。
 
-这三条答复之前，图像概述里只放了两条路径的**对照说明**，不写参数表——参数映射靠反推代码不可靠。
+**留给后端的三个问题**（不影响文档，但影响这条路的可用性）：
+
+1. `dto.ImageRequest` 里只有 `size` 和 `aspect_ratio`，**没有 `resolution` 字段**——
+   `gpt-image-2` 的 `1k` / `2k` / `4k` 档在同步端点怎么指定？这直接决定计费落在哪一档。
+2. DTO 里没有 `mask_url`，`/v1/images/edits` 的 multipart 分支也只取 `prompt` / `model` /
+   `n` / `quality` / `size` / `image` / `watermark`——掩码重绘在这条路上是不是根本没有入口？
+3. 不做模型组能力校验是有意为之还是欠账？
 
 ## 四、结论
 
-1. **能立刻做的**：补 `GET /v1/dashboard/billing/*` 三个端点的文档（余额 / 用量 / 订阅）。
-2. **等三个答复就能做的**：`/v1/images/*` 同步端点的完整参考页，见 §五。
-3. **等接入的**：音乐（flow-music / Lyria 3.5）。
+1. ✅ **已做**：`GET /v1/dashboard/billing/*` 三个端点 →「账户与用量」三页。
+2. ⛔ **明确不做**：`/v1/images/*` 同步端点的参考页，见 §五（后续走自家 SDK）。
+3. ⏳ **等接入**：音乐（flow-music / Lyria 3.5）。
 4. 其余都是**模型上架的下游**——视频、音频在本地后台一个承接都没有，
    在上架之前写任何东西都是猜。按 SOP 一组一组来。

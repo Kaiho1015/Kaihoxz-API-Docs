@@ -1,0 +1,111 @@
+---
+title: "查询余额"
+description: "用自己的 API Key 查钱包余额、已用量与总额度"
+api: "GET https://www.qingbo.dev/v1/dashboard/billing/balance"
+---
+
+用你自己的 WaveAPI Key 查询钱包状况，一次拿到**可用余额、累计已用、总额度**三个数。这是**开发者自助**端点，不需要管理权限。
+
+<Note>
+路径里的 `dashboard` 是为兼容既有工具保留的形状，不是管理后台接口。用普通的 `Authorization: Bearer $WAVE_API_KEY` 调用即可。
+</Note>
+
+<RequestExample>
+```bash cURL
+curl https://www.qingbo.dev/v1/dashboard/billing/balance \
+  -H "Authorization: Bearer $WAVE_API_KEY"
+```
+
+```python Python
+import os, requests
+
+r = requests.get(
+    "https://www.qingbo.dev/v1/dashboard/billing/balance",
+    headers={"Authorization": f"Bearer {os.environ['WAVE_API_KEY']}"},
+)
+print(r.json()["total_available_usd"])
+```
+
+```javascript JavaScript
+const r = await fetch('https://www.qingbo.dev/v1/dashboard/billing/balance', {
+  headers: { Authorization: `Bearer ${process.env.WAVE_API_KEY}` }
+});
+const data = await r.json();
+console.log(data.total_available_usd);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "object": "credit_summary",
+  "currency": "USD",
+  "total_granted_usd": 20,
+  "total_used_usd": 3.482914,
+  "total_available_usd": 16.517086,
+  "as_of": 1788681600
+}
+```
+
+```json 401
+{
+  "error": {
+    "message": "missing token identity",
+    "type": "invalid_request_error"
+  }
+}
+```
+</ResponseExample>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  `Bearer YOUR_API_KEY`，用[控制台](https://qingbo.dev/dashboard/keys)里的任意一把 Key 即可。
+</ParamField>
+
+## Response
+
+<ResponseField name="object" type="string">
+  固定为 `credit_summary`。
+</ResponseField>
+
+<ResponseField name="currency" type="string">
+  固定为 `USD`。
+</ResponseField>
+
+<ResponseField name="total_available_usd" type="number">
+  **当前可用余额**（美元）。要判断"还能不能继续调"，看这个数。
+</ResponseField>
+
+<ResponseField name="total_used_usd" type="number">
+  累计已用（美元），从开户至今，不按时间切片。
+</ResponseField>
+
+<ResponseField name="total_granted_usd" type="number">
+  总额度（美元）= 可用余额 + 累计已用。
+</ResponseField>
+
+<ResponseField name="as_of" type="integer">
+  数据时间戳（Unix 秒）。
+</ResponseField>
+
+## 口径说明
+
+- **余额属于账号，不属于某一把 Key。** Key 只是鉴权单元；同一账号下不同的 Key 查到的是同一个钱包。
+- **美元是换算值。** 内部计量单位是整数 quota，**500,000 quota = 1 USD**；任务与文本响应里的 `cost` 就是 quota，不是美元。
+- 本端点只返回你自己的数据，不含渠道、上游模型或 Key 明文等任何内部字段。
+
+## 三个端点怎么选
+
+| 想知道 | 用这个 |
+|---|---|
+| 还剩多少钱、用了多少、总共多少 | **本页**，一次拿全，推荐新接入用 |
+| 只要累计已用（OpenAI 口径，单位美分） | [查询已用量](/cn/api-reference/account/usage) |
+| 只要总额度（OpenAI 口径 `hard_limit_usd`） | [查询总额度](/cn/api-reference/account/subscription) |
+
+后两个是为**兼容既有的 OpenAI 额度查询工具**保留的形状（用量看板、成本统计脚本等）。自己写代码时用本页这个更直观。
+
+## 相关文档
+
+- [认证](/cn/docs/authentication)
+- [请求与响应格式](/cn/docs/request-response)

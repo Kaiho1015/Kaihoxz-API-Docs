@@ -1,0 +1,111 @@
+---
+title: "Get balance"
+description: "Check your wallet balance, usage to date and total credit with your own API key"
+api: "GET https://www.qingbo.dev/v1/dashboard/billing/balance"
+---
+
+Check your wallet with your own WaveAPI key and get all three numbers at once: **available balance, usage to date and total credit**. This is a **self-service** endpoint — no admin permission required.
+
+<Note>
+The `dashboard` in the path is a shape kept for compatibility with existing tools, not an admin API. Call it with an ordinary `Authorization: Bearer $WAVE_API_KEY`.
+</Note>
+
+<RequestExample>
+```bash cURL
+curl https://www.qingbo.dev/v1/dashboard/billing/balance \
+  -H "Authorization: Bearer $WAVE_API_KEY"
+```
+
+```python Python
+import os, requests
+
+r = requests.get(
+    "https://www.qingbo.dev/v1/dashboard/billing/balance",
+    headers={"Authorization": f"Bearer {os.environ['WAVE_API_KEY']}"},
+)
+print(r.json()["total_available_usd"])
+```
+
+```javascript JavaScript
+const r = await fetch('https://www.qingbo.dev/v1/dashboard/billing/balance', {
+  headers: { Authorization: `Bearer ${process.env.WAVE_API_KEY}` }
+});
+const data = await r.json();
+console.log(data.total_available_usd);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "object": "credit_summary",
+  "currency": "USD",
+  "total_granted_usd": 20,
+  "total_used_usd": 3.482914,
+  "total_available_usd": 16.517086,
+  "as_of": 1788681600
+}
+```
+
+```json 401
+{
+  "error": {
+    "message": "missing token identity",
+    "type": "invalid_request_error"
+  }
+}
+```
+</ResponseExample>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  `Bearer YOUR_API_KEY` — any key from your [console](https://qingbo.dev/dashboard/keys) works.
+</ParamField>
+
+## Response
+
+<ResponseField name="object" type="string">
+  Always `credit_summary`.
+</ResponseField>
+
+<ResponseField name="currency" type="string">
+  Always `USD`.
+</ResponseField>
+
+<ResponseField name="total_available_usd" type="number">
+  **Current available balance** in dollars. This is the number to check before deciding whether you can keep calling.
+</ResponseField>
+
+<ResponseField name="total_used_usd" type="number">
+  Usage to date in dollars, since the account was opened — not sliced by time.
+</ResponseField>
+
+<ResponseField name="total_granted_usd" type="number">
+  Total credit in dollars = available balance + usage to date.
+</ResponseField>
+
+<ResponseField name="as_of" type="integer">
+  Timestamp of the reading (Unix seconds).
+</ResponseField>
+
+## How the numbers work
+
+- **The balance belongs to the account, not to a key.** A key is only an authentication unit; every key on the same account reports the same wallet.
+- **Dollars are a conversion.** The internal unit is an integer quota at **500,000 quota = 1 USD**; the `cost` field on task and text responses is that quota, not dollars.
+- This endpoint returns only your own data — no channel, upstream model or key material.
+
+## Which of the three to use
+
+| You want | Use |
+|---|---|
+| Balance, usage and total in one call | **This page** — recommended for new integrations |
+| Usage to date only (OpenAI shape, in cents) | [Get usage](/en/api-reference/account/usage) |
+| Total credit only (OpenAI's `hard_limit_usd`) | [Get subscription](/en/api-reference/account/subscription) |
+
+The other two exist to stay compatible with **existing OpenAI credit-checking tools** (usage dashboards, cost-tracking scripts). When writing your own code, this endpoint is the direct one.
+
+## Related
+
+- [Authentication](/en/docs/authentication)
+- [Request and response format](/en/docs/request-response)
