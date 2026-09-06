@@ -184,7 +184,7 @@ Besides the OpenAI-compatible endpoint, Gemini has a native entry `POST /v1beta/
 - `deepseek-v3.2-exp` — no strict JSON Schema; separate model from `deepseek-v3.2` (2025-09-29 experimental build)
 - `deepseek-v3.1-terminus` — no strict JSON Schema; no longer listed on DeepSeek's main API
 
-V4 Pro / Flash are priced by the **UTC time slot at request start** (Beijing time = UTC+8); reservation, response cost and final settlement use the same frozen rate even if the response crosses a boundary, and `/waveapi/public/quote` only reflects the moment of quoting. Acceptance sent `thinking: {"type": "disabled"}` explicitly; the default thinking mode is not accepted yet. V4 cache-hit rates replace the matching input charge; there is no separate cache write. V3.x / R1 bill two rates; `deepseek-v3.2-exp` and `deepseek-v3.1-terminus` offer no strict JSON Schema — use `deepseek-v3.2` or `deepseek-r1-0528` when you need schema guarantees.
+V4 Pro / Flash are priced by the **UTC time slot at request start** (Beijing time = UTC+8); reservation, response cost and final settlement use the same frozen rate even if the response crosses a boundary, and a quote reflects the price at the moment it was requested rather than locking a later request. Acceptance sent `thinking: {"type": "disabled"}` explicitly; the default thinking mode is not accepted yet. V4 cache-hit rates replace the matching input charge; there is no separate cache write. V3.x / R1 bill two rates; `deepseek-v3.2-exp` and `deepseek-v3.1-terminus` offer no strict JSON Schema — use `deepseek-v3.2` or `deepseek-r1-0528` when you need schema guarantees.
 
 | Slot (UTC, start inclusive, end exclusive) | Pro input | Pro cache read | Pro output | Flash input | Flash cache read | Flash output |
 |---|---:|---:|---:|---:|---:|---:|
@@ -294,5 +294,7 @@ curl https://www.qingbo.dev/v1/models \
   -H "Authorization: Bearer $WAVE_API_KEY"
 ```
 
-Single model: `GET /v1/models/{model}`. Pre-submission quote: `POST /waveapi/public/quote`. A model present in an old catalog is not automatically live; models released before September 2024 or already retired are not offered in the new catalog.
+Single model: `GET /v1/models/{model}`. The `price_config` it returns is where this page's tables come from: `input` / `output` are the base rates, `cache_read` / `cache_write` / `cache_write_1h` show how far caching is opened up for that model, `input_tier_threshold` with the `*_above_price` fields is the long-context tier, and `cache_billing: "input_output"` means input and output are the only two rates.
+
+A model present in an old catalog is not automatically live; models released before September 2024 or already retired are not offered in the new catalog.
 

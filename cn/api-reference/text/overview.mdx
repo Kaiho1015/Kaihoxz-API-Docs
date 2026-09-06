@@ -184,7 +184,7 @@ OpenAI 兼容入口之外，Gemini 还有原生入口 `POST /v1beta/models/{mode
 - `deepseek-v3.2-exp` — 不提供严格 JSON Schema；与 `deepseek-v3.2` 是两个独立型号（2025-09-29 实验版）
 - `deepseek-v3.1-terminus` — 不提供严格 JSON Schema；官方主 API 已不再列出该版本
 
-V4 Pro / Flash 按 **请求开始时刻的 UTC 时段** 计价（北京时间加 8 小时），预扣、响应费用和最终结算用同一份冻结价格，跨时段不重选；`/waveapi/public/quote` 只反映报价时刻。验收时显式传 `thinking: {"type": "disabled"}`，默认思考模式未验收。V4 缓存命中价替代对应输入，不提供独立缓存写入。V3.x / R1 两项计价；`deepseek-v3.2-exp` 与 `deepseek-v3.1-terminus` 不提供严格 JSON Schema，需要 schema 约束请用 `deepseek-v3.2` 或 `deepseek-r1-0528`。
+V4 Pro / Flash 按 **请求开始时刻的 UTC 时段** 计价（北京时间加 8 小时），预扣、响应费用和最终结算用同一份冻结价格，跨时段不重选；报价接口反映的是报价时刻的价格，不锁定稍后真正发起的请求。验收时显式传 `thinking: {"type": "disabled"}`，默认思考模式未验收。V4 缓存命中价替代对应输入，不提供独立缓存写入。V3.x / R1 两项计价；`deepseek-v3.2-exp` 与 `deepseek-v3.1-terminus` 不提供严格 JSON Schema，需要 schema 约束请用 `deepseek-v3.2` 或 `deepseek-r1-0528`。
 
 | 时段（UTC，含开始不含结束） | Pro 输入 | Pro 缓存读 | Pro 输出 | Flash 输入 | Flash 缓存读 | Flash 输出 |
 |---|---:|---:|---:|---:|---:|---:|
@@ -294,5 +294,7 @@ curl https://www.qingbo.dev/v1/models \
   -H "Authorization: Bearer $WAVE_API_KEY"
 ```
 
-单个模型：`GET /v1/models/{model}`。提交前估价：`POST /waveapi/public/quote`。旧目录中的模型不自动代表已上架；2024 年 9 月以前发布或已经退役的模型不在新目录中开放。
+单个模型：`GET /v1/models/{model}`。返回的 `price_config` 就是本页表格的来源：`input` / `output` 是基础单价，`cache_read` / `cache_write` / `cache_write_1h` 表示该型号开放到哪一档缓存，`input_tier_threshold` 与 `*_above_price` 是长上下文分档，`cache_billing: "input_output"` 表示只有输入输出两项计价。
+
+旧目录中的模型不自动代表已上架；2024 年 9 月以前发布或已经退役的模型不在新目录中开放。
 
