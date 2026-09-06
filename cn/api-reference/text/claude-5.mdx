@@ -1,0 +1,47 @@
+---
+title: "Claude Sonnet 5 / Opus 5"
+description: "统一文本接口、缓存价格与当前渠道的能力范围"
+---
+
+模型 ID 为 `claude-sonnet-5` 和 `claude-opus-5`。一般接入使用 `POST /v1/chat/completions`；已有 Anthropic SDK 的应用可使用 `POST /v1/messages`。不需要根据渠道、更换价格或流式模式更换 URL。
+
+## 价格
+
+2026-09-05 核对，单位 **USD / 100 万 token**。两款模型各项售价为[官方标准价](https://platform.claude.com/docs/en/about-claude/pricing)九折。
+
+| 模型 | 普通输入 | 输出（含思考） | 缓存命中 | 写入 5 分钟缓存 | 写入 1 小时缓存 |
+|---|---:|---:|---:|---:|---:|
+| Claude Sonnet 5 | 1.80 | 9.00 | 0.18 | 2.25 | 3.60 |
+| Claude Opus 5 | 4.50 | 22.50 | 0.45 | 5.625 | 9.00 |
+
+Sonnet 5 官方输入 2、输出 10 的价格已成为永久标准价；不使用早期预告的 3 / 15。发布依据：[Sonnet 5（2026-06-30）](https://www.anthropic.com/news/claude-sonnet-5)、[Opus 5（2026-07-24）](https://www.anthropic.com/news/claude-opus-5)。
+
+普通输入、缓存命中和缓存写入分别计费，同一输入 token 不重复收费。5 分钟与 1 小时写入按实际用量区分；思考 token 已包含在输出总量中。当前各档缓存价格已配置，但这两款模型的真实缓存命中与 TTL 写入尚未完成验收。
+
+## 功能范围
+
+文本非流式输出、Chat 流式输出和 Chat 函数调用参数已通过实际调用验证。函数调用返回工具名称和参数，由你的应用执行工具，不表示网关执行了工具。
+
+**当前 APIMart 路由不开放结构化输出。** 实测 JSON Schema 请求没有遵循指定 schema，因此不能把普通文本返回当作 JSON Schema 支持。`response_format` 的 `json_schema` / `json_object` 及 Claude 结构化输出配置会在预扣前拒绝。普通提示词要求返回 JSON 不提供 schema 保证。
+
+原生 Messages 非流式和流式文本均已验证。流式响应在结束前返回最终 `message_delta` 用量，然后返回 `message_stop`。内置联网、服务档位加价和其他独立收费工具暂不开放。
+
+| 渠道声明上限 | Sonnet 5 | Opus 5 |
+|---|---:|---:|
+| 输入 tokens | 1,000,000 | 128,000 |
+| 输出 tokens | 128,000 | 16,000 |
+
+以上为当前渠道声明，不是已验证的极限，也不承诺同时用满。上下文极限、多轮工具、图像输入和显式缓存 TTL 尚未完成实测。
+
+## 接入
+
+```bash
+curl http://localhost:40081/v1/chat/completions \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"claude-sonnet-5","messages":[{"role":"user","content":"Reply with the single word OK."}],"max_tokens":128,"stream":false}'
+```
+
+部署后替换网关地址；将模型 ID 换成 `claude-opus-5` 即可。Chat 流式设置 `stream: true`、`stream_options: {"include_usage": true}`，读取最终 usage 和 `[DONE]`。原生协议格式见 [Messages 接口](/cn/api-reference/text/claude-messages)。
+
+Chat `usage.cost` 的单位为整数 quota，不是美元；原生 Messages 不额外插入此字段。实际扣费和待核对状态以本人账单为准。参见[账务说明](/cn/api-reference/text/gpt-5-6#usagecost-与最终账务)。

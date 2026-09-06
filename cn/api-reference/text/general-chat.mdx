@@ -1,653 +1,78 @@
 ---
 title: "通用对话接口"
-api: "POST https://www.qingbo.dev/v1/chat/completions"
+api: "POST http://localhost:40081/v1/chat/completions"
 ---
 
-- 统一的对话 API 接口，支持所有主流文本生成模型
-- 完全兼容 OpenAI Chat Completions API 格式
-- 通过 `model` 参数无缝切换不同 AI 模型
-- 支持流式输出、函数调用等高级功能
+通过 `model` 选择公开模型，同一接口支持非流式、流式和函数调用，不需要知道上游渠道或 Profile。参数是否可用以模型组的已验证能力为准，不承诺所有 OpenAI 参数在每条渠道都支持。
 
-<RequestExample>
-```bash cURL
-curl -X POST https://www.qingbo.dev/v1/chat/completions \
-  -H "Authorization: Bearer YOUR_API_KEY" \
+当前联调使用 `http://localhost:40081`；部署后替换为你的网关地址。使用 WaveAPI Key 作为 Bearer 凭据，不能使用生态登录 token 代替模型 Key。
+
+## 已校验的模型指南
+
+- [GPT-5.6 Luna / Terra / Sol](/cn/api-reference/text/gpt-5-6)
+- [GPT-5.4 / GPT-5.5](/cn/api-reference/text/gpt-5-4-and-5-5)
+- [Gemini 3.6 Flash](/cn/api-reference/text/gemini-3-6-flash)
+- [Claude Sonnet 5 / Opus 5](/cn/api-reference/text/claude-5)
+- [Claude Fable 5.1](/cn/api-reference/text/claude-fable-5-1)
+- [Grok 4.6](/cn/api-reference/text/grok-4-6)
+
+可用性以当前模型目录和 Key 权限为准。旧目录中的模型不自动代表已上架；2024 年 9 月以前发布或已经退役的模型不在新目录中开放。
+
+## 最小调用
+
+```bash
+curl http://localhost:40081/v1/chat/completions \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-    "model": "gpt-5",
-    "messages": [
-      {
-        "role": "system",
-        "content": "你是一个专业的AI助手。"
-      },
-      {
-        "role": "user",
-        "content": "解释一下冒泡排序算法。"
-      }
-    ],
-    "temperature": 0.7,
-    "max_tokens": 1024
-  }'
+  -d '{"model":"gpt-5.6-luna","messages":[{"role":"user","content":"Reply with the single word OK."}],"reasoning_effort":"none","max_completion_tokens":128,"stream":false}'
 ```
 
-```python Python
-from openai import OpenAI
+`model` 和 `messages` 必填。GPT 示例使用已验证的 `reasoning_effort: "none"` 和 `max_completion_tokens`；Claude 示例使用 `max_tokens`。这些参数不能不加区分地复制到所有模型。`temperature`、推理档位和多模态输入同样按模型指南选择。
 
-client = OpenAI(
-    base_url="https://www.qingbo.dev/v1",
-    api_key="YOUR_API_KEY"
-)
+## 流式
 
-response = client.chat.completions.create(
-    model="gpt-5",
-    messages=[
-        {"role": "system", "content": "你是一个专业的AI助手。"},
-        {"role": "user", "content": "解释一下冒泡排序算法。"}
-    ],
-    temperature=0.7,
-    max_tokens=1024
-)
+在同一请求添加 `stream: true` 和 `stream_options: {"include_usage": true}`。响应为 SSE：累加 `choices[].delta.content`，独立读取最终 `usage` 帧，再处理 `[DONE]`。最终用量帧可以没有 choices；不能因为内容已结束就忽略它。连接中断不等于调用免费，先查看已有账单再决定是否重发。
 
-print(response.choices[0].message.content)
-```
+## 结构化输出
 
-```javascript JavaScript
-import OpenAI from 'openai';
+以下请求已在 GPT-5.6 Luna 路由验证。只有明确支持此能力的模型才能使用；当前 Claude 路由会在预扣前拒绝 JSON Schema / JSON 模式。
 
-const client = new OpenAI({
-  baseURL: 'https://www.qingbo.dev/v1',
-  apiKey: 'YOUR_API_KEY'
-});
-
-const response = await client.chat.completions.create({
-  model: 'gpt-5',
-  messages: [
-    { role: 'system', content: '你是一个专业的AI助手。' },
-    { role: 'user', content: '解释一下冒泡排序算法。' }
-  ],
-  temperature: 0.7,
-  max_tokens: 1024
-});
-
-console.log(response.choices[0].message.content);
-```
-
-```go Go
-package main
-
-import (
-    "bytes"
-    "encoding/json"
-    "fmt"
-    "io"
-    "net/http"
-)
-
-func main() {
-    payload := map[string]interface{}{
-        "model": "gpt-5",
-        "messages": []map[string]string{
-            {"role": "system", "content": "你是一个专业的AI助手。"},
-            {"role": "user", "content": "解释一下冒泡排序算法。"},
-        },
-        "temperature": 0.7,
-        "max_tokens": 1024,
-    }
-
-    body, _ := json.Marshal(payload)
-    req, _ := http.NewRequest("POST", "https://www.qingbo.dev/v1/chat/completions", bytes.NewBuffer(body))
-    req.Header.Set("Authorization", "Bearer YOUR_API_KEY")
-    req.Header.Set("Content-Type", "application/json")
-
-    resp, err := http.DefaultClient.Do(req)
-    if err != nil {
-        panic(err)
-    }
-    defer resp.Body.Close()
-
-    result, _ := io.ReadAll(resp.Body)
-    fmt.Println(string(result))
-}
-```
-
-```java Java
-import java.net.http.*;
-import java.net.URI;
-
-public class Main {
-    public static void main(String[] args) throws Exception {
-        String payload = """
-        {
-          "model": "gpt-5",
-          "messages": [
-            {"role": "system", "content": "你是一个专业的AI助手。"},
-            {"role": "user", "content": "解释一下冒泡排序算法。"}
-          ],
-          "temperature": 0.7,
-          "max_tokens": 1024
-        }
-        """;
-
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create("https://www.qingbo.dev/v1/chat/completions"))
-            .header("Authorization", "Bearer YOUR_API_KEY")
-            .header("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(payload))
-            .build();
-
-        HttpResponse<String> response = client.send(request,
-            HttpResponse.BodyHandlers.ofString());
-        System.out.println(response.body());
-    }
-}
-```
-</RequestExample>
-
-<ResponseExample>
-  ```json 200 theme={null}
-  {
-    "id": "chatcmpl-CdA8u0qPqzeN2gu8QLuQfjaP9CHU4",
-    "object": "chat.completion",
-    "created": 1763449816,
-    "model": "gpt-5-2025-08-07",
-    "choices": [
-      {
-        "index": 0,
-        "message": {
-          "role": "assistant",
-          "content": "冒泡排序（Bubble Sort）是一种简单的比较交换排序。它通过重复遍历序列，比较相邻元素并把较大的“冒泡”到右侧末端，直到序列有序。\n\n核心思想\n- 每一趟从左到右比较相邻元素，若前者大于后者则交换。一次趟结束后，当前未排部分中最大的元素被放到末尾。\n- 重复多趟，直到没有发生交换或已完成 n−1 趟。\n\n流程示例（以 [5, 1, 4, 2] 为例）\n- 第1趟：比较并交换 → [1, 5, 4, 2] → [1, 4, 5, 2] → [1, 4, 2, 5]（最大元素5到末尾）\n- 第2趟：比较并交换 → [1, 4, 2, 5] → [1, 2, 4, 5]（已整体有序，可提前结束）\n\n性质\n- 时间复杂度：平均/最坏 O(n^2)，最好 O(n)（当已基本有序且使用提前退出优化）\n- 空间复杂度：O(1)（就地排序）\n- 稳定性：稳定（相等元素相对次序不变）\n- 适用场景：数据量小或序列几乎有序；不适合大规模无序数据\n\n常见优化\n- 提前退出：某趟未发生交换则已排序完成。\n- 缩短边界：记录本趟最后一次交换的位置，下一趟只需遍历到该位置。\n- 双向冒泡（鸡尾酒排序）：从左到右、再从右到左各走一遍，更快收敛。\n\n简要伪代码\nfunction bubbleSort(a):\n    n = length(a)\n    repeat\n        swapped = false\n        for j = 0 to n-2:\n            if a[j] > a[j+1]:\n                swap(a[j], a[j+1])\n                swapped = true\n        n = n - 1    // 末尾已就位，缩短范围\n    until swapped == false\n\n如需，我可以给出某种语言的实现代码或更多变体说明。",
-          "refusal": null,
-          "annotations": []
-        },
-        "finish_reason": "stop"
-      }
-    ],
-    "usage": {
-      "prompt_tokens": 24,
-      "completion_tokens": 1030,
-      "total_tokens": 1054,
-      "prompt_tokens_details": {
-        "cached_tokens": 0,
-        "audio_tokens": 0
-      },
-      "completion_tokens_details": {
-        "reasoning_tokens": 512,
-        "audio_tokens": 0,
-        "accepted_prediction_tokens": 0,
-        "rejected_prediction_tokens": 0
-      }
-    }
-  }
-  ```
-
-  ```json 400 theme={null}
-  {
-    "error": {
-      "code": 400,
-      "message": "请求参数无效",
-      "type": "invalid_request_error"
-    }
-  }
-  ```
-
-  ```json 401 theme={null}
-  {
-    "error": {
-      "code": 401,
-      "message": "身份验证失败，请检查您的API密钥",
-      "type": "authentication_error"
-    }
-  }
-  ```
-
-  ```json 402 theme={null}
-  {
-    "error": {
-      "code": 402,
-      "message": "账户余额不足，请充值后再试",
-      "type": "payment_required"
-    }
-  }
-  ```
-
-  ```json 403 theme={null}
-  {
-    "error": {
-      "code": 403,
-      "message": "访问被禁止，您没有权限访问此资源",
-      "type": "permission_error"
-    }
-  }
-  ```
-
-  ```json 429 theme={null}
-  {
-    "error": {
-      "code": 429,
-      "message": "请求过于频繁，请稍后再试",
-      "type": "rate_limit_error"
-    }
-  }
-  ```
-
-  ```json 500 theme={null}
-  {
-    "error": {
-      "code": 500,
-      "message": "服务器内部错误，请稍后重试",
-      "type": "server_error"
-    }
-  }
-  ```
-
-  ```json 502 theme={null}
-  {
-    "error": {
-      "code": 502,
-      "message": "网关错误，服务器暂时不可用",
-      "type": "bad_gateway"
-    }
-  }
-  ```
-</ResponseExample>
-
-## Authorizations
-
-<ParamField header="Authorization" type="string" required>
-  所有接口均需要使用Bearer Token进行认证
-
-  获取 API Key：
-
-  访问 [API Key 管理页面](https://qingbo.dev/dashboard/keys) 获取您的 API Key
-
-  使用时在请求头中添加：
-
-  ```
-  Authorization: Bearer YOUR_API_KEY
-  ```
-</ParamField>
-
-## Body
-
-<ParamField body="model" type="string" required>
-  模型名称
-
-  支持的模型包括：
-
-  * **OpenAI**: `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.5`, `gpt-5.4`, `gpt-5.4-mini`, `gpt-5.4-nano`, `gpt-5.4-pro`, `gpt-5.3-codex`, `gpt-5.2`, `gpt-5.2-pro`, `gpt-5.2-codex`, `gpt-5.1`, `gpt-5.1-codex-max`, `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-4.1`, `gpt-4.1-mini`, `gpt-4.1-nano`, `gpt-4o`, `gpt-4o-mini`, `o3`, `o4-mini`, `o3-mini`, `o1`
-  * **Anthropic**: `claude-fable-5`, `claude-opus-5`, `claude-sonnet-5`, `claude-opus-4.8`, `claude-opus-4.7`, `claude-opus-4.6`, `claude-sonnet-4.6`, `claude-opus-4.5-20251101`, `claude-sonnet-4.5-20250929`, `claude-haiku-4.5-20251001`
-  * **Google**: `gemini-3.7-flash`, `gemini-3.6-flash`, `gemini-3.5-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-pro-preview`, `gemini-3.1-flash-lite-preview`, `gemini-3-flash-preview`, `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.5-flash-lite`
-  * **DeepSeek**: `deepseek-v4-pro`, `deepseek-v4-flash`, `deepseek-r1-0528`, `deepseek-v3.2`, `deepseek-v3.2-exp`
-  * **Qwen**: `qwen3.8-max`, `qwen3.7-max`, `qwen3.7-plus`, `qwen3.6-plus`, `qwen3.6-flash`
-  * **MiniMax**: `minimax-m3`, `minimax-m2.7`, `minimax-m2.5`, `minimax-m2.1`
-  * **MoonshotAI**: `kimi-k3`, `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`, `kimi-k2.6`, `kimi-k2.5`
-  * **xAI**: `grok-4.6`, `grok-4.5`, `grok-4.3`, `grok-build-0.1`
-  * **Z.ai**: `glm-5.2`, `glm-5.1`, `glm-5`, `glm-4.7`, `glm-4.6`
-  * 更多模型持续更新中...
-</ParamField>
-
-<ParamField body="messages" type="array" required>
-  对话消息列表
-
-  <Expandable title="消息对象属性">
-    <ParamField body="role" type="string" required>
-      角色类型：`system`（系统提示）、`user`（用户输入）、`assistant`（模型回复）
-    </ParamField>
-
-    <ParamField body="content" type="string" required>
-      消息内容，支持字符串或多模态内容数组
-    </ParamField>
-  </Expandable>
-</ParamField>
-
-<ParamField body="temperature" type="number">
-  控制输出随机性，范围 0-2
-
-  * 较低的值（如 0.2）使输出更确定
-  * 较高的值（如 1.8）使输出更随机
-
-  默认值：1.0
-</ParamField>
-
-<ParamField body="max_tokens" type="integer">
-  生成的最大token数量
-
-  不同模型有不同的最大值限制，请参考具体模型文档
-</ParamField>
-
-<ParamField body="stream" type="boolean">
-  是否使用流式输出
-
-  * `true`: 流式返回（SSE格式）
-  * `false`: 一次性返回完整响应
-
-  默认值：false
-</ParamField>
-
-<ParamField body="top_p" type="number">
-  核采样参数，范围 0-1
-
-  控制生成文本的多样性，建议与 temperature 二选一使用
-
-  默认值：1.0
-</ParamField>
-
-<ParamField body="frequency_penalty" type="number">
-  频率惩罚，范围 -2.0 到 2.0
-
-  正值会降低重复使用相同词汇的可能性
-
-  默认值：0
-</ParamField>
-
-<ParamField body="presence_penalty" type="number">
-  存在惩罚，范围 -2.0 到 2.0
-
-  正值会增加谈论新主题的可能性
-
-  默认值：0
-</ParamField>
-
-<ParamField body="stop" type="string or array">
-  停止序列
-
-  最多4个序列，遇到这些序列时将停止生成
-</ParamField>
-
-<ParamField body="n" type="integer">
-  生成的回复数量
-
-  默认值：1
-</ParamField>
-
-## Response
-
-<ResponseField name="id" type="string">
-  响应的唯一标识符
-</ResponseField>
-
-<ResponseField name="object" type="string">
-  对象类型，固定为 `chat.completion`
-</ResponseField>
-
-<ResponseField name="created" type="integer">
-  创建时间戳
-</ResponseField>
-
-<ResponseField name="model" type="string">
-  实际使用的模型名称
-</ResponseField>
-
-<ResponseField name="choices" type="array">
-  生成的回复列表
-
-  <Expandable title="属性">
-    <ResponseField name="index" type="integer">
-      选项索引
-    </ResponseField>
-
-    <ResponseField name="message" type="object">
-      消息内容
-
-      <Expandable title="属性">
-        <ResponseField name="role" type="string">
-          角色类型（assistant）
-        </ResponseField>
-
-        <ResponseField name="content" type="string">
-          生成的文本内容
-        </ResponseField>
-      </Expandable>
-    </ResponseField>
-
-    <ResponseField name="logprobs" type="object">
-      对数概率信息（默认为 null）
-    </ResponseField>
-
-    <ResponseField name="finish_reason" type="string">
-      结束原因
-
-      可能的值：
-
-      * `stop` - 自然结束
-      * `length` - 达到最大长度
-      * `content_filter` - 内容过滤
-      * `function_call` - 函数调用
-    </ResponseField>
-  </Expandable>
-</ResponseField>
-
-<ResponseField name="usage" type="object">
-  token使用统计
-
-  <Expandable title="属性">
-    <ResponseField name="prompt_tokens" type="integer">
-      输入消息的 token 数
-    </ResponseField>
-
-    <ResponseField name="completion_tokens" type="integer">
-      生成内容的 token 数
-    </ResponseField>
-
-    <ResponseField name="total_tokens" type="integer">
-      总 token 数
-    </ResponseField>
-
-    <ResponseField name="prompt_tokens_details" type="object">
-      输入 token 详细信息
-
-      <Expandable title="属性">
-        <ResponseField name="cached_tokens" type="integer">
-          缓存的 token 数
-        </ResponseField>
-
-        <ResponseField name="text_tokens" type="integer">
-          文本 token 数
-        </ResponseField>
-
-        <ResponseField name="audio_tokens" type="integer">
-          音频 token 数
-        </ResponseField>
-
-        <ResponseField name="image_tokens" type="integer">
-          图像 token 数
-        </ResponseField>
-      </Expandable>
-    </ResponseField>
-
-    <ResponseField name="completion_tokens_details" type="object">
-      生成 token 详细信息
-
-      <Expandable title="属性">
-        <ResponseField name="text_tokens" type="integer">
-          文本 token 数
-        </ResponseField>
-
-        <ResponseField name="audio_tokens" type="integer">
-          音频 token 数
-        </ResponseField>
-
-        <ResponseField name="reasoning_tokens" type="integer">
-          推理 token 数（思考模型专用）
-        </ResponseField>
-      </Expandable>
-    </ResponseField>
-  </Expandable>
-</ResponseField>
-
-<ResponseField name="system_fingerprint" type="string">
-  系统指纹标识（用于追踪后端配置）
-</ResponseField>
-
-## 支持的模型列表
-
-<Note>
-**长上下文分档**：部分模型在单次请求的输入 token 超过阈值后，超出部分的输入与整段输出按更高档单价计费，与厂商官方一致：GPT-5.4 / 5.5 / 5.6 系列 **272K**、Grok 系列 **200K**、Gemini Pro 系列 **200K**、Qwen Plus / Flash **256K**、MiniMax M3 **512K**。各档单价以 [Explore](https://qingbo.dev/explore) 模型详情页为准。Anthropic 4.6+ 全上下文同价。
-</Note>
-
-### OpenAI 系列
-
-* `gpt-5.6-sol` - GPT-5.6 Sol 旗舰（超过 272K 输入按长上下文档计费）
-* `gpt-5.6-terra` - GPT-5.6 Terra 均衡档
-* `gpt-5.6-luna` - GPT-5.6 Luna 轻量档
-* `gpt-5.5` - GPT-5.5
-* `gpt-5.4-pro` - GPT-5.4 Pro
-* `gpt-5.4-mini` - GPT-5.4 轻量版
-* `gpt-5.4-nano` - GPT-5.4 超轻量版
-* `gpt-5.3-codex` - GPT-5.3 Codex 编码模型
-* `gpt-5.2-pro` - GPT-5.2 Pro
-* `gpt-5.2-codex` - GPT-5.2 Codex
-* `gpt-5.1-codex-max` - GPT-5.1 Codex Max
-* `gpt-5` - GPT-5 基础模型
-* `gpt-5-mini` - GPT-5 轻量版
-* `gpt-5-nano` - GPT-5 超轻量版
-* `gpt-5.1` - GPT-5.1
-* `gpt-5.2` - GPT-5.2
-* `gpt-5.4` - GPT-5.4
-* `gpt-4.1` - GPT-4.1
-* `gpt-4.1-mini` - GPT-4.1 轻量版
-* `gpt-4.1-nano` - GPT-4.1 超轻量版
-* `gpt-4o` - GPT-4o 多模态模型
-* `gpt-4o-mini` - GPT-4o 轻量版
-* `o3` - OpenAI o3 推理模型
-* `o4-mini` - OpenAI o4 Mini
-* `o3-mini` - OpenAI o3 Mini
-* `o1` - OpenAI o1 推理模型
-
-### Anthropic 系列
-
-* `claude-fable-5` - Claude Fable 5 Mythos 级旗舰（100 万 token 上下文）
-* `claude-opus-5` - Claude Opus 5
-* `claude-sonnet-5` - Claude Sonnet 5
-* `claude-opus-4.8` - Claude Opus 4.8
-* `claude-opus-4.7` - Claude Opus 4.7
-* `claude-opus-4.6` - Claude Opus 4.6
-* `claude-sonnet-4.6` - Claude Sonnet 4.6
-* `claude-opus-4.5-20251101` - Claude 4.5 Opus 旗舰模型
-* `claude-sonnet-4.5-20250929` - Claude 4.5 Sonnet 平衡版
-* `claude-haiku-4.5-20251001` - Claude 4.5 Haiku 快速响应版
-
-### Google 系列
-
-* `gemini-3.7-flash` - Gemini 3.7 Flash（快速智能体与多步推理）
-* `gemini-3.6-flash` - Gemini 3.6 Flash（编码与 Web / App 开发）
-* `gemini-3.5-flash` - Gemini 3.5 Flash
-* `gemini-3.5-flash-lite` - Gemini 3.5 Flash-Lite 轻量档
-* `gemini-3.1-pro-preview` - Gemini 3.1 Pro 预览版（超过 200K 输入按长上下文档计费）
-* `gemini-3.1-flash-lite-preview` - Gemini 3.1 Flash-Lite 预览版
-* `gemini-3-flash-preview` - Gemini 3 Flash 预览版
-* `gemini-2.5-pro` - Gemini 2.5 专业版（超过 200K 输入按长上下文档计费）
-* `gemini-2.5-flash` - Gemini 2.5 快速版
-* `gemini-2.5-flash-lite` - Gemini 2.5 超轻量版
-
-### DeepSeek 系列
-
-* `deepseek-v4-pro` - DeepSeek V4 Pro（100 万 token 上下文）
-* `deepseek-v4-flash` - DeepSeek V4 Flash
-* `deepseek-r1-0528` - DeepSeek R1 推理模型
-* `deepseek-v3.2` - DeepSeek V3.2
-* `deepseek-v3.2-exp` - DeepSeek V3.2 实验版
-
-### Qwen 系列
-
-* `qwen3.8-max` - Qwen3.8-Max 旗舰（100 万 token 上下文）
-* `qwen3.7-max` - Qwen3.7-Max
-* `qwen3.7-plus` - Qwen3.7-Plus 均衡档（超过 256K 输入按长上下文档计费）
-* `qwen3.6-plus` - Qwen3.6-Plus（超过 256K 输入按长上下文档计费）
-* `qwen3.6-flash` - Qwen3.6-Flash 高速低价档（超过 256K 输入按长上下文档计费）
-
-### MiniMax 系列
-
-* `minimax-m3` - MiniMax M3 多模态旗舰（100 万 token 上下文，超过 512K 输入按 2 倍计费）
-* `minimax-m2.7` - MiniMax M2.7
-* `minimax-m2.5` - MiniMax M2.5
-* `minimax-m2.1` - MiniMax M2.1
-
-### MoonshotAI 系列
-
-* `kimi-k3` - Kimi K3 旗舰版（100 万 token 上下文）
-* `kimi-k2.7-code` - Kimi K2.7 Code 编码专用
-* `kimi-k2.7-code-highspeed` - Kimi K2.7 Code 高速版（约 180 token/s，2 倍价格）
-* `kimi-k2.6` - Kimi K2.6 多模态
-* `kimi-k2.5` - Kimi K2.5
-
-### xAI 系列
-
-* `grok-4.6` - Grok 4.6 旗舰模型（代码与通用任务，50 万 token 上下文）
-* `grok-4.5` - Grok 4.5 推理模型（50 万 token 上下文）
-* `grok-4.3` - Grok 4.3 快速通用模型（100 万 token 上下文）
-* `grok-build-0.1` - Grok Build 0.1 编码智能体模型（25.6 万 token 上下文）
-
-<Note>
-Grok 系列单次请求输入超过 **200K token** 时，超出部分的输入与整段输出按 **2 倍单价**计费（与 xAI 官方长上下文分档一致）。四个模型均支持图片输入、函数调用与结构化输出。
-</Note>
-
-### Z.ai 系列
-
-* `glm-5.2` - GLM-5.2 大规模推理模型（100 万 token 上下文）
-* `glm-5.1` - GLM-5.1
-* `glm-5` - GLM-5
-* `glm-4.7` - GLM-4.7
-* `glm-4.6` - GLM-4.6
-
-## 使用示例
-
-### 基础对话
-
-```json  theme={null}
+```json
 {
-  "model": "gpt-5",
-  "messages": [
-    {"role": "user", "content": "你好"}
-  ]
+  "model": "gpt-5.6-luna",
+  "messages": [{"role": "user", "content": "Return an object whose answer is OK."}],
+  "reasoning_effort": "none",
+  "max_completion_tokens": 128,
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "answer",
+      "strict": true,
+      "schema": {"type": "object", "properties": {"answer": {"type": "string", "enum": ["OK"]}}, "required": ["answer"], "additionalProperties": false}
+    }
+  }
 }
 ```
 
-### 系统提示词
+## 函数调用
 
-```json  theme={null}
+函数声明与普通文本共用同一个 URL。返回 `tool_calls` 的函数名与 JSON 参数由你的应用检查并执行；生成工具参数不代表工具已执行。多轮工具流程需按模型支持情况另行验证。
+
+```json
 {
-  "model": "claude-sonnet-4.5-20250929",
-  "messages": [
-    {"role": "system", "content": "你是一位专业的Python编程导师"},
-    {"role": "user", "content": "如何使用列表推导式？"}
-  ]
+  "model": "gpt-5.6-luna",
+  "messages": [{"role": "user", "content": "Call record_result with answer OK."}],
+  "reasoning_effort": "none",
+  "max_completion_tokens": 128,
+  "tools": [{"type": "function", "function": {"name": "record_result", "description": "Return a result to the caller.", "parameters": {"type": "object", "properties": {"answer": {"type": "string"}}, "required": ["answer"], "additionalProperties": false}}}],
+  "tool_choice": {"type": "function", "function": {"name": "record_result"}}
 }
 ```
 
-### 多轮对话
+## 用量与费用
 
-```json  theme={null}
-{
-  "model": "gemini-2.5-flash",
-  "messages": [
-    {"role": "user", "content": "什么是机器学习？"},
-    {"role": "assistant", "content": "机器学习是人工智能的一个分支..."},
-    {"role": "user", "content": "能举个例子吗？"}
-  ]
-}
-```
+`prompt_tokens` 包含普通输入及缓存部分；缓存命中和写入是其中的不同计费部分，不能在总输入之外再加一次。`completion_tokens` 包含思考 token，不能重复计费。`usage.cost` 是整数 quota，不是美元；当前换算为 500,000 quota = 1 USD。最终费用以本人文本账本为准，`pricing_pending` 表示仍需核对，不能显示为零费用。
 
-### 流式输出
+## 当前不开放的参数
 
-```json  theme={null}
-{
-  "model": "gpt-5",
-  "messages": [
-    {"role": "user", "content": "写一首关于春天的诗"}
-  ],
-  "stream": true
-}
-```
-
-## 高级功能
-
-<Note>
-  本接口支持基础的文本对话。如需使用以下高级功能，请参考：
-
-  - **图片/视频分析** — [多模态响应接口](/cn/api-reference/text/openai-multimodal)
-  - **工具调用 (Function Calling)** — [多模态响应接口](/cn/api-reference/text/openai-multimodal)
-  - **网络搜索、文件搜索** — [多模态响应接口](/cn/api-reference/text/openai-multimodal)
-  - **流式输出** — [流式输出指南](/cn/docs/streaming)
-</Note>
+内置联网、托管搜索/执行工具和非标准 `service_tier` 尚未配置完整费用，因此在预扣前拒绝。客户端函数调用不属于这些托管工具。Gemini 显式缓存存储同样未开放。原生协议分别见 [Gemini](/cn/api-reference/text/gemini-native)和 [Claude Messages](/cn/api-reference/text/claude-messages)，无需为每个渠道增加一套 URL。

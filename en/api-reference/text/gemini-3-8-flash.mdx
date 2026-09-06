@@ -1,0 +1,96 @@
+---
+title: "Gemini 3.8 Flash"
+description: "The stronger-reasoning tier in the series, built for long-horizon engineering, autonomous agents and complex enterprise workflows."
+---
+
+## What this model is for
+
+`gemini-3.8-flash` is engineered for long-horizon software engineering, autonomous agents and complex enterprise workflows, and is built to sustain coherent planning and execution across extended task chains. It fits work that advances through many dependent stages, where drift partway through a long sequence is costly and consistent follow-through matters more than brevity.
+
+## Supported use
+
+Call it through the common OpenAI-compatible endpoint:
+
+```
+POST /v1/chat/completions
+```
+
+Pass the exact model ID `gemini-3.8-flash` in the `model` field.
+
+Confirmed capabilities:
+
+- **Text generation** — standard `messages` chat completions.
+- **Streaming** — set `stream: true` for incremental deltas.
+- **Function calling** — the model produces the function name and arguments; your application executes the tool and sends the result back as a new message.
+- **Structured output** — constrain responses with a JSON Schema.
+
+For the full request and response reference see [General Chat](/en/api-reference/text/general-chat), and for credentials see [Authentication](/en/docs/authentication).
+
+## Pricing
+
+Current retail price, USD per million tokens:
+
+| Item | Price |
+| --- | --- |
+| Ordinary input | 0.675 |
+| Output (includes reasoning) | 3.375 |
+| Implicitly cached input | 0.0675 |
+
+Formula:
+
+```
+USD = ((prompt_tokens - cached_tokens) * 0.675
+     + cached_tokens * 0.0675
+     + completion_tokens * 3.375) / 1000000
+```
+
+Notes:
+
+- The cache discount applies only to cache tokens actually reported by the upstream supplier. Those tokens are a subset of `prompt_tokens`, and a cache hit is never guaranteed — do not build cost estimates that assume one.
+- Reasoning tokens are already included in `completion_tokens`, with no separate line item and no double counting. On long task chains that reasoning is still billed at the output rate, so budget across the whole multi-step run rather than per call.
+- There is no cache creation or storage API, and no grounding, Batch, Flex or Priority capability offered for this model.
+- `usage.cost` in a Chat response is the gateway's integer quota counter, not a dollar amount. The final actual charge appears in your console usage history and is subject to integer rounding and a minimum charge.
+- A missing final usage block (for example after a timeout or dropped connection) is not evidence that the request was free. Check the status of the existing request in the console before retrying, so you do not pay twice.
+
+This is the current price.
+
+## Example
+
+`WAVE_BASE_URL` must point at your own WaveAPI gateway, and `WAVE_API_KEY` holds your API key:
+
+```bash
+curl -X POST "$WAVE_BASE_URL/v1/chat/completions" \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-3.8-flash",
+    "messages": [
+      { "role": "user", "content": "Hi, introduce yourself in one sentence." }
+    ],
+    "max_tokens": 512,
+    "reasoning_effort": "low",
+    "stream": false
+  }'
+```
+
+`max_tokens: 512` is only the output budget for this sample. It is not the context window and not a guarantee of what a call will cost.
+
+## Native Gemini clients
+
+Chat remains the recommended interface for new integrations. If you already have a client written against the native Gemini protocol, you can call the native path directly, using the exact model ID `gemini-3.8-flash` in the URL:
+
+```bash
+curl -X POST "$WAVE_BASE_URL/v1beta/models/gemini-3.8-flash:generateContent" \
+  -H "x-goog-api-key: $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [
+      { "role": "user", "parts": [ { "text": "Reply with the single word OK." } ] }
+    ],
+    "generationConfig": { "maxOutputTokens": 512 }
+  }'
+```
+
+Streaming uses the same model with the method changed to `:streamGenerateContent?alt=sse`; the body is unchanged.
+
+Native responses report usage in `usageMetadata`: `promptTokenCount` already includes `cachedContentTokenCount`, and billed output is `candidatesTokenCount + thoughtsTokenCount`. For streaming, read the final cumulative usage rather than adding up per-frame values. Ordinary input, cached input and output are priced exactly as in the table above.

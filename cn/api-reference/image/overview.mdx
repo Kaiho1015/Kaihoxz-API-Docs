@@ -19,8 +19,8 @@ POST https://www.qingbo.dev/v1/tasks
   <Card title="Gemini Image" href="/cn/api-reference/image/gemini">
     Google Gemini 图像 — Nano Banana 系列(2.5 Flash / 3 Pro / 3.1 Flash)+ official 直连
   </Card>
-  <Card title="GPT Image" href="/cn/api-reference/image/gpt-image">
-    OpenAI GPT-Image — 1 / 1.5 / 2,多模态生成 + 编辑 + 局部重绘
+  <Card title="GPT Image" href="/cn/api-reference/image/gpt-image/overview">
+    GPT Image 模型家族 — GPT Image 2 官方与逆向线路,统一任务接口,按能力与计费方式选择模型 ID
   </Card>
   <Card title="Seedream" href="/cn/api-reference/image/seedream">
     字节豆包 Seedream — 4.0 / 4.5 / 5.0-lite,14 张参考,组图生成
@@ -110,7 +110,7 @@ POST https://www.qingbo.dev/v1/tasks
 | **文生图(T2I)** | 仅 `prompt` | 全部 |
 | **图生图 / 多图参考** | `+ image_urls`(单图或多图) | Seedream / Gemini / GPT-Image / Wan / Qwen |
 | **图像编辑(局部重绘 / 光影修改)** | `+ image_urls + action: edit` | Seedream 4.0/4.5 / Gemini / GPT-Image / Wan |
-| **局部重绘(带 mask)** | `+ image_urls + mask_url + action: inpaint` | GPT-Image 系列 |
+| **局部重绘(带 mask)** | `+ image_urls + mask_url + action: edit` | [`gpt-image-2`](/cn/api-reference/image/gpt-image/gpt-image-2)(官方线路) |
 | **组图生成(主题相关一组)** | `sequential_image_generation: auto` 或 `enable_sequential: true` | Seedream / Wan |
 | **交互式编辑(bbox 框选)** | `+ image_urls + bbox_list` | Wan Image |
 | **搜索增强出图** | `google_search: true` 或 `google_image_search: true` | Gemini 3.1 Flash |
@@ -124,7 +124,7 @@ POST https://www.qingbo.dev/v1/tasks
 - **媒体引用统一复数** — 一律 `image_urls`,即使单张也用单元素数组 `["one.jpg"]`
 - **画面比例统一** `aspect_ratio` — vendor 内部用 `size` / `ratio` 等是实现细节,无需感知
 - **分辨率统一** `resolution` — vendor 内部用 `quality` 等是实现细节
-- **遮罩字段** `mask_url`(GPT-Image 系列局部重绘用)
+- **遮罩字段** `mask_url`(`gpt-image-2` 局部重绘用)
 
 ## 相关文档
 

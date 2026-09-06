@@ -1,0 +1,37 @@
+---
+title: "Kimi K3"
+description: "Pricing, integration and verified capabilities"
+---
+
+`kimi-k3` · `POST /v1/chat/completions`
+
+Verified text, streaming and auto function calls. Kimi also passed JSON Schema and a 180-token cache hit. A tool request truncated at 128 output tokens passed with a 512-token budget.
+
+The nine local Kimi/Fable requests settled for 7,499 quota ($0.014998), matching responses, wallet, key, logs and ledger. Two initial capability failures remain recorded. This is not a production deployment.
+
+## Pricing
+
+Checked September 5, 2026. USD per million tokens. [Official](https://www.kimi.ai/resources/kimi-k3-pricing) · [Release](https://github.com/MoonshotAI/kimi-help-center/blob/master/en-US/agent/overview.md)
+
+| Dimension | Retail |
+|---|---:|
+| Input | 2.7 |
+| Output, including reasoning | 13.5 |
+| Cache read | 0.27 |
+
+Cache tokens replace corresponding ordinary input charges. Reasoning is included in output. 500,000 quota equals $1; sum components before integer quota conversion. The settled ledger is authoritative.
+
+## Example
+
+```bash
+curl http://localhost:40081/v1/chat/completions \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"kimi-k3","messages":[{"role":"user","content":"Reply with the single word OK."}],"max_tokens":512,"stream":false}'
+```
+
+For streaming, set `stream: true` and `stream_options: {"include_usage": true}`; read the usage tail and `[DONE]`. Use `tool_choice: "auto"`; the client executes the generated function call.
+
+## Limits
+
+Provider-declared input/output limits: 1,000,000/104,857 tokens, not stress-tested. Images, native protocols, streaming/multi-turn tools and hosted tools are unverified. Independent cache writes are unsupported.

@@ -1,0 +1,179 @@
+---
+title: "GPT-5.6 Luna / Terra / Sol"
+description: "Chat 接入、渠道声明上限与完整 token 价格档位"
+---
+
+使用公开模型 ID `gpt-5.6-luna`、`gpt-5.6-terra` 或 `gpt-5.6-sol`，统一调用 `POST /v1/chat/completions`。三款模型由 OpenAI 于 [2026 年 7 月 9 日发布](https://openai.com/index/gpt-5-6/)。
+
+<Note>
+本轮已在联调环境验证三款模型的 Chat 非流式、流式、JSON Schema 与强制函数调用输出，共 12 条请求，使用 `max_completion_tokens: 128` 和 `reasoning_effort: "none"`。本页仅说明 Chat 协议，Responses 尚未验证。调用前请在[模型目录](/cn/docs/models)确认账户可用状态；联调验收不代表线上部署已完成。
+</Note>
+
+## 模型与渠道声明
+
+| 公开模型 ID | 渠道声明最大输入 token | 渠道声明最大输出 token |
+|---|---:|---:|
+| `gpt-5.6-luna` | 922,000 | 128,000 |
+| `gpt-5.6-terra` | 922,000 | 12,800 |
+| `gpt-5.6-sol` | 922,000 | 12,800 |
+
+以上来自当前渠道的模型声明，**不是实测极限**，也不表示可以同时把输入和输出用满。官方模型规格与渠道接受的请求上限是两回事；不要将官方输出上限直接用作本渠道的输出预算。Luna 已验证一次 275,218 输入 token 的请求；最大输出、多模态输入和其余型号的长上下文仍待验证。
+
+## 价格与计费
+
+以下为 2026 年 9 月 5 日核对的标准文本价格，单位均为 **USD / 100 万 token**。WaveAPI 本组价格为对应官方规格价格的九折，不使用 Batch、Flex 或 Priority 价格。
+
+### 普通档：输入总量不超过 272,000 token
+
+| 模型 | 普通输入 | 输出（含思考） | 缓存读取 | 缓存写入 |
+|---|---:|---:|---:|---:|
+| Luna | $0.18 | $1.08 | $0.018 | $0.225 |
+| Terra | $1.80 | $10.80 | $0.18 | $2.25 |
+| Sol | $3.60 | $18.00 | $0.36 | $4.50 |
+
+### 长上下文档：输入总量超过 272,000 token
+
+| 模型 | 普通输入 | 输出（含思考） | 缓存读取 | 缓存写入 |
+|---|---:|---:|---:|---:|
+| Luna | $0.36 | $1.62 | $0.036 | $0.45 |
+| Terra | $3.60 | $16.20 | $0.36 | $4.50 |
+| Sol | $7.20 | $27.00 | $0.72 | $9.00 |
+
+输入总量包含缓存读取和写入 token。**恰好 272,000 token 使用普通档；超过时，整次请求切换到长上下文档**，包括全部输入、缓存读取、缓存写入和输出，不是只给超出部分加价。上述价格来自各型号的当前官方基准：[Luna](https://developers.openai.com/api/docs/models/gpt-5.6-luna)、[Terra](https://developers.openai.com/api/docs/models/gpt-5.6-terra)、[Sol](https://developers.openai.com/api/docs/models/gpt-5.6-sol)。
+
+<Warning>
+Sol 当前官方基准属于促销价，官方承诺至少持续至 **2026 年 11 月 21 日**。届时须重新核对官方价格与 WaveAPI 生效价；本页不承诺促销价永久延续，也不预告尚未确定的新价格。
+</Warning>
+
+### 缓存和思考 token
+
+在统一输入总量中，缓存读取和缓存写入分别替换普通输入计费。缓存写入价为本档普通输入价的 1.25 倍，**不是先收一遍普通输入，再加 1.25 倍写入费**。官方语义见[提示缓存说明](https://developers.openai.com/api/docs/guides/prompt-caching)。
+
+```text
+P = 输入总量（含缓存读取和写入）
+R = 实际缓存读取 token
+W = 实际缓存写入 token
+O = 输出总量（已含思考 token）
+
+普通输入 token = P - R - W
+费用（USD）= ((P - R - W) × 本档输入价
+            + R × 本档缓存读取价
+            + W × 本档缓存写入价
+            + O × 本档输出价) / 1,000,000
+```
+
+`completion_tokens` 已包含 `completion_tokens_details.reasoning_tokens`，思考用量不能再加一次。各分项费用先汇总，再换成整数 quota；账户适用的计费倍率与整数计量也会影响最终额度。
+
+缓存价格适用于渠道实际报告的用量。Luna 已完成自动缓存写入、缓存命中和超过 272K 输入的真实计费验收。Terra / Sol 的缓存，以及所有型号的显式缓存控制参数和保留时长仍未验证；不要从有价格推断这些能力已开放。若用量存在不同保留时长的写入分项，必须使用相应已配置价格，不能把未知时长或缺失价格按零计费。
+
+### `usage.cost` 与最终账务
+
+Chat 非流式响应体或流式 usage 末帧中的 `usage.cost` 是本次按用量计算的 **quota 整数**，不是 USD，也不是美元单价。响应出现该字段不等于账户结算已经完成；最终费用以该调用的账务记录为准。
+
+| 文本账务状态 | 含义 |
+|---|---|
+| `reserved` | 已预扣，结果尚未确认；预扣不是最终费用 |
+| `pricing_pending` | 已收到用量，但价格或计量信息需要核对；保留预扣，不发布确定的费用 |
+| `settlement_pending` / `refund_pending` | 等待结算或退款完成 |
+| `settled` / `refunded` | 扣费或退款已完成；使用最终账务金额核对 |
+
+这些是文本账务记录的状态，不是 Chat 响应新增的 `billing_status` 字段，也不是异步媒体任务。若没有收到完整 usage、费用缺失或连接中断，不要视为免费或立即重复提交；先核对已有调用及账务状态。缺少可核实的写入价格时，网关不会把供应商返回的同名 USD `cost` 当成 quota 透传。
+
+## Chat 接入
+
+设置 `WAVE_API_KEY` 为自己的 WaveAPI Key。示例使用 Luna；可以把 `model` 换为另外两个公开 ID，参数是否通过以下方验收范围为准。
+
+<CodeGroup>
+
+```bash 非流式
+curl https://www.qingbo.dev/v1/chat/completions \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5.6-luna",
+    "messages": [{"role": "user", "content": "Reply with one short greeting."}],
+    "max_completion_tokens": 128,
+    "reasoning_effort": "none",
+    "stream": false
+  }'
+```
+
+```bash 流式
+curl -N https://www.qingbo.dev/v1/chat/completions \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5.6-luna",
+    "messages": [{"role": "user", "content": "Reply with one short greeting."}],
+    "max_completion_tokens": 128,
+    "reasoning_effort": "none",
+    "stream": true,
+    "stream_options": {"include_usage": true}
+  }'
+```
+
+</CodeGroup>
+
+`128` 是本轮短文本验证的输出预算，不是模型上限。示例沿用已验证的 `reasoning_effort: "none"`；默认推理行为及其他推理档位尚未验证。开启思考后，思考也会占用输出预算；`finish_reason: "length"` 表示输出可能尚未完成，不能当作完整回答验收。
+
+### 安全读取 SSE 用量末帧
+
+usage 末帧的 `choices` 可以为空数组。先读用量，再判断文本增量，避免在生成已完成后因数组越界丢掉费用信息。
+
+```python
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["WAVE_API_KEY"],
+    base_url="https://www.qingbo.dev/v1",
+)
+stream = client.chat.completions.create(
+    model="gpt-5.6-luna",
+    messages=[{"role": "user", "content": "Reply with one short greeting."}],
+    max_completion_tokens=128,
+    reasoning_effort="none",
+    stream=True,
+    stream_options={"include_usage": True},
+)
+
+for chunk in stream:
+    if chunk.usage is not None:
+        quota_cost = getattr(chunk.usage, "cost", None)
+        if quota_cost is not None:
+            print(f"\n本次计算额度: {quota_cost} quota")
+    if chunk.choices:
+        content = chunk.choices[0].delta.content
+        if content:
+            print(content, end="", flush=True)
+```
+
+## 当前渠道验收范围
+
+| Chat 项目 | Luna | Terra | Sol |
+|---|---|---|---|
+| 非流式短文本 | 已通过 · 3 quota | 已通过 · 33 quota | 已通过 · 59 quota |
+| 流式短文本与 usage 末帧 | 已通过 · 3 quota | 已通过 · 33 quota | 已通过 · 59 quota |
+| JSON Schema 输出 | 已通过 · 10 quota | 已通过 · 104 quota | 已通过 · 187 quota |
+| 强制函数调用输出 | 已通过 · 21 quota | 已通过 · 213 quota | 已通过 · 396 quota |
+
+12 条请求均返回 HTTP 200。非流式与流式短文本返回 `OK`，正常结束；流式收到 usage 末帧与 `[DONE]`。JSON Schema 请求返回 `{"answer":"OK"}`；强制函数调用返回 `record_result` 及参数 `{"answer":"OK"}`，**未执行函数**。
+
+表内金额是这些具体测试请求的回执，不是每次调用的固定收费。12 笔合计 **1,121 quota**；响应费用、按用量计算的金额、账户余额变化、Key 用量、12 条独立消费记录与 12 条最终账务记录一致，全部 `settled`，消费日志均已送达。
+
+函数调用验证仅覆盖函数名与参数生成，不代表应用的多轮工具流程已验证。Responses、默认推理及其他推理档位、最大上下文和最大输出、多模态，以及 Terra / Sol 的真实缓存和长上下文均不在已验收范围。
+
+本页不开放内置搜索、托管工具、显式缓存存储或其他额外收费能力。普通由调用方执行的函数与内置工具不同；仍应按已验证的 Chat 参数调用。通用结构见[通用对话接口](/cn/api-reference/text/general-chat)，流式事件处理见[流式输出](/cn/docs/streaming)。
+
+### Luna 缓存与长上下文补充验收
+
+以下 4 次请求均已结算，响应额度与账本一致；未设置显式缓存保留时长。
+
+| 输入总量 | 缓存写入 | 缓存读取 | 输出 | 最终 quota |
+|---:|---:|---:|---:|---:|
+| 4,818 | 4,815 | 0 | 4 | 544 |
+| 4,818 | 4,815 | 0 | 4 | 544 |
+| 4,818 | 0 | 4,815 | 4 | 45 |
+| 275,218 | 275,215 | 0 | 4 | 61,927 |
+
+最后一笔使用长上下文整单档，费用为 0.123854 USD（按整数额度截断）。这是一个已验证样本，不代表最大上下文或所有缓存控制方式均已验证。

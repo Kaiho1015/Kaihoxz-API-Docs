@@ -1,0 +1,42 @@
+---
+title: "DeepSeek V4 Pro / Flash"
+description: "UTC tariffs frozen at request start, with cache-aware billing"
+---
+
+Use `deepseek-v4-pro` or `deepseek-v4-flash` on `POST /v1/chat/completions`. Change `model` to switch models; the provider does not introduce another URL.
+
+## Time-based prices
+
+Checked September 5, 2026. All prices are USD per million tokens and all times below are **UTC**.
+
+| Window | Pro input | Pro cache hit | Pro output | Flash input | Flash cache hit | Flash output |
+|---|---:|---:|---:|---:|---:|---:|
+| Monday–Friday 01:00–04:00 and 06:00–10:00 | 1.188 | 0.044 | 3.564 | 0.396 | 0.014 | 1.188 |
+| Other hours within 00:00–14:00 daily | 0.660 | 0.022 | 1.980 | 0.220 | 0.007 | 0.660 |
+| 14:00–24:00 daily | 0.594 | 0.022 | 1.782 | 0.198 | 0.007 | 0.594 |
+
+Windows include their start and exclude their end. At 04:00 UTC on Monday, the next tariff already applies. **The request-start tariff is frozen for reservation, response cost, and settlement**, even if the response crosses a boundary. Quotes describe the quote timestamp and do not lock a future request.
+
+Retail dimensions are priced at 90% or 100% of the [official tariff for that time](https://api-docs.deepseek.com/quick_start/pricing/), never above it. Public model details expose the complete `price_config.text_schedule`. Operator billing evidence shows the selected version, window, and timestamp.
+
+Cached input is included in prompt tokens and replaces the corresponding uncached charge. Reasoning included in completion tokens is counted once. The current provider declares independent cache writes unsupported, so no cache-write price is invented.
+
+## Verified scope
+
+- `deepseek-v4-pro`: chat_nonstream, chat_stream, chat_json_schema, chat_nonstream_forced_function.
+  Pro returned 1,024 cached tokens; the same input dropped from 354 to 27 quota, matching the ledger.
+- `deepseek-v4-flash`: chat_nonstream, chat_stream, chat_json_schema, chat_nonstream_forced_function.
+  Flash returned zero cache hits in two repeated-context checks; the cache tariff is configured, but hits are not guaranteed.
+
+These calls explicitly set `thinking.type=disabled`. Default thinking mode, maximum context, image input, native Anthropic/Responses, and multi-turn tools remain unverified. Official support alone does not establish provider compatibility. Provider-declared limits are 1,000,000 input / 393,216 output for Pro and 128,000 / 16,000 for Flash; simultaneous maxima were not tested.
+
+## Example
+
+```bash
+curl http://localhost:40081/v1/chat/completions \
+  -H "Authorization: Bearer $WAVEAPI_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Reply with the single word OK."}],"thinking":{"type":"disabled"},"max_tokens":128,"stream":false}'
+```
+
+For streaming, set `stream:true` and `stream_options:{"include_usage":true}`. Read the final usage before reconciling cost. Use a finite key quota to control the overall budget.

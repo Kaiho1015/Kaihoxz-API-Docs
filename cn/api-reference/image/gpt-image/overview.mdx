@@ -1,0 +1,54 @@
+---
+title: "GPT Image 模型家族"
+description: "通过统一任务接口调用 GPT Image 官方与逆向线路"
+---
+
+GPT Image 模型家族统一使用 `POST /v1/tasks`。你只需要根据能力和计费方式选择模型 ID，请求地址不随线路变化。
+
+## 当前可用模型
+
+<CardGroup cols={2}>
+  <Card title="GPT Image 2 官方线路" href="/cn/api-reference/image/gpt-image/gpt-image-2">
+    `gpt-image-2` · 文生图、最多 16 张参考图编辑、掩码重绘、透明背景与输出格式控制；按实际 token 用量结算
+  </Card>
+  <Card title="GPT Image 2 逆向线路" href="/cn/api-reference/image/gpt-image/gpt-image-2-rev">
+    `gpt-image-2-rev` · 文生图与最多 15 张参考图编辑；按 1K / 2K / 4K 固定张价结算
+  </Card>
+</CardGroup>
+
+## 如何选择
+
+| 需求 | 推荐模型 | 原因 |
+|---|---|---|
+| 掩码重绘、透明背景、画质档或输出格式控制 | `gpt-image-2` | 官方线路提供完整参数 |
+| 提交前确定单张价格 | `gpt-image-2-rev` | 按输出分辨率固定计费 |
+| 多图参考编辑 | 两者都支持 | 官方最多 16 张，逆向最多 15 张 |
+
+<Note>
+两条线路不会自动互相切换。请把模型 ID 作为产品选择保存，并按对应子文档发送参数。
+</Note>
+
+## 统一调用方式
+
+```bash
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-image-2",
+    "action": "generate",
+    "prompt": "一只蓝色陶瓷杯放在白色桌面上，柔和自然光",
+    "aspect_ratio": "1:1",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+成功后会返回 `task_id`。使用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，或配置 Webhook 接收终态通知。
+
+## 继续阅读
+
+- [GPT Image 2 官方线路](/cn/api-reference/image/gpt-image/gpt-image-2)
+- [GPT Image 2 逆向线路](/cn/api-reference/image/gpt-image/gpt-image-2-rev)
+- [任务系统](/cn/docs/task-system)
+- [认证](/cn/docs/authentication)

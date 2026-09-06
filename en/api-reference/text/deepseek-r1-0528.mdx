@@ -1,0 +1,72 @@
+---
+title: "deepseek-r1-0528"
+description: "The May 2025 update of DeepSeek R1, suited to mathematical reasoning, code analysis and problems that require multiple steps. Supports streaming answers, structured JSON output and function-call arguments. Reasoning tokens count toward output usage."
+---
+
+The May 2025 update of DeepSeek R1, suited to mathematical reasoning, code analysis and problems that require multiple steps. Supports streaming answers, structured JSON output and function-call arguments. Reasoning tokens count toward output usage.
+
+Use `deepseek-r1-0528` with `POST /v1/chat/completions`. The scope below follows this model's acceptance records.
+
+Official release date: [2025-05-28](https://api-docs.deepseek.com/news/news250528).
+
+## Pricing and billing
+
+These are WaveAPI sale prices in **USD per 1 million tokens**. The official reference does not establish support for every official billing feature on this route.
+
+[Official pricing source](https://api-docs.deepseek.com/quick_start/pricing)
+
+| Billing dimension | WaveAPI rate |
+|---|---:|
+| Total input tokens | 0.495 |
+| Output tokens | 1.971 |
+
+Total input includes any reported cache statistics and is billed at the ordinary input rate. Cache statistics are part of input, not an extra amount to add again. This integration offers only input and output billing, with no separate cache discount, cache creation, or storage capability.
+
+Explicit `cache_control` requests are rejected before quota reservation.
+
+`completion_tokens` already includes reasoning tokens in its detail fields; do not add them again. Missing usage does not mean zero cost.
+
+```text
+USD = (total_input_tokens * applicable_input_rate
+     + completion_tokens * applicable_output_rate) / 1,000,000
+```
+
+The formula requires complete usage. The gateway converts it to base quota; with the per-request minimum enabled, a request with positive usage and less than 1 base quota is raised to 1 before applying the account group multiplier and taking the integer part. The verified standard group uses multiplier 1, so its minimum charge for positive usage is 1 quota per request. The USD value of 1 quota depends on gateway conversion settings. A very small request can therefore cost more than the unrounded formula amount.
+
+Response `usage.cost` is an integer quota amount, not USD. Reconcile it with console usage records.
+
+## Supported features
+
+This integration supports the following text features:
+
+- Chat function-call argument generation
+- Chat JSON Schema output
+- Non-streaming Chat text and usage
+- Streaming Chat text and final usage
+
+Tool calls return function names and arguments for your application to execute.
+
+## Request example
+
+Set `WAVE_API_KEY` to your own key. This example explicitly selects non-streaming and a requested 2048-token budget, without adding a reasoning parameter.
+
+```bash
+curl http://localhost:40081/v1/chat/completions \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "deepseek-r1-0528",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Reply with one short greeting."
+    }
+  ],
+  "stream": false,
+  "max_tokens": 2048
+}'
+```
+
+Replace the gateway URL for your deployment. `max_tokens=2048` is an example request parameter, not a model limit or total-cost guarantee. If the connection drops or final usage is absent, inspect existing usage records before retrying.
+
+[Common Chat API parameters](/en/api-reference/text/general-chat) · [Key authentication](/en/docs/authentication)

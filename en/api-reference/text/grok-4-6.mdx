@@ -1,0 +1,40 @@
+---
+title: "Grok 4.6"
+description: "Text, structured output, caching, and the 200K tier"
+---
+
+Use `grok-4.6` with `POST /v1/chat/completions`. Non-streaming text, streaming, JSON Schema, and cache-read billing passed live checks.
+
+Released on [2026-08-12](https://x.ai/news/grok-4-6)。
+
+## Pricing
+
+Checked September 5, 2026. USD per million tokens, at 90% of [official standard pricing](https://docs.x.ai/developers/pricing).
+
+| Total prompt | Uncached input | Cache read | Output including reasoning |
+|---|---:|---:|---:|
+| &lt;200,000 | 1.80 | 0.45 | 5.40 |
+| ≥200,000 | 3.60 | 0.90 | 10.80 |
+
+At exactly 200,000 prompt tokens, all input, cached input, and output use the higher tier. Cached tokens are part of the prompt total. This is not marginal pricing on the excess. The provider explicitly declares separate cache writes unsupported; no write rate is invented.
+
+## Capabilities and limits
+
+Text, streaming, and JSON Schema passed. Each of the four test calls reported 192 cached input tokens, billed at the cache rate instead of uncached input; reasoning is included in completion_tokens.
+
+Function calling is not enabled on the current APIMart route: a forced-tool test returned plain text without tool_calls. Explicit tool configuration is rejected before quota reservation. This describes the current route, not a claim that the official model lacks the feature.
+
+The provider declares 500,000 input and 12,800 output tokens; maxima were not tested. Tests used reasoning_effort=low and max_tokens=512, but two responses reported completion_tokens above 512 after including reasoning. Do not treat max_tokens as a hard cap on total billable tokens or cost. Key quota helps control the overall budget; final charges still follow actual usage and billing records.
+
+The long-context tier is configured with tested calculation boundaries; no live 200K request was sent. Image input, other reasoning levels, and Responses remain unverified. Built-in search and other independently billed tools are not enabled.
+
+## Example
+
+```bash
+curl http://localhost:40081/v1/chat/completions \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"grok-4.6","messages":[{"role":"user","content":"Reply with the single word OK."}],"reasoning_effort":"low","max_tokens":512,"stream":false}'
+```
+
+Replace the gateway URL after deployment. For streaming, add stream=true and stream_options.include_usage=true. See JSON Schema request structure in the [Chat API](/en/api-reference/text/general-chat).

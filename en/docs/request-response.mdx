@@ -23,8 +23,7 @@ Response shapes vary by endpoint, each following its own API spec:
 
 ## Billing Field (usage.cost)
 
-Text and embedding endpoints return the actual charge of each call (quota,
-integer) in the `usage` object:
+The OpenAI-format responses from `/v1/chat/completions` and `/v1/embeddings` return the call's billed quota in `usage.cost`. Its unit is **quota (an integer)**, not US dollars (USD). For example, `cost: 150` means 150 quota.
 
 ```json
 {
@@ -37,13 +36,12 @@ integer) in the `usage` object:
 }
 ```
 
-- **Non-streaming** → `usage.cost` in the response body
-- **Streaming (SSE)** → the last data frame carrying `usage` (see [Streaming](/en/docs/streaming))
-- **Async tasks** → `pre_consumed_cost` on submission (pre-deduction), `cost` in the terminal
-  state (settlement; `0` after refund on failure/cancellation)
+- **Non-streaming Chat Completions and Embeddings** → `usage.cost` in the response body
+- **Streaming Chat Completions (SSE)** → the last data frame carrying `usage` (see [Streaming](/en/docs/streaming))
 
-For per-call reconciliation, the accumulated value of these fields matches your
-account balance deductions exactly.
+Claude Messages (`/v1/messages`), OpenAI Responses (`/v1/responses`), and native Gemini endpoints use their own usage structures. They do not currently define a shared gateway `usage.cost` field. Do not interpret an upstream field with the same name as gateway quota; check these calls' charges in the console usage records.
+
+Async tasks have separate cost and settlement-status fields; see [Query Task](/en/api-reference/task/status). Do not add task cost fields directly to text `usage.cost` as though their units were the same.
 
 ## Error Responses
 

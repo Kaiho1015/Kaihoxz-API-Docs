@@ -1,0 +1,38 @@
+---
+title: "GPT-5.4 / GPT-5.5"
+description: "Unified Chat access, pricing, and verified features"
+---
+
+Use `gpt-5.4` or `gpt-5.5` with the same `POST /v1/chat/completions` endpoint. GPT-5.4 [launched on March 5, 2026](https://openai.com/index/introducing-gpt-5-4/); GPT-5.5 [launched April 23 and became API-available April 24](https://openai.com/index/introducing-gpt-5-5/).
+
+Both models passed local non-streaming, streaming, JSON Schema, and forced function-call output checks. All eight requests settled: **1,228 quota (USD 0.002456)** matched the responses, wallet, Key, logs, and ledger. Tests used `reasoning_effort: "none"` and `max_completion_tokens: 128`. Functions were returned, not executed. Local acceptance does not establish production deployment.
+
+## Prices
+
+Checked 2026-09-05; **USD per million tokens**, at 90% of standard official prices. References: [GPT-5.4](https://developers.openai.com/api/docs/models/gpt-5.4) and [GPT-5.5](https://developers.openai.com/api/docs/models/gpt-5.5).
+
+| Model | Input ≤272K | Output ≤272K | Cache read ≤272K | Input >272K | Output >272K | Cache read >272K |
+|---|---:|---:|---:|---:|---:|---:|
+| GPT-5.4 | 2.25 | 13.50 | 0.225 | 4.50 | 20.25 | 0.45 |
+| GPT-5.5 | 4.50 | 27.00 | 0.45 | 9.00 | 40.50 | 0.90 |
+
+**Total input tokens**, including cache reads, select every column's tier. Above 272,000 the whole request changes tier; exactly 272,000 stays in the standard tier. Cache reads replace corresponding input charges. Reasoning is included in output and is not added twice. The current provider explicitly declares separate cache writes unsupported; do not copy GPT-5.6's 1.25x write rate.
+
+`usage.cost` is integer quota, not USD. Charges are summed before conversion and truncation; the `settled` text ledger establishes the final debit. Missing costs or a disconnected response do not imply a free request. See [text billing states](/en/api-reference/text/gpt-5-6#usagecost-and-final-billing).
+
+## Example
+
+```bash
+curl http://localhost:40081/v1/chat/completions \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"gpt-5.4","messages":[{"role":"user","content":"Reply with the single word OK."}],"reasoning_effort":"none","max_completion_tokens":128}'
+```
+
+This is the local acceptance address; replace it with your gateway address after deployment. Change the model ID to `gpt-5.5` as needed. For streaming add `stream: true` and `stream_options: {"include_usage": true}`; consume the final usage frame and `[DONE]`. JSON Schema and function parameters follow the [General Chat API](/en/api-reference/text/general-chat).
+
+## Scope and limits
+
+The provider declares maximum **1,000,000 input** and **12,800 output** tokens. These are declarations, not stress-tested maxima or a promise that both can be exhausted together. Official model specifications do not override provider limits.
+
+Live cache reads, long context, maximum output, default or other reasoning levels, image inputs, Responses, and multi-turn tool workflows remain unverified. Built-in search, hosted tools, regional surcharges, and other separately billed capabilities are outside this page's enabled scope.

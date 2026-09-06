@@ -1,0 +1,96 @@
+---
+title: "Gemini 3.8 Flash"
+description: "同系列中推理能力更强的一档，面向长周期软件工程、自主智能体与复杂企业流程，支持文本生成、流式输出、函数调用与结构化输出。"
+---
+
+## 模型定位
+
+`gemini-3.8-flash` 是同系列中推理能力更强的一档，面向长周期软件工程、自主智能体与复杂企业流程设计，能在较长的任务链上保持计划与执行的一致性，适合需要跨多个环节推进、对中途偏离较为敏感的工程与业务场景。
+
+## 支持的能力
+
+推荐通过通用的 OpenAI 兼容接口调用：
+
+```
+POST /v1/chat/completions
+```
+
+请求体中的 `model` 请使用完整的模型 ID `gemini-3.8-flash`。
+
+当前已确认支持：
+
+- **文本生成**：标准的 `messages` 对话补全。
+- **流式输出**：设置 `stream: true` 后按增量返回。
+- **函数调用**：模型负责生成函数名与参数；工具的实际执行由你的应用完成，并把结果作为新的消息回传。
+- **结构化输出**：可按 JSON Schema 约束返回结构。
+
+接口参数与返回字段的完整说明见 [通用对话接口](/cn/api-reference/text/general-chat)，鉴权方式见 [鉴权说明](/cn/docs/authentication)。
+
+## 计费
+
+当前零售价格（美元 / 每百万 tokens）：
+
+| 计费项 | 单价 |
+| --- | --- |
+| 普通输入 | 0.675 |
+| 输出（含推理内容） | 3.375 |
+| 隐式缓存输入 | 0.0675 |
+
+计算公式：
+
+```
+USD = ((prompt_tokens - cached_tokens) * 0.675
+     + cached_tokens * 0.0675
+     + completion_tokens * 3.375) / 1000000
+```
+
+说明：
+
+- 缓存折扣只适用于上游实际回报的缓存 tokens，它们是 `prompt_tokens` 的一个子集；缓存是否命中由上游决定，请不要按“必定命中”来做成本预估。
+- 推理内容产生的 tokens 已计入 `completion_tokens`，不需要另行叠加，也不会重复计费。长任务链上的推理输出同样按输出价计费，建议对多步骤流程做整体预算。
+- 目前不提供缓存创建/存储接口，也不提供 grounding、Batch、Flex 或 Priority 相关能力。
+- Chat 响应中的 `usage.cost` 是网关内部的整数额度计数，不是美元金额。最终实际扣费以控制台的用量记录为准，并会受到整数取整与最低计费的影响。
+- 如果因超时或断连没有拿到最终的 usage，不能据此认为该次请求免费。重试前请先在控制台确认已有请求的状态，避免重复计费。
+
+以上为当前价格。
+
+## 调用示例
+
+`WAVE_BASE_URL` 需指向你所使用的 WaveAPI 网关地址，`WAVE_API_KEY` 为你的 API Key：
+
+```bash
+curl -X POST "$WAVE_BASE_URL/v1/chat/completions" \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-3.8-flash",
+    "messages": [
+      { "role": "user", "content": "你好，请用一句话介绍你自己。" }
+    ],
+    "max_tokens": 512,
+    "reasoning_effort": "low",
+    "stream": false
+  }'
+```
+
+其中 `max_tokens: 512` 只是本示例的输出预算上限，既不代表模型的上下文窗口，也不构成对单次调用花费的保证。
+
+## Gemini 原生客户端
+
+新接入仍建议使用上面的通用对话接口。如果你已有按 Gemini 原生协议编写的客户端，也可以直接调用原生路径，路径中的模型名请使用完整的模型 ID `gemini-3.8-flash`：
+
+```bash
+curl -X POST "$WAVE_BASE_URL/v1beta/models/gemini-3.8-flash:generateContent" \
+  -H "x-goog-api-key: $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [
+      { "role": "user", "parts": [ { "text": "Reply with the single word OK." } ] }
+    ],
+    "generationConfig": { "maxOutputTokens": 512 }
+  }'
+```
+
+流式使用同一个模型，把方法换成 `:streamGenerateContent?alt=sse` 即可，请求体保持不变。
+
+用量与计费方面，原生响应在 `usageMetadata` 中报告用量：`promptTokenCount` 已经包含 `cachedContentTokenCount`，计费的输出为 `candidatesTokenCount + thoughtsTokenCount`。流式请以最终的累计用量为准，不要把各帧的用量相加。普通输入、缓存输入与输出的单价与上表相同。

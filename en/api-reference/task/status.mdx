@@ -27,7 +27,7 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
   "status": "queued",
   "action": "generate",
   "model": "wan2.7",
-  "progress": 0,
+  "progress": "",
   "created_at": 1720000000,
   "urls": {
     "get": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499",
@@ -42,7 +42,7 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
   "status": "processing",
   "action": "generate",
   "model": "wan2.7",
-  "progress": 45,
+  "progress": "45%",
   "created_at": 1720000000,
   "urls": {
     "get": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499",
@@ -57,7 +57,7 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
   "status": "completed",
   "action": "generate",
   "model": "wan2.7",
-  "progress": 100,
+  "progress": "100%",
   "created_at": 1720000000,
   "completed_at": 1720000030,
   "cost": 75000,
@@ -82,7 +82,7 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
   "status": "completed",
   "action": "generate",
   "model": "seedream-5.0-lite",
-  "progress": 100,
+  "progress": "100%",
   "created_at": 1720000000,
   "completed_at": 1720000030,
   "cost": 5500,
@@ -107,7 +107,7 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
   "status": "failed",
   "action": "generate",
   "model": "wan2.7",
-  "progress": 0,
+  "progress": "100%",
   "created_at": 1720000000,
   "completed_at": 1720000005,
   "cost": 0,
@@ -133,7 +133,7 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
 <ResponseField name="status" type="string">
   Task status:
   - `queued` — Submitted, waiting to be processed
-  - `processing` — In progress; the `progress` field indicates progress (0–100)
+  - `processing` — In progress; the `progress` field indicates progress (percentage string)
   - `completed` — Done; `result` contains the generated output
   - `failed` — Failed; `error` contains the error details
   - `cancelled` — Cancelled (only `queued` tasks can be cancelled)
@@ -147,16 +147,17 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
   Model ID used (group_name)
 </ResponseField>
 
-<ResponseField name="progress" type="integer">
-  Progress as an integer 0–100. `0` for queued / failed / cancelled, `100` for completed
+<ResponseField name="progress" type="string">
+  Progress as a **percentage string** (for example `"30%"`, `"100%"`). It may be an empty string right after queuing; terminal states (completed / failed) report `"100%"`.
+  Note that the submit response carries `progress` as the integer `0`, while the status response carries a string — do not parse it as a number.
 </ResponseField>
 
 <ResponseField name="created_at" type="integer">
-  Creation time (Unix millisecond timestamp)
+  Creation time (Unix timestamp in **seconds**)
 </ResponseField>
 
 <ResponseField name="completed_at" type="integer">
-  Completion time (Unix millisecond timestamp). **Only present in completed / failed / cancelled states**
+  Completion time (Unix timestamp in **seconds**). **Only present in completed / failed / cancelled states**
 </ResponseField>
 
 <ResponseField name="cost" type="integer">
@@ -174,7 +175,7 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
 <ResponseField name="result" type="object">
   Generation result. **Only present in the completed state**. Depending on the task's media type, the key is `images` / `videos` / `audios` (an array). Each item contains:
   - `url` — `string[]` array (always an array, even with a single element)
-  - `expires_at` — Unix timestamp; link expiration (default 3 days)
+  - `expires_at` — Unix timestamp in seconds; a suggested download deadline. It is recomputed **on every query** as "now + 3 days" and is not a storage-side retention promise
 </ResponseField>
 
 <ResponseField name="urls" type="object">
@@ -193,7 +194,7 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
 See [Task System](/en/docs/task-system) for the full workflow.
 
 <Warning>
-**Generated result links are valid for 24 hours to 3 days** (see the `expires_at` field). Download and persist them to your own storage promptly. After expiration the links become invalid and you'll need to resubmit the task.
+**Download and persist result links to your own storage promptly.** `expires_at` is a suggested download deadline of 3 days from the moment of the query and is recomputed on every query; it neither guarantees that the file is kept until then nor that it disappears afterwards. Do not rely on result links for long-term storage.
 </Warning>
 
 ## Error Codes

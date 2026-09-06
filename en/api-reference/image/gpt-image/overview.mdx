@@ -1,0 +1,54 @@
+---
+title: "GPT Image family"
+description: "Call official and reverse GPT Image lines through one task endpoint"
+---
+
+Every GPT Image model uses `POST /v1/tasks`. Choose the model ID by capability and billing method; the request URL stays the same across lines.
+
+## Available models
+
+<CardGroup cols={2}>
+  <Card title="GPT Image 2 Official" href="/en/api-reference/image/gpt-image/gpt-image-2">
+    `gpt-image-2` · text-to-image, edits with up to 16 references, mask inpainting, transparency, and output controls; billed on actual token usage
+  </Card>
+  <Card title="GPT Image 2 Reverse" href="/en/api-reference/image/gpt-image/gpt-image-2-rev">
+    `gpt-image-2-rev` · text-to-image and edits with up to 15 references; fixed per-image pricing at 1K, 2K, or 4K
+  </Card>
+</CardGroup>
+
+## Choose a line
+
+| Need | Recommended model | Why |
+|---|---|---|
+| Masks, transparent backgrounds, quality tiers, or output-format controls | `gpt-image-2` | The official line exposes the full parameter set |
+| A fixed per-image price before submission | `gpt-image-2-rev` | Billing is fixed by output resolution |
+| Multi-image reference editing | Either | Official accepts up to 16 images; reverse accepts up to 15 |
+
+<Note>
+QWave does not switch between these lines automatically. Store the model ID as a product choice and send only the parameters documented for that line.
+</Note>
+
+## Unified request
+
+```bash
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-image-2",
+    "action": "generate",
+    "prompt": "A blue ceramic cup on a white table in soft natural light",
+    "aspect_ratio": "1:1",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+The response contains a `task_id`. Poll [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), or configure a webhook for terminal updates.
+
+## Continue
+
+- [GPT Image 2 Official](/en/api-reference/image/gpt-image/gpt-image-2)
+- [GPT Image 2 Reverse](/en/api-reference/image/gpt-image/gpt-image-2-rev)
+- [Task system](/en/docs/task-system)
+- [Authentication](/en/docs/authentication)

@@ -1,0 +1,33 @@
+---
+title: "Qwen3.8 Max"
+description: "Unified Chat, automatic caching and verified scope"
+---
+
+Use `qwen3.8-max` with `POST /v1/chat/completions`. Text, streaming, JSON Schema, auto function calls and automatic caching passed local tests. Six requests settled for 2,095 quota ($0.00419), matching responses, wallet, key, logs and ledger. A repeated prefix hit 1,024 cached tokens, reducing its charge from 1,017 to 352 quota. Hits are not guaranteed.
+
+## Pricing
+
+Checked September 5, 2026. USD per million tokens, at 90% of the [official Beijing-region USD Standard table](https://www.alibabacloud.com/help/en/model-studio/qwen3-8-max).
+
+| Input | Output, including reasoning | Automatic cache read |
+|---:|---:|---:|
+| 1.485 | 4.4559 | 0.1854 |
+
+Cached tokens replace corresponding ordinary input charges. Reasoning is already included in output. Sum components before integer quota conversion; 500,000 quota equals $1. The settled ledger is authoritative.
+
+## Example
+
+```bash
+curl http://localhost:40081/v1/chat/completions \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"qwen3.8-max","messages":[{"role":"user","content":"Reply with the single word OK."}],"stream":false,"max_tokens":512}'
+```
+
+For streaming, use `stream: true` and `stream_options: {"include_usage": true}`, then read final usage and `[DONE]`. Function calls use `tool_choice: "auto"`; the client executes the generated arguments.
+
+## Scope
+
+Only ordinary text and automatic caching are exposed. **Explicit cache creation/reads are unavailable**: `cache_control` is rejected before reservation because explicit reads have a distinct rate. Built-in search and hosted tools are also rejected. Responses, images/PDF, streaming tools and multi-turn tools are unverified.
+
+Provider-declared input/output limits are 983,616/131,072 tokens, not stress-tested. Reasoning consumes output budget; disabling it is not promised. These are local acceptance results, not a production deployment.

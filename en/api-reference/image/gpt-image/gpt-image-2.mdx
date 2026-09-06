@@ -1,0 +1,181 @@
+---
+title: "GPT Image 2 Official"
+description: "Official GPT Image 2 line for image generation, reference editing, and inpainting"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+`gpt-image-2` is the official API line for GPT Image 2. Use it for product imagery, posters, illustration, and edits based on visual references. Every operation uses the unified `POST /v1/tasks` endpoint.
+
+<Note>
+For fixed per-image pricing, see [`gpt-image-2-rev`](/en/api-reference/image/gpt-image/gpt-image-2-rev). Both lines use the same task endpoint, but have separate model IDs, parameters, and billing. QWave never switches between them automatically.
+</Note>
+
+## Quick start
+
+<CodeGroup>
+
+```bash Generate an image
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: image-demo-001" \
+  -d '{
+    "model": "gpt-image-2",
+    "action": "generate",
+    "prompt": "A blue ceramic cup on a white table, soft natural light, product photography",
+    "aspect_ratio": "1:1",
+    "resolution": "1k",
+    "quality": "low",
+    "n": 1
+  }'
+```
+
+```bash Edit a reference image
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: image-edit-001" \
+  -d '{
+    "model": "gpt-image-2",
+    "action": "edit",
+    "prompt": "Keep the subject and replace the background with a beach at sunset",
+    "image_urls": ["https://cdn.example.com/source.png"],
+    "aspect_ratio": "1:1",
+    "resolution": "1k",
+    "quality": "low",
+    "n": 1
+  }'
+```
+
+```bash Inpaint with a mask
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-image-2",
+    "action": "edit",
+    "prompt": "Change only the cup to dark green; preserve everything else",
+    "image_urls": ["https://cdn.example.com/source.png"],
+    "mask_url": "https://cdn.example.com/mask.png",
+    "resolution": "1k",
+    "quality": "medium"
+  }'
+```
+
+</CodeGroup>
+
+The submission response contains a `task_id`. Retrieve the image with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), or use [`Prefer: wait`](/en/api-reference/task/submit#request-waiting-prefer-wait) or a webhook.
+
+## Request parameters
+
+<ParamField body="model" type="string" required>
+  Must be `gpt-image-2`.
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  - `generate`: create an image from text
+  - `edit`: edit reference images; requires `image_urls`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  The image description or editing instruction.
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Reference image URLs. Required for `edit`; up to 16 images.
+</ParamField>
+
+<ParamField body="mask_url" type="string">
+  URL of an inpainting mask. Requires `image_urls` and must match the first reference image dimensions.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="1:1">
+  One of `1:1`, `3:2`, `2:3`, `4:3`, `3:4`, `5:4`, `4:5`, `16:9`, `9:16`, `2:1`, `1:2`, `3:1`, `1:3`, `21:9`, or `9:21`.
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1k">
+  Output resolution: `1k`, `2k`, or `4k`.
+</ParamField>
+
+<ParamField body="quality" type="string" default="low">
+  `low`, `medium`, or `high`. Higher quality usually consumes more output tokens.
+</ParamField>
+
+<ParamField body="n" type="integer" default="1">
+  Currently fixed at `1`; each task generates one image.
+</ParamField>
+
+<ParamField body="background" type="string" default="auto">
+  `auto`, `opaque`, or `transparent`. Transparent output requires `png` or `webp`.
+</ParamField>
+
+<ParamField body="output_format" type="string" default="png">
+  `png`, `jpeg`, or `webp`.
+</ParamField>
+
+<ParamField body="output_compression" type="integer">
+  JPEG/WebP compression from `0` to `100`. Set `output_format` to `jpeg` or `webp` when using it.
+</ParamField>
+
+<ParamField body="moderation" type="string" default="auto">
+  Moderation level: `auto` or `low`.
+</ParamField>
+
+See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key`, and the maximum-cost header. Model parameters not declared on this page are rejected before submission.
+
+## Pricing
+
+The official line is billed from actual token usage in USD per one million tokens:
+
+| Usage | Price |
+|---|---:|
+| Text input | $4.50 |
+| Cached text input | $1.125 |
+| Image input | $7.20 |
+| Cached image input | $1.80 |
+| Image output | $27.00 |
+
+Image input includes reference images and masks. Cached rates apply only when the upstream response reports cache usage that can be settled. Otherwise, billing uses ordinary input and image-output usage.
+
+QWave reserves the maximum estimated cost when the task is submitted, then settles from actual usage and refunds the difference. The task response's `cost` is the final amount. See [Task status](/en/api-reference/task/status) for the billing fields.
+
+## Response
+
+```json Completed task
+{
+  "task_id": "taski_example",
+  "model": "gpt-image-2",
+  "action": "edit",
+  "status": "completed",
+  "progress": "100%",
+  "result": {
+    "images": [
+      {
+        "url": ["https://cdn.example.com/result.png"]
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 6368
+}
+```
+
+Generated images are returned in `result.images`. Failed and cancelled tasks refund their reservation. If an upstream success response contains no deliverable image, QWave marks the task as failed and refunds it.
+
+## Limits
+
+| Item | Limit |
+|---|---|
+| Output count | 1 image per task |
+| Reference images | Up to 16; at least 1 for `edit` |
+| Mask | Must match the first reference image dimensions |
+| Resolution | `1k`, `2k`, `4k` |
+| Output format | `png`, `jpeg`, `webp` |
+
+## Related
+
+- [Submit a task](/en/api-reference/task/submit)
+- [Retrieve a task](/en/api-reference/task/status)
+- [Task system](/en/docs/task-system)
+- [GPT Image family](/en/api-reference/image/gpt-image/overview)
+- [GPT Image 2 Reverse](/en/api-reference/image/gpt-image/gpt-image-2-rev)

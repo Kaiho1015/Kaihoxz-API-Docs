@@ -1,0 +1,153 @@
+---
+title: "Gemini 3.6 Flash"
+description: "文本接入、标准 token 价格与渠道验证范围"
+---
+
+使用公开模型 ID `gemini-3.6-flash` 调用文本生成。OpenAI 兼容入口为 `POST /v1/chat/completions`；Gemini 原生入口使用 `/v1beta`。
+
+<Note>
+本轮已在联调环境验证当前渠道的 Chat Completions 与 Gemini 原生的非流式、流式短文本，以及 Chat 协议下的 JSON Schema 和函数调用输出。更完整的能力仍按下表逐项验证；示例不代表已经验证所有参数。联调结果不代表线上部署已完成，调用前请在[模型目录](/cn/docs/models)确认账户可用状态。
+</Note>
+
+## 价格与计费
+
+以下为标准文本请求价格，单位均为 **USD / 100 万 token**，不使用 Batch 或 Flex 价格。
+
+| 计费项 | Google 官方标准价 | WaveAPI 标准价 |
+|---|---:|---:|
+| 普通输入 | $1.50 | **$1.35** |
+| 输出（含思考 token） | $7.50 | **$6.75** |
+| 缓存读取输入 | $0.15 | **$0.135** |
+
+官方基准见 [Google Gemini API 中文价格页](https://ai.google.dev/gemini-api/docs/pricing?hl=zh-cn)。本页不包含缓存存储、搜索 grounding 或其他工具附加费用；这些能力的接入与计费尚未完成。当前会在预扣前拒绝内置工具、`web_search_options`、Gemini 显式缓存，以及 `standard` / `default` 以外的 `service_tier`。普通由调用方执行的函数调用不属于内置工具，但其渠道验证状态仍以下表为准。
+
+### token 如何计算
+
+- `prompt_tokens` 是输入总量；其中实际命中的 `prompt_tokens_details.cached_tokens` 按缓存读取价计算，其余输入按普通输入价计算。
+- `completion_tokens` 已包含 `completion_tokens_details.reasoning_tokens`。思考 token 按输出价计费，**不能再加一次**。
+- 缓存读取价格只适用于实际报告的缓存命中用量，不代表提供缓存创建或存储接口；本轮尚未完成缓存命中验收。
+
+对返回完整用量的标准文本请求，美元费用的计算口径为：
+
+```text
+普通输入 token = prompt_tokens - cached_tokens
+费用（USD）= (普通输入 token × 1.35
+            + cached_tokens × 0.135
+            + completion_tokens × 6.75) / 1,000,000
+```
+
+例如，输入 1,000 token，其中缓存命中 400 token，输出 200 token（已包含思考 token），按上表计算为 **$0.002214**。这是计算示例，不是调用回执；实际额度扣除还涉及 quota 整数计量。
+
+### 响应费用字段
+
+Chat Completions 的 `usage.cost` 单位是 **quota（整数）**，不是 USD。非流式读取响应体 `usage`；流式读取末尾的 usage 帧，不能把美元单价与该整数直接相加。具体见[请求与响应格式](/cn/docs/request-response)与[流式输出](/cn/docs/streaming)。
+
+如果未收到完整用量或连接中断，不要将缺失费用当作免费，也不要仅因没有末帧就自动再次生成。请先到控制台用量记录核对已有调用。
+
+## OpenAI 兼容接入
+
+以下为文本请求示例。设置 `WAVE_API_KEY` 为自己的 WaveAPI Key。
+
+<CodeGroup>
+
+```bash 非流式
+curl https://www.qingbo.dev/v1/chat/completions \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-3.6-flash",
+    "messages": [{"role": "user", "content": "Reply with one short greeting."}],
+    "max_tokens": 128,
+    "stream": false
+  }'
+```
+
+```bash 流式
+curl -N https://www.qingbo.dev/v1/chat/completions \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-3.6-flash",
+    "messages": [{"role": "user", "content": "Reply with one short greeting."}],
+    "max_tokens": 128,
+    "stream": true,
+    "stream_options": {"include_usage": true}
+  }'
+```
+
+</CodeGroup>
+
+`128` 是短文本验证用的输出预算示例。思考也会消耗输出 token；若 `finish_reason` 为 `length`，可能在可见回答完成前就耗尽预算，不能据此判断模型不能回答，也不能视为完整内容验收。
+
+### 用 SDK 读取流式结果
+
+下面使用 OpenAI Python SDK。usage 帧的 `choices` 可以为空数组，先读取用量，再判断是否存在文本增量。
+
+```python
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["WAVE_API_KEY"],
+    base_url="https://www.qingbo.dev/v1",
+)
+
+stream = client.chat.completions.create(
+    model="gemini-3.6-flash",
+    messages=[{"role": "user", "content": "Reply with one short greeting."}],
+    max_tokens=128,
+    stream=True,
+    stream_options={"include_usage": True},
+)
+
+for chunk in stream:
+    if chunk.usage is not None:
+        quota_cost = getattr(chunk.usage, "cost", None)
+        if quota_cost is not None:
+            print(f"\n消耗额度: {quota_cost} quota")
+    if chunk.choices:
+        content = chunk.choices[0].delta.content
+        if content:
+            print(content, end="", flush=True)
+```
+
+## Gemini 原生格式
+
+原生请求的路径为 `POST /v1beta/models/gemini-3.6-flash:generateContent`，使用 `contents` 与 `generationConfig`，不使用 Chat Completions 的 `messages`。本轮已通过原生非流式与流式短文本验证；原生格式的函数调用与结构化输出仍未验证。
+
+```bash
+curl https://www.qingbo.dev/v1beta/models/gemini-3.6-flash:generateContent \
+  -H "x-goog-api-key: $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{"role": "user", "parts": [{"text": "Reply with one short greeting."}]}],
+    "generationConfig": {"maxOutputTokens": 128}
+  }'
+```
+
+Gemini 原生响应使用自身的 `usageMetadata`，目前不添加网关 `usage.cost` 字段。原生接口的费用应在控制台用量记录核对。
+
+原生流式末尾可以出现仅有用量、`candidates: []` 的事件：即使没有候选文本，也要读取 `usageMetadata`。本轮实际收到的末帧为输入 8、候选输出 1、思考 77、总计 86 token。原生的 `candidatesTokenCount` 与 `thoughtsTokenCount` 分开报告；不要把它们直接当作 Chat 的 `completion_tokens`（已包含思考）来解读。
+
+## 官方能力与本轮联调验证范围
+
+[Google 官方模型页](https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash)列明输入上限 **1,048,576 token**、输出上限 **65,536 token**，并支持思考、函数调用与结构化输出。这些是官方模型规格，不代表本渠道已验证相同上限或全部参数。
+
+| 项目 | 当前渠道验证状态 |
+|---|---|
+| Chat Completions 非流式短文本 | HTTP 200，已返回文本和用量 |
+| Chat Completions 流式短文本与 usage 末帧 | HTTP 200，收到 usage 与 `[DONE]` |
+| Gemini 原生非流式文本请求 | HTTP 200，已返回文本和 `usageMetadata` |
+| Gemini 原生流式请求 | HTTP 200，返回文本；保留 `candidates: []` 的用量末帧 |
+| Chat 协议 JSON Schema | HTTP 200，返回符合示例 schema 的 `{"answer":"OK"}` |
+| Chat 协议强制函数调用 | HTTP 200，返回 `record_result` 和参数 `{"answer":"OK"}`；未执行函数 |
+| Gemini 原生函数调用、结构化输出 | 官方支持；本渠道未验证 |
+| 长上下文与最大输出上限 | 官方规格已核对；本渠道边界未验证 |
+| 多模态输入、缓存命中 | 本轮未验证 |
+| 缓存存储、grounding 与工具附加费用 | 接入和计费未完成，本页不开放 |
+
+本轮两笔 Chat Completions 短文本验证分别返回 275 与 184 quota，总计 459 quota；账户余额变化、Key 用量与消费记录一致。JSON Schema 与函数调用验证另分别返回 404、614 quota。这些是特定请求的验证结果，不是每次调用的固定费用。
+
+Priority、`web_search` 与 Gemini `cache_control` 三类未接入的附加费请求均实测返回 HTTP 400，没有新增账单。函数调用验收只验证参数生成；调用方实际执行函数及后续多轮回传仍需按应用场景验证。
+
+参数结构与通用错误处理见[通用对话接口](/cn/api-reference/text/general-chat)；Key 使用方式见[认证](/cn/docs/authentication)。

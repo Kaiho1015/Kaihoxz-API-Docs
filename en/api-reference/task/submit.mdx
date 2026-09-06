@@ -24,8 +24,10 @@ Submit an image, video, or audio generation task and immediately receive a `task
   Webhook URL invoked when the task completes
 </ParamField>
 
-<ParamField body="extra" type="object">
-  Pass-through field for model-specific parameters; forwarded directly to the upstream model
+<ParamField body="extra" type="object" deprecated>
+  No longer accepted. Put model-specific parameters at the root of the request body; only
+  parameters declared in the model's documentation are accepted. A non-empty `extra` is
+  rejected before any pre-deduction with HTTP 400 (`code: capability_violation`, `param: extra`).
 </ParamField>
 
 For more parameters, see [Image Generation Overview](/en/api-reference/image/overview) or [Video Generation Overview](/en/api-reference/video/overview).

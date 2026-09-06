@@ -1,0 +1,47 @@
+---
+title: "Claude Sonnet 5 / Opus 5"
+description: "Unified text endpoints, cache pricing, and current route capabilities"
+---
+
+Use model IDs `claude-sonnet-5` and `claude-opus-5` with `POST /v1/chat/completions`. Existing Anthropic SDK integrations can use `POST /v1/messages`. The endpoint does not change with the provider, price, or streaming mode.
+
+## Pricing
+
+Checked September 5, 2026. All values are **USD per million tokens**, at 90% of [official standard prices](https://platform.claude.com/docs/en/about-claude/pricing).
+
+| Model | Uncached input | Output including reasoning | Cache read | 5-minute cache write | 1-hour cache write |
+|---|---:|---:|---:|---:|---:|
+| Claude Sonnet 5 | 1.80 | 9.00 | 0.18 | 2.25 | 3.60 |
+| Claude Opus 5 | 4.50 | 22.50 | 0.45 | 5.625 | 9.00 |
+
+Sonnet 5's official 2 / 10 input/output price became permanent; the earlier planned 3 / 15 increase does not apply. Release sources: [Sonnet 5, June 30, 2026](https://www.anthropic.com/news/claude-sonnet-5) and [Opus 5, July 24, 2026](https://www.anthropic.com/news/claude-opus-5).
+
+Uncached input, cache reads, and cache writes are separate, non-overlapping charges. Write usage distinguishes five-minute and one-hour retention. Reasoning is already included in output tokens. These cache rates are configured, but live cache hits and TTL writes for these two models are not yet verified.
+
+## Capabilities
+
+Non-streaming text, Chat streaming, and Chat function-call arguments passed live checks. Your application executes returned tool calls; the gateway does not execute the tool.
+
+**Structured output is not enabled on the current APIMart route.** Live JSON Schema requests did not conform to the requested schema. Chat `response_format` values `json_schema` / `json_object` and Claude structured-output configuration are rejected before quota reservation. Asking for JSON in ordinary text does not guarantee schema compliance.
+
+Native Messages non-streaming and streaming text both passed. Streaming returns authoritative usage in a final `message_delta`, followed by `message_stop`. Built-in web search, premium service tiers, and other independently billed tools are not enabled.
+
+| Provider-declared limit | Sonnet 5 | Opus 5 |
+|---|---:|---:|
+| Input tokens | 1,000,000 | 128,000 |
+| Output tokens | 128,000 | 16,000 |
+
+These are provider declarations, not tested maxima or a promise that both limits can be used simultaneously. Maximum context, multi-turn tool workflows, image input, and explicit cache TTL remain unverified.
+
+## Example
+
+```bash
+curl http://localhost:40081/v1/chat/completions \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"claude-sonnet-5","messages":[{"role":"user","content":"Reply with the single word OK."}],"max_tokens":128,"stream":false}'
+```
+
+Replace the gateway URL after deployment. Change the model ID to `claude-opus-5` to use Opus. For Chat streaming, set `stream: true` and `stream_options: {"include_usage": true}`, then consume final usage and `[DONE]`. See the [Messages API](/en/api-reference/text/claude-messages) for the native envelope.
+
+Chat `usage.cost` is integer quota, not USD. Native Messages does not add this field. Use your billing records for final charges and reconciliation status. See [billing behavior](/en/api-reference/text/gpt-5-6).

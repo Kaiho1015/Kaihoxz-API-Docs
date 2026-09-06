@@ -23,7 +23,7 @@ Authorization: Bearer YOUR_API_KEY
 
 ## 计费字段（usage.cost）
 
-文本与嵌入端点的响应 `usage` 中带本次调用的实际扣费（quota，整数）：
+`/v1/chat/completions` 与 `/v1/embeddings` 的 OpenAI 格式响应在 `usage.cost` 中返回本次调用的计费额度。单位是 **quota（整数）**，不是美元（USD）。例如，`cost: 150` 表示 150 quota。
 
 ```json
 {
@@ -36,11 +36,12 @@ Authorization: Bearer YOUR_API_KEY
 }
 ```
 
-- **非流式** → 响应体 `usage.cost`
-- **流式（SSE）** → 最后一个带 `usage` 的数据帧（详见[流式输出](/cn/docs/streaming)）
-- **异步任务** → 提交返 `pre_consumed_cost`（预扣），终态返 `cost`（结算；失败/取消已退款为 0）
+- **Chat Completions 非流式、Embeddings** → 响应体 `usage.cost`
+- **Chat Completions 流式（SSE）** → 最后一个带 `usage` 的数据帧（详见[流式输出](/cn/docs/streaming)）
 
-按调用对账时，以这些字段累计值为准，与账户余额扣减严格一致。
+Claude Messages（`/v1/messages`）、OpenAI Responses（`/v1/responses`）与 Gemini 原生接口使用各自的用量结构，目前未定义统一的网关 `usage.cost` 字段。不要将其中的同名上游字段直接解释为网关 quota；这些接口的费用请在控制台用量记录中核对。
+
+异步任务有独立的费用和结算状态字段，见[查询任务](/cn/api-reference/task/status)。不要将任务费用字段与文本 `usage.cost` 按同一单位直接相加。
 
 ## 错误响应
 

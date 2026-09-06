@@ -1,0 +1,35 @@
+---
+title: "Claude Fable 5.1"
+description: "Official model ID, automatic tool selection, and cache pricing"
+---
+
+Use the official ID `claude-fable-5-1` with `POST /v1/chat/completions`. APIMart naming differences are mapped internally and do not require another client URL. Official [2026-09-01 release and model details](https://platform.claude.com/docs/en/models/fable-5-1/overview)。
+
+## Pricing
+
+Checked September 5, 2026. USD per million tokens, at 90% of official standard rates for each dimension.
+
+| Uncached input | Output including reasoning | Cache read | 5-minute write | 1-hour write |
+|---:|---:|---:|---:|---:|
+| 9.00 | 45.00 | 0.225 | 11.25 | 18.00 |
+
+Uncached input, cache reads, and writes are non-overlapping charges; output includes reasoning. Cache prices are configured, but live cache hits and TTL writes remain unverified.
+
+## Verified capabilities
+
+Chat non-streaming, streaming, and automatic function calling passed. Supply tools and use tool_choice=auto or omit it; your application executes returned names and arguments. Do not use required or force a named function: the current upstream explicitly rejects these modes. A forced-tool test returned 400 and its reservation was fully refunded; this does not mean all tool use is unsupported.
+
+The JSON Schema test returned a Markdown code block rather than strict JSON. Structured output is therefore disabled; json_schema / json_object requests fail before quota reservation. A natural-language prompt is not a schema guarantee.
+
+The provider declares 1,000,000 input and 128,000 output tokens; neither the limits nor simultaneous maxima were tested. Image input, native Messages, multi-turn tools, and cache TTL remain unverified. Built-in search, hosted tools, and premium service tiers are not enabled.
+
+## Example
+
+```bash
+curl http://localhost:40081/v1/chat/completions \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"claude-fable-5-1","messages":[{"role":"user","content":"Reply with the single word OK."}],"max_tokens":256,"stream":false}'
+```
+
+Replace the gateway URL after deployment. Streaming uses the same URL with stream=true and stream_options.include_usage=true. For function definitions see the [Chat API](/en/api-reference/text/general-chat); use this model ID, remove GPT-specific reasoning_effort, replace max_completion_tokens with max_tokens as shown here, and set tool_choice=auto.

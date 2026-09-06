@@ -1,0 +1,40 @@
+---
+title: "Grok 4.6"
+description: "文本、结构化输出、缓存价格与 200K 档位"
+---
+
+使用 `grok-4.6` 调用 `POST /v1/chat/completions`。已实测文本非流式、流式、JSON Schema 和缓存命中计费。
+
+该模型于 [2026-08-12](https://x.ai/news/grok-4-6)。
+
+## 价格
+
+2026-09-05 核对，单位 USD / 100 万 token，售价为 [official standard pricing](https://docs.x.ai/developers/pricing)的九折。
+
+| 输入总量 | 普通输入 | 缓存命中 | 输出（含思考） |
+|---|---:|---:|---:|
+| &lt;200,000 | 1.80 | 0.45 | 5.40 |
+| ≥200,000 | 3.60 | 0.90 | 10.80 |
+
+输入恰好达到 200,000 tokens 时，整单的输入、缓存命中和输出都切换到高档；缓存部分包含在输入总量中。不是只对超出部分加价。渠道明确不支持独立缓存写入，因此没有虚构写入价格。
+
+## 能力和限制
+
+文本、流式和 JSON Schema 已验证。本次四笔实测各包含 192 个缓存命中 tokens，已按缓存价格替代相应输入计费；思考包含在 completion_tokens 中，不重复相加。
+
+当前 APIMart 路由暂不开放函数调用：强制工具调用实测只返回普通文本，没有返回 tool_calls。显式工具配置会在预扣前拒绝。此限制描述当前渠道接入结果，不代表官方模型没有该功能。
+
+渠道声明输入上限 500,000、输出上限 12,800 tokens，未实测极限。实测设置 reasoning_effort=low、max_tokens=512，但两笔响应的 completion_tokens 包含思考后超过 512。因此 max_tokens 不能当作总计费 tokens 或金额的硬上限。使用 Key 额度控制整体预算，最终金额仍需按实际 usage 和账单核对。
+
+长上下文档位已配置并验证计价边界，但没有发送 200K 真实请求。图像输入、其他推理档位和 Responses 尚未验收；内置联网与其他额外收费工具暂不开放。
+
+## 示例
+
+```bash
+curl http://localhost:40081/v1/chat/completions \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"grok-4.6","messages":[{"role":"user","content":"Reply with the single word OK."}],"reasoning_effort":"low","max_tokens":512,"stream":false}'
+```
+
+部署后替换网关地址。流式在相同请求增加 stream=true、stream_options.include_usage=true；JSON Schema 参数结构参见 [Chat API](/cn/api-reference/text/general-chat).

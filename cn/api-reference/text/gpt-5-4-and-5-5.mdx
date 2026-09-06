@@ -1,0 +1,38 @@
+---
+title: "GPT-5.4 / GPT-5.5"
+description: "统一 Chat 接口、价格和已验证功能"
+---
+
+使用模型 ID `gpt-5.4` 或 `gpt-5.5`，统一调用 `POST /v1/chat/completions`。GPT-5.4 于 [2026 年 3 月 5 日发布](https://openai.com/index/introducing-gpt-5-4/)；GPT-5.5 于 [4 月 23 日发布、4 月 24 日开放 API](https://openai.com/index/introducing-gpt-5-5/)。
+
+两款模型均已在本地联调验证非流式、流式、JSON Schema 和强制函数调用输出，八笔合计 **1,228 quota（0.002456 USD）**，响应、钱包、Key、消费日志和最终账本一致。测试使用 `reasoning_effort: "none"` 和 `max_completion_tokens: 128`；函数只生成名称与参数，没有执行工具。联调完成不代表线上已部署。
+
+## 价格
+
+2026-09-05 核对，单位 **USD / 100 万 token**。均为标准价九折；参考 [GPT-5.4 官方价格](https://developers.openai.com/api/docs/models/gpt-5.4)和 [GPT-5.5 官方价格](https://developers.openai.com/api/docs/models/gpt-5.5)。
+
+| 模型 | 输入 ≤272K | 输出 ≤272K | 缓存命中 ≤272K | 输入 >272K | 输出 >272K | 缓存命中 >272K |
+|---|---:|---:|---:|---:|---:|---:|
+| GPT-5.4 | 2.25 | 13.50 | 0.225 | 4.50 | 20.25 | 0.45 |
+| GPT-5.5 | 4.50 | 27.00 | 0.45 | 9.00 | 40.50 | 0.90 |
+
+所有列的档位都由**输入总 token 数**决定，包括缓存命中；超过 272,000 时整单切换，恰好等于时仍用普通档。缓存命中替代相应输入费用，思考 token 已包含在输出中，不再累加。当前渠道明确声明不支持独立缓存写入，不应复制 GPT-5.6 的 1.25 倍写入价。
+
+`usage.cost` 为整数 quota，不是 USD。分项合计后换算并截断，最终扣款以文本账本 `settled` 为准。缺少确定费用或连接中断不代表免费；先核对已有调用。详细账务状态见 [GPT-5.6 计费说明](/cn/api-reference/text/gpt-5-6#usagecost-与最终账务)。
+
+## 接入示例
+
+```bash
+curl http://localhost:40081/v1/chat/completions \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"gpt-5.4","messages":[{"role":"user","content":"Reply with the single word OK."}],"reasoning_effort":"none","max_completion_tokens":128}'
+```
+
+本地验收使用上面的地址；部署后替换为你的网关地址。将模型 ID 换成 `gpt-5.5` 即可。流式增加 `stream: true` 和 `stream_options: {"include_usage": true}`，以 usage 尾帧和 `[DONE]` 为准。JSON Schema / 函数参数结构与[通用 Chat 接口](/cn/api-reference/text/general-chat)相同。
+
+## 范围与限制
+
+当前渠道声明最大输入 **1,000,000**、最大输出 **12,800** tokens；这是渠道声明，不是压力测试结果，也不承诺同时用满。官方模型规格不能直接替代渠道上限。
+
+尚未实际验证缓存命中、长上下文、最大输出、默认或其他推理档位、图像输入、Responses 和多轮工具流程。内置联网、托管工具、区域溢价和其他额外收费能力不在本页开放范围。

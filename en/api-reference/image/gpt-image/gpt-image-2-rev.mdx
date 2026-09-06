@@ -1,0 +1,136 @@
+---
+title: "GPT Image 2 Reverse"
+description: "Reverse GPT Image 2 line with fixed per-image pricing"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+`gpt-image-2-rev` provides GPT Image 2 text-to-image generation and reference-image editing through an aggregator. Pricing is fixed by output resolution, making the per-image cost known before submission.
+
+<Warning>
+This is a reverse line, not the official OpenAI API. Use [`gpt-image-2`](/en/api-reference/image/gpt-image/gpt-image-2) for quality tiers, masks, transparent backgrounds, and output-format controls. QWave never switches between the two lines automatically.
+</Warning>
+
+## Quick start
+
+<CodeGroup>
+
+```bash Generate an image
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: image-rev-001" \
+  -d '{
+    "model": "gpt-image-2-rev",
+    "action": "generate",
+    "prompt": "Minimal perfume product photography, warm white background, soft studio light",
+    "aspect_ratio": "4:5",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+```bash Edit a reference image
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: image-rev-edit-001" \
+  -d '{
+    "model": "gpt-image-2-rev",
+    "action": "edit",
+    "prompt": "Keep the subject and replace the background with a pale green studio",
+    "image_urls": ["https://cdn.example.com/source.png"],
+    "aspect_ratio": "1:1",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+</CodeGroup>
+
+Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status).
+
+## Request parameters
+
+<ParamField body="model" type="string" required>
+  Must be `gpt-image-2-rev`.
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  - `generate`: create an image from text
+  - `edit`: edit reference images; requires `image_urls`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  The image description or editing instruction.
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Reference image URLs. Required for `edit`; up to 15 images. References do not add a fee.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="1:1">
+  One of `1:1`, `3:2`, `2:3`, `4:3`, `3:4`, `5:4`, `4:5`, `16:9`, `9:16`, `2:1`, `1:2`, `3:1`, `1:3`, `21:9`, or `9:21`.
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1k">
+  Output resolution: `1k`, `2k`, or `4k`.
+</ParamField>
+
+<ParamField body="n" type="integer" default="1">
+  Fixed at `1`; each task generates one image.
+</ParamField>
+
+This line does not accept `quality`, `mask_url`, `background`, `output_format`, `output_compression`, `moderation`, or `seed`. Undeclared parameters are rejected before submission.
+
+## Pricing
+
+Successful tasks are billed at a fixed price:
+
+| Resolution | Price per image |
+|---|---:|
+| `1k` | $0.0095625 |
+| `2k` | $0.01575 |
+| `4k` | $0.023625 |
+
+`generate` and `edit` use the same price, and reference images do not add a fee. Failed, cancelled, and zero-output tasks are fully refunded. Check the model catalog for the current quote; the completed task's `cost` is authoritative.
+
+## Response
+
+```json Completed task
+{
+  "task_id": "taski_example",
+  "model": "gpt-image-2-rev",
+  "action": "edit",
+  "status": "completed",
+  "progress": "100%",
+  "result": {
+    "images": [
+      {
+        "url": ["https://cdn.example.com/result.png"]
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 4781
+}
+```
+
+## Official vs reverse
+
+| | `gpt-image-2-rev` | [`gpt-image-2`](/en/api-reference/image/gpt-image/gpt-image-2) |
+|---|---|---|
+| Access | Aggregator reverse line | Official API line |
+| Billing | Fixed by resolution | Actual token usage |
+| Generation / reference editing | Supported | Supported |
+| Quality tiers | Not supported | `low` / `medium` / `high` |
+| Mask inpainting | Not supported | Supported |
+| Background and output format | Not supported | Supported |
+| Output count | 1 | 1 |
+
+## Related
+
+- [Submit a task](/en/api-reference/task/submit)
+- [Retrieve a task](/en/api-reference/task/status)
+- [Task system](/en/docs/task-system)
+- [GPT Image family](/en/api-reference/image/gpt-image/overview)
+- [Official GPT Image 2](/en/api-reference/image/gpt-image/gpt-image-2)
