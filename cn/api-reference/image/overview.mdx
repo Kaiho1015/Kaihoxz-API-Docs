@@ -16,8 +16,8 @@ POST https://www.qingbo.dev/v1/tasks
 ## 支持的模型
 
 <CardGroup cols={2}>
-  <Card title="Gemini Image" href="/cn/api-reference/image/gemini">
-    Google Gemini 图像 — Nano Banana 系列(2.5 Flash / 3 Pro / 3.1 Flash)+ official 直连
+  <Card title="Nano Banana 经济版" href="/cn/api-reference/image/gemini/nano-banana-rev">
+    Google Gemini 图像 — Pro / 2 / 2 Lite 三档经济线路,按张固定价,最多 14 张参考图
   </Card>
   <Card title="GPT Image" href="/cn/api-reference/image/gpt-image/overview">
     GPT Image 模型家族 — GPT Image 2 官方与逆向线路,统一任务接口,按能力与计费方式选择模型 ID
@@ -127,10 +127,9 @@ POST https://www.qingbo.dev/v1/tasks
 | **文生图(T2I)** | 仅 `prompt` | 全部 |
 | **图生图 / 多图参考** | `+ image_urls`(单图或多图) | Seedream / Gemini / GPT-Image / Wan / Qwen |
 | **图像编辑(局部重绘 / 光影修改)** | `+ image_urls + action: edit` | Seedream 4.0/4.5 / Gemini / GPT-Image / Wan |
-| **局部重绘(带 mask)** | `+ image_urls + mask_url + action: edit` | [`gpt-image-2`](/cn/api-reference/image/gpt-image/gpt-image-2)(官方线路) |
+| **局部重绘(带 mask)** | `+ image_urls + mask_url + action: edit` | 仅 [`gpt-image-2`](/cn/api-reference/image/gpt-image/gpt-image-2)(官方线路);Nano Banana 经济版**不支持** |
 | **组图生成(主题相关一组)** | `sequential_image_generation: auto` 或 `enable_sequential: true` | Seedream / Wan |
 | **交互式编辑(bbox 框选)** | `+ image_urls + bbox_list` | Wan Image |
-| **搜索增强出图** | `google_search: true` 或 `google_image_search: true` | Gemini 3.1 Flash |
 
 <Note>
 并非所有模型都支持全部模式 — 各 vendor 实际支持的 `action` 列表 + 字段范围请查看对应文档。后端会校验请求字段是否在 vendor 声明的能力范围内,不在范围会返回错误。

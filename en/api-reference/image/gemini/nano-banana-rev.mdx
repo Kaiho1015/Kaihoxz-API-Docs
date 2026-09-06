@@ -1,0 +1,179 @@
+---
+title: "Nano Banana Economy"
+description: "Google Nano Banana (Gemini Image) economy routes: fixed per-image pricing for text-to-image and multi-reference editing"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+Nano Banana is Google's Gemini image model line. This page covers the **three economy routes** that are live today. They share one set of request parameters and one billing model (a fixed price per successful image) and differ only in aspect ratios, resolutions and unit price — switching tiers means changing `model` and nothing else.
+
+<Note>
+The economy routes are served through an aggregating supplier, not Google's official API. The official routes bill from token usage and are not live yet; they will get their own page when they launch.
+</Note>
+
+## Available models
+
+| Model ID | Aspect ratios | Resolutions | Price per image |
+|---|---|---|---:|
+| `gemini-3-pro-image-rev`<br/>Flagship | 11 | `1k` `2k` | $0.0375<br/>same at both |
+| `gemini-3.1-flash-image-rev`<br/>Fast | **15** | `1k` `2k` | `1k` \$0.01875<br/>`2k` \$0.025 |
+| `gemini-3.1-flash-lite-image-rev`<br/>Lightest | 11 | `1k` only | $0.015626 |
+
+All three do text-to-image and editing with up to 14 reference images, one image per request.
+
+- **The 11 shared aspect ratios**: `auto` `1:1` `2:3` `3:2` `3:4` `4:3` `4:5` `5:4` `9:16` `16:9` `21:9`
+- **The fast tier adds four extreme ratios**: `1:4` `4:1` `1:8` `8:1`, for long horizontal and vertical banners
+- **The lightest tier does not accept `resolution`** and always outputs 1K
+
+## Quick start
+
+<CodeGroup>
+
+```bash Text to image
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: nb-demo-001" \
+  -d '{
+    "model": "gemini-3.1-flash-image-rev",
+    "action": "generate",
+    "prompt": "A celadon teacup on an oak table, natural window light, product photography",
+    "aspect_ratio": "1:1",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+```bash Edit with a reference
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: nb-edit-001" \
+  -d '{
+    "model": "gemini-3.1-flash-image-rev",
+    "action": "edit",
+    "prompt": "Keep the subject, replace the background with a bamboo grove at dawn",
+    "image_urls": ["https://cdn.example.com/source.png"],
+    "aspect_ratio": "1:1",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+```bash Multiple references
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-3-pro-image-rev",
+    "action": "edit",
+    "prompt": "Place the person from the first image into the scene from the second, matching the light",
+    "image_urls": [
+      "https://cdn.example.com/person.png",
+      "https://cdn.example.com/scene.png"
+    ],
+    "aspect_ratio": "16:9",
+    "resolution": "2k"
+  }'
+```
+
+</CodeGroup>
+
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit), or configure a webhook.
+
+## Request parameters
+
+<ParamField body="model" type="string" required>
+  One of `gemini-3-pro-image-rev`, `gemini-3.1-flash-image-rev` or `gemini-3.1-flash-lite-image-rev`.
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  - `generate` — generate from text
+  - `edit` — rewrite from reference images; `image_urls` is required
+
+  Image-to-image and multi-reference blending both use `edit`; the only difference is how many entries `image_urls` carries.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Image description or editing instruction, in English or Chinese.
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Reference image URLs. Required for `edit`, up to 14. Reference images carry no extra charge.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="1:1">
+  Frame ratio. Eleven are shared by all three tiers: `auto`, `1:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9`.
+
+  `gemini-3.1-flash-image-rev` additionally supports `1:4`, `4:1`, `1:8` and `8:1`.
+
+  `auto` lets the model decide: it picks from the prompt for text-to-image, and follows the input image for edits.
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1k">
+  Output resolution, `1k` or `2k`.
+
+  **`gemini-3.1-flash-lite-image-rev` does not accept this parameter** — it always outputs 1K, and sending it is rejected before quota is reserved.
+</ParamField>
+
+<ParamField body="n" type="integer" default="1">
+  Number of images. **Fixed at `1` during initial acceptance** — one image per task. This is a limit of the current integration, not the model's ceiling.
+</ParamField>
+
+See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key` and the maximum-cost header.
+
+<Warning>
+**The economy routes have no line-specific parameters.** `mask_url` (masked inpainting), `quality`, `seed`, `google_search` / `google_image_search` (search grounding) and `official_fallback` are **not accepted**; undeclared parameters are rejected **before any quota is reserved** (HTTP 400, no charge). For masked inpainting use [`gpt-image-2`](/en/api-reference/image/gpt-image/gpt-image-2).
+</Warning>
+
+## Limits
+
+| Condition | Limit |
+|---|---|
+| Per request | One image (a limit of the initial acceptance period) |
+| `action: "edit"` | At least one reference image is required |
+| Reference images | Up to 14 |
+| Resolution | `1k` / `2k` on the flagship and fast tiers; the lightest tier is `1k` only and rejects `resolution` |
+
+## Pricing
+
+Billed at a fixed price per successfully generated image, in dollars:
+
+| Model | `1k` | `2k` |
+|---|---:|---:|
+| `gemini-3-pro-image-rev` | \$0.0375 | \$0.0375 |
+| `gemini-3.1-flash-image-rev` | \$0.01875 | \$0.025 |
+| `gemini-3.1-flash-lite-image-rev` | $0.015626 | n/a |
+
+`generate` and `edit` cost the same, reference images add nothing, and neither aspect ratio nor prompt length affects the price — **resolution is the only billing dimension, so the cost of a call is known before you send it**. A resolution that does not match the table settles at that model's fallback price (equal to its `1k` price).
+
+Failed and cancelled tasks, and upstream successes that carry no deliverable image, refund the reservation **in full**. The task response's `cost` is the final amount, and it is an integer quota rather than dollars (500,000 quota = 1 USD).
+
+## Response
+
+```json Completed task
+{
+  "task_id": "taski_example",
+  "model": "gemini-3.1-flash-image-rev",
+  "action": "edit",
+  "status": "completed",
+  "progress": "100%",
+  "result": {
+    "images": [
+      {
+        "url": ["https://cdn.example.com/result.png"]
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 9375
+}
+```
+
+Generated images come back in `result.images`. See [Task status](/en/api-reference/task/status) for the full field list.
+
+## Related
+
+- [Submit a task](/en/api-reference/task/submit)
+- [Retrieve a task](/en/api-reference/task/status)
+- [Task system](/en/docs/task-system)
+- [Image generation overview](/en/api-reference/image/overview)

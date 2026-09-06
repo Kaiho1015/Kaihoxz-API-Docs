@@ -16,11 +16,11 @@ Calls carrying a reference video used to be approximated as "output seconds × 2
 | Reference seconds counted, tier switched | Seedance 2.x, Wan 2.7 R2V / VideoEdit | (reference-video seconds + output seconds) × the **video-reference** rate |
 | Reference seconds counted, same tier | MiniMax H3 / H3-Max / H3-Regeneration | (reference-video seconds + output seconds) × the same tier's rate |
 | Tier switched, reference seconds free | Kling Omni / Video-O1, SkyReels V4 | output seconds × the **video-reference** rate |
-| Reference seconds only, no clip price | Omni-Flash-Ext | reference-video seconds × a per-second rate ($0.09 at 720p / 1080p, $0.27 at 4K); the clip price is not charged |
+| Reference seconds only, no clip price | Omni-Flash-Ext | reference-video seconds × a per-second rate (\$0.09 at 720p / 1080p, \$0.27 at 4K); the clip price is not charged |
 
 For Kling's two `*-motion-control` models the reference video carries no separate charge; output duration equals the reference video's duration, and `720P` bills at the standard tier, `1080P` at the professional tier.
 
-**Price cuts in this batch**: `seedance-2.0` family with a reference video (480p $0.082 → **$0.045** per second, other tiers reduced proportionally — the video-reference rate is below the text-to-video rate) and Kling `motion-control` at 720P.
+**Price cuts in this batch**: `seedance-2.0` family with a reference video (480p \$0.082 → **\$0.045** per second, other tiers reduced proportionally — the video-reference rate is below the text-to-video rate) and Kling `motion-control` at 720P.
 
 Two more changes:
 
@@ -33,7 +33,7 @@ Effective **immediately**, for calls made after the change. Live prices are in [
 <Update label="2026-09-03" description="Pricing change">
 **whisper-1 price change**
 
-`whisper-1`: $0.0054 → **$0.03** per minute (billed per second, rounded up). The upstream bills whisper-1 above OpenAI's list price and we realign to cost; for cheaper transcription use `gpt-4o-mini-transcribe` ($0.0027/min) or `gpt-4o-transcribe` ($0.0054/min), both with better accuracy. Effective immediately.
+`whisper-1`: \$0.0054 → **\$0.03** per minute (billed per second, rounded up). The upstream bills whisper-1 above OpenAI's list price and we realign to cost; for cheaper transcription use `gpt-4o-mini-transcribe` (\$0.0027/min) or `gpt-4o-transcribe` (\$0.0054/min), both with better accuracy. Effective immediately.
 </Update>
 
 <Update label="2026-09-03" description="Pricing change">
@@ -43,11 +43,11 @@ FLUX.2 is billed upstream by **megapixel (MP) tier**. `1K` (1024×1024 ≈ 1.05 
 
 | Model | `1K` | `2K` | Reference image / each |
 |---|---|---|---|
-| `flux-2-pro` | $0.027 → **$0.0405** | $0.0675 (unchanged) | $0.0135 → **$0.027** |
-| `flux-2-flex` | $0.045 → **$0.09** | $0.18 (unchanged) | $0.045 → **$0.09** |
-| `flux-2-max` | $0.063 → **$0.09** | $0.144 (unchanged) | $0.027 → **$0.054** |
+| `flux-2-pro` | \$0.027 → **\$0.0405** | \$0.0675 (unchanged) | \$0.0135 → **\$0.027** |
+| `flux-2-flex` | \$0.045 → **\$0.09** | \$0.18 (unchanged) | \$0.045 → **\$0.09** |
+| `flux-2-max` | \$0.063 → **\$0.09** | \$0.144 (unchanged) | \$0.027 → **\$0.054** |
 
-`seedream-5.0-lite`: $0.028286 → **$0.035** per image (no upstream discount on the list price; adjusted per our pricing rule).
+`seedream-5.0-lite`: \$0.028286 → **\$0.035** per image (no upstream discount on the list price; adjusted per our pricing rule).
 
 `seedream-4.5` no longer offers `1K` (upstream only bills 2K / 4K); `imagen-4.0` is delisted (upstream no longer serves it). Effective **immediately**.
 </Update>
@@ -63,7 +63,7 @@ For the models below, reference images (`image_urls`) are now **charged per imag
 | `qwen-image-3.0` / `qwen-image-3.0-pro` | $0.002571 |
 | `grok-imagine-image` | $0.0018 |
 | `grok-imagine-image-quality` / `grok-imagine-image-2.0` | $0.009 |
-| `flux-2-pro` / `flux-2-max` / `flux-2-flex` | $0.0135 / $0.027 / $0.045 (up to 8 reference images now accepted) |
+| `flux-2-pro` / `flux-2-max` / `flux-2-flex` | \$0.0135 / \$0.027 / \$0.045 (up to 8 reference images now accepted) |
 | `gpt-image-2` / `gpt-image-1.5` | $0.0025 (gpt-image-2 previously used 1–3 / 4+ image tiers; now linear) |
 | `gpt-image-1` | $0.0031 |
 
@@ -77,8 +77,8 @@ The upstream list price of the standard (`-rev`) tiers dropped; ours follow:
 
 | Model | 1K / 2K | 4K |
 |---|---|---|
-| `gemini-3-pro-image-preview-rev` (Nano Banana Pro, standard) | $0.045 → **$0.03375** | $0.073125 → **$0.045** |
-| `gemini-3.1-flash-image-preview-rev` (Nano Banana 2, standard) | 1K $0.03375 → **$0.016875**, 2K $0.045 → **$0.0225** | $0.0675 → **$0.028125** |
+| `gemini-3-pro-image-preview-rev` (Nano Banana Pro, standard) | \$0.045 → **\$0.03375** | \$0.073125 → **\$0.045** |
+| `gemini-3.1-flash-image-preview-rev` (Nano Banana 2, standard) | 1K \$0.03375 → **\$0.016875**, 2K \$0.045 → **\$0.0225** | \$0.0675 → **\$0.028125** |
 
 Official direct tiers (without `-rev`) are unchanged. Effective **immediately**.
 </Update>

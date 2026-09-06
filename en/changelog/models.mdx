@@ -3,12 +3,23 @@ title: "Model Updates"
 ---
 
 <Update label="2026-09-06" description="Model launch">
+**Nano Banana Economy is live · three Gemini image tiers**
+
+- **Model IDs**: `gemini-3-pro-image-rev` (flagship) · `gemini-3.1-flash-image-rev` (fast) · `gemini-3.1-flash-lite-image-rev` (lightest)
+- All three share one parameter set: served on `POST /v1/tasks` with `generate` and `edit` (up to 14 reference images), one image per request, and eleven shared aspect ratios including `auto`.
+- **Tier differences**: the flagship charges \$0.0375 at both `1k` and `2k`; the fast tier is \$0.01875 at `1k` and \$0.025 at `2k` and adds the extreme ratios `1:4`, `4:1`, `1:8` and `8:1`; the lightest is \$0.015626, always outputs 1K and rejects `resolution`.
+- **Billed at a fixed price per successful image.** Resolution is the only billing dimension — reference images and aspect ratio add nothing, so cost is known before submission.
+- The economy routes have **no line-specific parameters**: `mask_url`, `quality`, `seed`, `google_search` / `google_image_search` and `official_fallback` are all rejected before quota is reserved. Use `gpt-image-2` for masked inpainting.
+- **Docs**: [Nano Banana Economy](/en/api-reference/image/gemini/nano-banana-rev)
+</Update>
+
+<Update label="2026-09-06" description="Model launch">
 **GPT Image 2 is live · official and reverse lines**
 
 - **Model IDs**: `gpt-image-2` (official) · `gpt-image-2-rev` (reverse)
 - Both are served on `POST /v1/tasks` with `generate` and `edit`, fifteen aspect ratios, `1k` / `2k` / `4k` resolutions, one image per request, and no `seed` support.
 - **The official line** adds masked inpainting (`mask_url`), quality tiers (`low` / `medium` / `high`) and transparent-background and output-format control (`background` / `output_format` / `output_compression` / `moderation`), with up to 16 reference images. It **settles from actual token usage**: the reservation is estimated from aspect ratio × resolution × quality, and the difference is refunded on completion.
-- **The reverse line** accepts none of those line-specific parameters and takes up to 15 reference images. It bills a **fixed price per image by output resolution** (1K $0.0095625 / 2K $0.01575 / 4K $0.023625), so the cost of a call is known before you send it.
+- **The reverse line** accepts none of those line-specific parameters and takes up to 15 reference images. It bills a **fixed price per image by output resolution** (1K \$0.0095625 / 2K \$0.01575 / 4K \$0.023625), so the cost of a call is known before you send it.
 - The two lines never switch automatically — pin the model ID in your configuration as a product choice.
 - **Docs**: [GPT Image family](/en/api-reference/image/gpt-image/overview) · [Official line](/en/api-reference/image/gpt-image/gpt-image-2) · [Reverse line](/en/api-reference/image/gpt-image/gpt-image-2-rev)
 </Update>
@@ -47,7 +58,7 @@ title: "Model Updates"
 - **Model ID**: `imagen-4.0`
 - Upstream no longer serves this model; it is delisted effective today and calls will return an error.
 - For Google image generation, use the Nano Banana family instead: `gemini-3-pro-image-preview` (Nano Banana Pro) / `gemini-3.1-flash-image-preview` (Nano Banana 2), plus their `-rev` standard tiers.
-- **Docs**: [Gemini image models](/en/api-reference/image/gemini)
+- **Docs**: [Gemini image models](/en/api-reference/image/gemini/nano-banana-rev)
 </Update>
 
 <Update label="2026-09-02" description="Model launch">
@@ -55,7 +66,7 @@ title: "Model Updates"
 
 - **Model ID**: `gemini-3.1-flash-lite-image-rev`
 - The fastest, cheapest image model in the Gemini 3.1 family — about 4 seconds per image, `1K` only, up to 14 reference images, no search grounding or inpainting. Currently the lowest-priced Gemini image tier on the platform.
-- **Docs**: [Gemini image models](/en/api-reference/image/gemini)
+- **Docs**: [Gemini image models](/en/api-reference/image/gemini/nano-banana-rev)
 </Update>
 
 <Update label="2026-09-02" description="Model launch">
@@ -374,7 +385,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 
 - **Model ID**: `gemini-3.1-flash-image-preview` · `gemini-3.1-flash-image-preview`
 - Resolution 0.5K / 1K / 2K / 4K　·　Aspect ratios 11 ratios　·　generate / edit
-- **Docs**: [Gemini image API](/en/api-reference/image/gemini)
+- **Docs**: [Gemini image API](/en/api-reference/image/gemini/nano-banana-rev)
 </Update>
 
 <Update label="2026-02-25" description="Model launch">
@@ -579,7 +590,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 
 - **Model ID**: `gemini-3-pro-image-preview` · `gemini-3-pro-image-preview`
 - Resolution 1K / 2K / 4K　·　Aspect ratios 11 ratios　·　generate / edit
-- **Docs**: [Gemini image API](/en/api-reference/image/gemini)
+- **Docs**: [Gemini image API](/en/api-reference/image/gemini/nano-banana-rev)
 </Update>
 
 <Update label="2025-11-18" description="Model launch">
@@ -695,7 +706,7 @@ To keep constraining first / last frames, use **`image_with_roles`** (unaffected
 
 - **Model ID**: `gemini-2.5-flash-image-preview` · `gemini-2.5-flash-image-preview`
 - Resolution 1K　·　Aspect ratios 11 ratios　·　generate / edit
-- **Docs**: [Gemini image API](/en/api-reference/image/gemini)
+- **Docs**: [Gemini image API](/en/api-reference/image/gemini/nano-banana-rev)
 </Update>
 
 <Update label="2025-08-07" description="Model launch">

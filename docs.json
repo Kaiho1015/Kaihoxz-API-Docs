@@ -62,6 +62,14 @@
     {
       "source": "/en/api-reference/image/gpt-image-2-rev",
       "destination": "/en/api-reference/image/gpt-image/gpt-image-2-rev"
+    },
+    {
+      "source": "/cn/api-reference/image/gemini",
+      "destination": "/cn/api-reference/image/gemini/nano-banana-rev"
+    },
+    {
+      "source": "/en/api-reference/image/gemini",
+      "destination": "/en/api-reference/image/gemini/nano-banana-rev"
     }
   ],
   "navigation": {
@@ -125,7 +133,7 @@
                 "group": "图像生成",
                 "pages": [
                   "cn/api-reference/image/overview",
-                  "cn/api-reference/image/gemini",
+                  "cn/api-reference/image/gemini/nano-banana-rev",
                   {
                     "group": "GPT Image 系列",
                     "root": "cn/api-reference/image/gpt-image/overview",
@@ -262,7 +270,7 @@
                 "group": "Image Generation",
                 "pages": [
                   "en/api-reference/image/overview",
-                  "en/api-reference/image/gemini",
+                  "en/api-reference/image/gemini/nano-banana-rev",
                   {
                     "group": "GPT Image Series",
                     "root": "en/api-reference/image/gpt-image/overview",

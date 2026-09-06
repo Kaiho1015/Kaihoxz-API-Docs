@@ -50,13 +50,13 @@ APIMart 直接代理各家原生端点，一个 action 就是一个 URL，所以
 | APIMart | 我们的文档 | 备注 |
 |---|---|---|
 | gpt-image-1 · gpt-image-2（generation + official） | ✅ [GPT Image 系列](../cn/api-reference/image/gpt-image/overview.mdx) | 我们已上架 `gpt-image-2` 两条线；`gpt-image-1` / `gpt-image-1.5` 后台已配承接但未启用 |
-| gemini-2.5-flash · gemini-3-pro · gemini-3.1-flash(+lite) | ✅ Gemini Image 系列 | |
-| seedream-4 · 4.5 · 5-0-pro · 5-lite | ✅ Seedream 系列 | |
+| gemini-2.5-flash · gemini-3-pro · gemini-3.1-flash(+lite) | ✅ [Nano Banana 经济版](../cn/api-reference/image/gemini/nano-banana-rev.mdx) —— 2026-09-06 上架三个 `-rev` 档并重写；三个官方档已配承接未启用，上架后单独成页 | |
+| seedream-4 · 4.5 · 5-0-pro · 5-lite | 🟡 Seedream 系列（存量页，**待重写**：`seedream-5.0-pro` 已于 2026-09-06 上架） | |
 | qwen-image · qwen-image-3.0 | ✅ Qwen Image 系列 | |
 | wan2.7-image | ✅ Wan Image 系列 | |
 | z-image-turbo | ✅ Z.ai Image | |
 | flux-2 · flux-kontext | ✅ FLUX 系列 | |
-| grok-imagine · **grok-imagine-2.0-ext**（含 layer-region-edit 分层区域编辑） | 🟡 Grok Imagine 系列 | **`layer-region-edit` 这个 action 我们有没有，要对模型组的 `supported_actions`** |
+| grok-imagine · **grok-imagine-2.0-ext**（含 layer-region-edit 分层区域编辑） | 🟡 Grok Imagine 系列（存量页，**待重写**：`grok-imagine-image-2.0` 与 `-rev` 已于 2026-09-06 上架） | `layer-region-edit` 这个 action 我们有没有，重写时对 `supported_actions` |
 | midjourney（17 页含 best-practices / workflow） | ✅ Midjourney（单页 + action 表） | 结构差异见 §一；他们的 best-practices / workflow 是指南内容，我们没有对应物 |
 | imagen-4.0-apimart | ⚪ 已下架 | 见 changelog 2026-09-03 |
 

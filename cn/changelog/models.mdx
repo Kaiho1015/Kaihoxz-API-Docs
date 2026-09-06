@@ -3,12 +3,23 @@ title: "模型动态"
 ---
 
 <Update label="2026-09-06" description="模型上架">
+**Nano Banana 经济版上架 · Gemini 图像三档**
+
+- **模型 ID**：`gemini-3-pro-image-rev`（旗舰）　·　`gemini-3.1-flash-image-rev`（快速）　·　`gemini-3.1-flash-lite-image-rev`（最轻）
+- 三档共用同一套参数：走 `POST /v1/tasks`，支持 `generate` 文生图与 `edit` 参考图编辑（最多 14 张参考图），每次请求出 1 张，11 种共通画幅含 `auto`。
+- **档位差异**：旗舰档 `1k` / `2k` 同价 \$0.0375；快速档 `1k` \$0.01875 / `2k` \$0.025，并额外支持 `1:4`、`4:1`、`1:8`、`8:1` 四种极端画幅；最轻档 \$0.015626，输出固定 1K、不接受 `resolution`。
+- **按成功出图的固定张价计费**，分辨率是唯一计费维度，参考图与画幅都不加价，提交前即可确定成本。
+- 经济版**没有专有参数**：`mask_url`、`quality`、`seed`、`google_search` / `google_image_search`、`official_fallback` 均不接受，会在额度预扣前拒绝。需要掩码重绘请用 `gpt-image-2`。
+- **文档**：[Nano Banana 经济版](/cn/api-reference/image/gemini/nano-banana-rev)
+</Update>
+
+<Update label="2026-09-06" description="模型上架">
 **GPT Image 2 上架 · 官方与逆向两条线路**
 
 - **模型 ID**：`gpt-image-2`（官方线路）　·　`gpt-image-2-rev`（逆向线路）
 - 两条线路都走 `POST /v1/tasks`，支持 `generate` 文生图与 `edit` 参考图编辑，15 种画幅、`1k` / `2k` / `4k` 分辨率，每次请求出 1 张，均不支持 `seed`。
 - **官方线路**独有掩码局部重绘（`mask_url`）、画质档（`low` / `medium` / `high`）、透明背景与输出格式控制（`background` / `output_format` / `output_compression` / `moderation`），最多 16 张参考图；**按实际 token 用量结算**，提交时按画幅 × 分辨率 × 画质预扣，完成后退回差额。
-- **逆向线路**不接受上述专有参数，最多 15 张参考图；**按输出分辨率固定张价**结算（1K $0.0095625 / 2K $0.01575 / 4K $0.023625），提交前即可确定单张成本。
+- **逆向线路**不接受上述专有参数，最多 15 张参考图；**按输出分辨率固定张价**结算（1K \$0.0095625 / 2K \$0.01575 / 4K \$0.023625），提交前即可确定单张成本。
 - 两条线路不会自动互相切换，模型 ID 请作为产品选择固化在配置里。
 - **文档**：[GPT Image 模型家族](/cn/api-reference/image/gpt-image/overview) · [官方线路](/cn/api-reference/image/gpt-image/gpt-image-2) · [逆向线路](/cn/api-reference/image/gpt-image/gpt-image-2-rev)
 </Update>
@@ -47,7 +58,7 @@ title: "模型动态"
 - **模型 ID**:`imagen-4.0`
 - 上游已不可用,该模型即日下架,调用将返回错误。
 - Google 图像线请改用 Nano Banana 系列:`gemini-3-pro-image-preview`(Nano Banana Pro) / `gemini-3.1-flash-image-preview`(Nano Banana 2) 及各自的 `-rev` 标准档。
-- **文档**:[Gemini 图像系列](/cn/api-reference/image/gemini)
+- **文档**:[Gemini 图像系列](/cn/api-reference/image/gemini/nano-banana-rev)
 </Update>
 
 <Update label="2026-09-02" description="模型上架">
@@ -55,7 +66,7 @@ title: "模型动态"
 
 - **模型 ID**:`gemini-3.1-flash-lite-image-rev`
 - Gemini 3.1 系列中最快、最便宜的图像模型,约 4 秒出图,仅 `1K`,最多 14 张参考图,不支持搜索增强与局部重绘。是当前站内最低价的 Gemini 出图档。
-- **文档**:[Gemini 图像系列](/cn/api-reference/image/gemini)
+- **文档**:[Gemini 图像系列](/cn/api-reference/image/gemini/nano-banana-rev)
 </Update>
 
 <Update label="2026-09-02" description="模型上架">
@@ -374,7 +385,7 @@ title: "模型动态"
 
 - **模型 ID**：`gemini-3.1-flash-image-preview` · `gemini-3.1-flash-image-preview`
 - 分辨率 0.5K / 1K / 2K / 4K　·　画面比例 11 种比例　·　支持生成 / 编辑
-- **文档**：[Gemini 图像 API](/cn/api-reference/image/gemini)
+- **文档**：[Gemini 图像 API](/cn/api-reference/image/gemini/nano-banana-rev)
 </Update>
 
 <Update label="2026-02-25" description="模型上架">
@@ -579,7 +590,7 @@ title: "模型动态"
 
 - **模型 ID**：`gemini-3-pro-image-preview` · `gemini-3-pro-image-preview`
 - 分辨率 1K / 2K / 4K　·　画面比例 11 种比例　·　支持生成 / 编辑
-- **文档**：[Gemini 图像 API](/cn/api-reference/image/gemini)
+- **文档**：[Gemini 图像 API](/cn/api-reference/image/gemini/nano-banana-rev)
 </Update>
 
 <Update label="2025-11-18" description="模型上架">
@@ -695,7 +706,7 @@ title: "模型动态"
 
 - **模型 ID**：`gemini-2.5-flash-image-preview` · `gemini-2.5-flash-image-preview`
 - 分辨率 1K　·　画面比例 11 种比例　·　支持生成 / 编辑
-- **文档**：[Gemini 图像 API](/cn/api-reference/image/gemini)
+- **文档**：[Gemini 图像 API](/cn/api-reference/image/gemini/nano-banana-rev)
 </Update>
 
 <Update label="2025-08-07" description="模型上架">
