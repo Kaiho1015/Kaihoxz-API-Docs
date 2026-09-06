@@ -58,9 +58,91 @@ quota      = 费用（USD） × 500,000，向下取整，最低 1
 没有收到完整 `usage`、连接中断或响应缺少费用字段，都**不代表本次调用免费**。先到控制台核对已有用量记录，不要自动重发。
 </Warning>
 
+## 缓存
+
+缓存能力按型号分四档，判据是模型组 `price_config` 里配了哪几项缓存价，**不由官方是否支持推断**。
+缓存读写按各自单价**替代**对应的普通输入费用，不在输入之外另加一笔。
+
+| 档 | 判据 | 型号 |
+|---|---|---|
+| 无缓存优惠 | `cache_billing: "input_output"` | 目录中其余全部型号；响应里若带缓存统计，一律按普通输入价计 |
+| 只有缓存读 | 配了 `cache_read` | `gpt-5.5` `gpt-5.4` `grok-4.6` `gemini-3.6-flash` `gemini-3.7-flash` `gemini-3.8-flash` `kimi-k3` `qwen3.8-max` |
+| 缓存读 + 写 | 再配 `cache_write` | `gpt-5.6-luna` `gpt-5.6-terra` `gpt-5.6-sol` `gpt-6-astra` |
+| 缓存读 + 5 分钟写 + 1 小时写 | 再配 `cache_write_1h` | `claude-opus-5` `claude-sonnet-5` `claude-fable-5` `claude-fable-5-1` |
+| 时段缓存价 | `text_schedule` 各时段带 `cache_read` | `deepseek-v4-pro` `deepseek-v4-flash` |
+
+### 自动缓存与显式缓存
+
+**自动缓存**由上游决定是否命中，调用方不传任何参数：命中的 token 出现在
+`usage.prompt_tokens_details.cached_tokens` 里，按该型号的缓存读价计费。是否命中不做保证，
+成本预估不要按「必定命中」算。
+
+**显式缓存**要在请求里用 `cache_control` 标出可复用的前缀，网关按型号放行：
+
+| 型号 | 显式 `cache_control` |
+|---|---|
+| `claude-opus-5` `claude-sonnet-5` `claude-fable-5` `claude-fable-5-1` | ✅ 放行，三档缓存价齐备（读 / 5 分钟写 / 1 小时写） |
+| 所有 `gemini-*`、`qwen3.8-max` | ❌ 预扣前拒绝：这两家显式缓存与自动缓存的读价不同，两套计费维度尚未同时配齐，只开放自动缓存 |
+| 两项计价型号 | ❌ 预扣前拒绝：没有缓存计费维度 |
+| 其余（`gpt-5.4/5.5/5.6-*`、`gpt-6-astra`、`grok-4.6`、`kimi-k3`、`deepseek-v4-*`） | 上游只有自动缓存，不需要也不用传 `cache_control` |
+
+被拒绝的请求返回 HTTP 400，**在额度预扣前发生，不计费**。
+
+<Note>
+显式缓存的计费维度已配齐、网关已放行，但**缓存命中与 TTL 写入尚未完成验收实测**。
+首次接入请用小请求核对一遍控制台用量记录里的缓存分项，再放量。
+</Note>
+
+### Claude 显式缓存写法
+
+OpenAI 兼容接口：`content` **必须是内容块数组**，字符串形式的 `content` 带不了 `cache_control`，
+标记会被忽略、整段按普通输入计费。
+
+```json
+{
+  "model": "claude-sonnet-5",
+  "max_tokens": 1024,
+  "messages": [
+    {
+      "role": "system",
+      "content": [
+        {
+          "type": "text",
+          "text": "这里放要反复复用的长前缀……",
+          "cache_control": {"type": "ephemeral"}
+        }
+      ]
+    },
+    {"role": "user", "content": "基于上面的内容回答。"}
+  ]
+}
+```
+
+原生 [Messages 接口](/cn/api-reference/text/claude-messages)把前缀放在 `system` 数组里，写法相同。
+`ttl` 省略时为 5 分钟；要用 1 小时档，请求里写 `"cache_control": {"type": "ephemeral", "ttl": "1h"}`
+并带上 `anthropic-beta: extended-cache-ttl-2025-04-11` 请求头——该头由网关原样透传到上游。
+
+### 命中条件与读数
+
+- **前缀要够长**：通常至少约 1,024 token，短前缀不会产生缓存。
+- **前缀要逐字节一致**：文本、空格、换行、内容块顺序有任何差异都不算命中。
+- **要在 TTL 内**：5 分钟或 1 小时从最近一次命中重新计时。
+
+Chat 响应里 `usage.prompt_tokens_details.cached_tokens` 是命中量；原生 Messages 用
+`cache_read_input_tokens` 与 `cache_creation_input_tokens`，并且原生的 `input_tokens`
+**不含**这两项，总输入是三者相加（Chat 的 `prompt_tokens` 则已经含在内）。写入量按缓存写价计费，
+比普通输入贵，所以显式缓存只在「前缀稳定且会在 TTL 内被复用」时才划算。
+
 ## 当前不开放的能力
 
-以下能力尚未完成接入与计费配置，请求会在预扣前被拒绝（HTTP 400，不计费）：内置联网 / 托管搜索 / 托管执行等厂商内置工具、`web_search_options`、`standard` / `default` 以外的 `service_tier`、Gemini 显式缓存，以及两项计价型号上的 `cache_control`。由调用方自己执行的函数调用（`tools` + `tool_calls`）不属于内置工具，按各型号「已验证」列使用。
+以下请求在**额度预扣前**被拒绝（HTTP 400，不计费），因为它们的额外收费维度还没在文本价格契约里表示出来：
+
+- **厂商内置工具**——`tools` 里出现 `function` / `custom` 之外的类型（内置联网、托管搜索、托管执行等）。由调用方自己执行的函数工具不在此列，正常使用。
+- **`web_search_options`**。
+- **`service_tier`** 取 `standard` / `default` 以外的值。
+- **显式缓存**——见上一节的放行表。
+
+此外，模型组会声明本路由实测支持的协议与能力：请求打到未声明的协议（Chat / Responses / Claude Messages / Gemini 原生），或者在明确声明不支持工具 / 结构化输出的型号上传 `tools`、`tool_choice`、`response_format`，同样在预扣前拒绝。各型号支持什么以上面的模型目录为准。
 
 ## 模型目录
 
@@ -137,7 +219,7 @@ GPT-5 及之后的型号用 `max_completion_tokens` 限制输出、用 `reasonin
 - `claude-opus-5` — 缓存写 5 分钟 5.625、1 小时 9；渠道声明上限 128K 入 / 16K 出；JSON Schema / json_object 预扣前拒绝；原生 `/v1/messages` 非流式与流式已验证；缓存价已配置，未验收
 - `claude-sonnet-5` — 缓存写 5 分钟 2.25、1 小时 3.6；渠道声明上限 1M 入 / 128K 出；JSON Schema / json_object 预扣前拒绝；原生 `/v1/messages` 非流式与流式已验证；缓存价已配置，未验收
 
-Chat 接口用 `max_tokens`，不要带 GPT 专用的 `reasoning_effort` / `max_completion_tokens`。Claude 5 与 Fable 系列是三段缓存价（读 / 5 分钟写 / 1 小时写），价格已配置但缓存命中与 TTL 写入尚未验收；**结构化输出未开放**——实测不遵循 schema，`response_format` 的 `json_schema` / `json_object` 在预扣前拒绝。Fable 系列工具只接受 `tool_choice: "auto"`，`required` 或指定函数会被上游 400（预扣全额退回）。4.x 系列只有输入 / 输出两项计价，`cache_control` 预扣前拒绝。已有 Anthropic SDK 的应用可走原生 [Messages 接口](/cn/api-reference/text/claude-messages)，Sonnet 5 / Opus 5 的原生文本非流式与流式已验证。
+Chat 接口用 `max_tokens`，不要带 GPT 专用的 `reasoning_effort` / `max_completion_tokens`。Claude 5 与 Fable 四个型号是三段缓存价（读 / 5 分钟写 / 1 小时写），也是目前**唯一放行显式 `cache_control`** 的一组，写法见[缓存](#缓存)；**结构化输出未开放**——实测不遵循 schema，`response_format` 的 `json_schema` / `json_object` 在预扣前拒绝。Fable 系列工具只接受 `tool_choice: "auto"`，`required` 或指定函数会被上游 400（预扣全额退回）。4.x 系列只有输入 / 输出两项计价，`cache_control` 预扣前拒绝。已有 Anthropic SDK 的应用可走原生 [Messages 接口](/cn/api-reference/text/claude-messages)，Sonnet 5 / Opus 5 的原生文本非流式与流式已验证。
 
 ### Google Gemini
 
@@ -164,7 +246,7 @@ Chat 接口用 `max_tokens`，不要带 GPT 专用的 `reasoning_effort` / `max_
 - `gemini-2.5-pro` — 200K 长上下文分档；原生协议已验证
 - `gemini-2.5-flash-lite` — 原生协议已验证
 
-OpenAI 兼容入口之外，Gemini 还有原生入口 `POST /v1beta/models/{model}:generateContent`（流式 `:streamGenerateContent?alt=sse`），见 [Gemini 原生接口](/cn/api-reference/text/gemini-native)。原生响应用 `usageMetadata` 报告用量、不带 `usage.cost`；`candidatesTokenCount` 与 `thoughtsTokenCount` 分开报告，计费输出是两者之和。Pro 型号（`gemini-2.5-pro` / `gemini-3.1-pro-preview`）有 200K 长上下文分档，超过 200,000 输入总量后整单切换。3.6 / 3.7 / 3.8 Flash 有隐式缓存读价，是否命中由上游决定；其余型号两项计价。Gemini 显式缓存、内置工具、`web_search_options` 以及 `standard` / `default` 以外的 `service_tier` 均在预扣前拒绝。
+OpenAI 兼容入口之外，Gemini 还有原生入口 `POST /v1beta/models/{model}:generateContent`（流式 `:streamGenerateContent?alt=sse`），见 [Gemini 原生接口](/cn/api-reference/text/gemini-native)。原生响应用 `usageMetadata` 报告用量、不带 `usage.cost`；`candidatesTokenCount` 与 `thoughtsTokenCount` 分开报告，计费输出是两者之和。Pro 型号（`gemini-2.5-pro` / `gemini-3.1-pro-preview`）有 200K 长上下文分档，超过 200,000 输入总量后整单切换。3.6 / 3.7 / 3.8 Flash 有隐式缓存读价，是否命中由上游决定；其余型号两项计价。Gemini **全系显式缓存**（`cache_control` / `cachedContent`）在预扣前拒绝，只开放自动缓存；内置工具、`web_search_options` 以及 `standard` / `default` 以外的 `service_tier` 同样拒绝。
 
 ### DeepSeek
 
@@ -209,7 +291,7 @@ V4 Pro / Flash 按 **请求开始时刻的 UTC 时段** 计价（北京时间加
 - `qwen3.6-plus` — 256K 长上下文分档
 - `qwen3.6-flash` — 256K 长上下文分档
 
-Qwen3.8 Max 只开放自动缓存（读价 0.1854，已实测命中，不保证每次命中）；显式缓存创建 / 读取的 `cache_control` 在预扣前拒绝，两者单价不同不能混用。Plus / Flash 有 256K 分档，按输入总量整单切换。思考占用输出预算，不承诺可以关闭思考。
+Qwen3.8 Max 只开放自动缓存（读价 0.1854，已实测命中，不保证每次命中）；显式缓存的 `cache_control` 在预扣前拒绝——显式与自动的读价不同，两套维度没同时配齐前不混用。Plus / Flash 有 256K 分档，按输入总量整单切换。思考占用输出预算，不承诺可以关闭思考。
 
 ### Kimi（Moonshot）
 

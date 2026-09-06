@@ -58,9 +58,95 @@ The final charge is the text ledger entry in your billing records; its states me
 A missing final `usage`, a dropped connection or a response without a cost field **does not make the call free**. Check the existing usage record in the console before resubmitting; never retry automatically on that basis.
 </Warning>
 
+## Caching
+
+Caching is graded per model by which cache rates the model group has configured in
+`price_config` — **never inferred from what the vendor supports**. Cache reads and writes
+**replace** the matching ordinary input charge at their own rate; they are not added on top.
+
+| Grade | Test | Models |
+|---|---|---|
+| No cache discount | `cache_billing: "input_output"` | every other model in the catalog; any cache statistics in the response bill at the ordinary input rate |
+| Cache read only | has `cache_read` | `gpt-5.5` `gpt-5.4` `grok-4.6` `gemini-3.6-flash` `gemini-3.7-flash` `gemini-3.8-flash` `kimi-k3` `qwen3.8-max` |
+| Cache read + write | also `cache_write` | `gpt-5.6-luna` `gpt-5.6-terra` `gpt-5.6-sol` `gpt-6-astra` |
+| Cache read + 5-min write + 1-hour write | also `cache_write_1h` | `claude-opus-5` `claude-sonnet-5` `claude-fable-5` `claude-fable-5-1` |
+| Time-of-day cache rate | `cache_read` inside each `text_schedule` window | `deepseek-v4-pro` `deepseek-v4-flash` |
+
+### Automatic vs explicit caching
+
+**Automatic caching** is decided upstream and needs no parameters from you: hit tokens appear in
+`usage.prompt_tokens_details.cached_tokens` and bill at that model's cache-read rate. Hits are never
+guaranteed — do not budget as if every call will hit.
+
+**Explicit caching** marks a reusable prefix with `cache_control`, and the gateway allows it per model:
+
+| Models | Explicit `cache_control` |
+|---|---|
+| `claude-opus-5` `claude-sonnet-5` `claude-fable-5` `claude-fable-5-1` | ✅ Allowed; all three cache rates configured (read / 5-minute write / 1-hour write) |
+| every `gemini-*`, and `qwen3.8-max` | ❌ Rejected before reservation: explicit and automatic cache reads carry different rates upstream and both billing dimensions are not configured yet, so only automatic caching is open |
+| two-rate models | ❌ Rejected before reservation: no cache billing dimension exists |
+| everything else (`gpt-5.4/5.5/5.6-*`, `gpt-6-astra`, `grok-4.6`, `kimi-k3`, `deepseek-v4-*`) | Upstream caches automatically; `cache_control` is neither needed nor used |
+
+A rejected request returns HTTP 400 **before any quota is reserved, so it is not charged**.
+
+<Note>
+The billing dimensions for explicit caching are configured and the gateway allows it, but
+**cache hits and TTL writes have not been through acceptance testing yet**. On first integration,
+check the cache line items in your console usage record on a small request before scaling up.
+</Note>
+
+### Writing a Claude explicit cache request
+
+On the OpenAI-compatible endpoint, `content` **must be an array of content blocks**. A string
+`content` cannot carry `cache_control`; the marker is ignored and the whole prefix bills as ordinary input.
+
+```json
+{
+  "model": "claude-sonnet-5",
+  "max_tokens": 1024,
+  "messages": [
+    {
+      "role": "system",
+      "content": [
+        {
+          "type": "text",
+          "text": "Put the long prefix you want to reuse here...",
+          "cache_control": {"type": "ephemeral"}
+        }
+      ]
+    },
+    {"role": "user", "content": "Answer using the content above."}
+  ]
+}
+```
+
+The native [Messages endpoint](/en/api-reference/text/claude-messages) takes the same shape with the
+prefix in the `system` array. `ttl` defaults to 5 minutes; for the 1-hour tier send
+`"cache_control": {"type": "ephemeral", "ttl": "1h"}` together with the
+`anthropic-beta: extended-cache-ttl-2025-04-11` header — the gateway forwards that header upstream as-is.
+
+### Hit conditions and reading usage
+
+- **The prefix must be long enough** — usually at least ~1,024 tokens; short prefixes create no cache.
+- **The prefix must be byte-identical** — any difference in text, spaces, newlines or content-block order misses.
+- **It must be within the TTL** — 5 minutes or 1 hour, counted from the most recent hit.
+
+In Chat responses the hit count is `usage.prompt_tokens_details.cached_tokens`. Native Messages reports
+`cache_read_input_tokens` and `cache_creation_input_tokens` instead, and its `input_tokens` **excludes**
+both — total input is the sum of the three (whereas Chat's `prompt_tokens` already includes them).
+Written tokens bill at the cache-write rate, which is higher than ordinary input, so explicit caching
+only pays off when the prefix is stable and gets reused within the TTL.
+
 ## Not yet available
 
-The following are not wired up for billing yet and are rejected before reservation (HTTP 400, no charge): vendor built-in tools such as hosted web search / hosted execution, `web_search_options`, any `service_tier` other than `standard` / `default`, Gemini explicit caching, and `cache_control` on two-rate models. Client-executed function calling (`tools` + `tool_calls`) is not a built-in tool; use it according to each model's Verified column.
+The following are rejected **before any quota is reserved** (HTTP 400, no charge), because their extra charge dimensions are not yet represented in the accepted text price contract:
+
+- **Vendor built-in tools** — any entry in `tools` whose type is not `function` or `custom` (hosted web search, hosted execution, and similar). Client-executed function tools are not in this group and work normally.
+- **`web_search_options`**.
+- **`service_tier`** set to anything other than `standard` / `default`.
+- **Explicit caching** — see the table in the previous section.
+
+Model groups also declare the protocols and capabilities this route has actually been verified on: a request arriving on a protocol the group never declared (Chat / Responses / Claude Messages / Gemini native), or `tools`, `tool_choice` or `response_format` sent to a model declared not to support them, is rejected before reservation as well. What each model supports is the catalog above.
 
 ## Model catalog
 
@@ -137,7 +223,7 @@ GPT-5 and later use `max_completion_tokens` to cap output and `reasoning_effort`
 - `claude-opus-5` — cache write 5-min 5.625, 1-hour 9; route-declared limits 128K in / 16K out; JSON Schema / json_object rejected before reservation; native `/v1/messages` non-streaming and streaming verified; cache rates configured, not accepted yet
 - `claude-sonnet-5` — cache write 5-min 2.25, 1-hour 3.6; route-declared limits 1M in / 128K out; JSON Schema / json_object rejected before reservation; native `/v1/messages` non-streaming and streaming verified; cache rates configured, not accepted yet
 
-Use `max_tokens` on the Chat endpoint; do not send the GPT-only `reasoning_effort` / `max_completion_tokens`. Claude 5 and the Fable family carry three cache rates (read / 5-minute write / 1-hour write); the rates are configured but cache hits and TTL writes have not been accepted yet. **Structured output is not enabled** — tests did not follow the schema, so `response_format` with `json_schema` / `json_object` is rejected before reservation. Fable models accept only `tool_choice: "auto"`; `required` or a named function returns 400 upstream (the reservation is fully refunded). The 4.x line bills input / output only and rejects `cache_control` before reservation. Apps built on the Anthropic SDK can use the native [Messages endpoint](/en/api-reference/text/claude-messages); native non-streaming and streaming text is verified for Sonnet 5 / Opus 5.
+Use `max_tokens` on the Chat endpoint; do not send the GPT-only `reasoning_effort` / `max_completion_tokens`. The four Claude 5 / Fable models carry three cache rates (read / 5-minute write / 1-hour write) and are the only models that currently **allow explicit `cache_control`** — see [Caching](#caching) for the request shape. **Structured output is not enabled** — tests did not follow the schema, so `response_format` with `json_schema` / `json_object` is rejected before reservation. Fable models accept only `tool_choice: "auto"`; `required` or a named function returns 400 upstream (the reservation is fully refunded). The 4.x line bills input / output only and rejects `cache_control` before reservation. Apps built on the Anthropic SDK can use the native [Messages endpoint](/en/api-reference/text/claude-messages); native non-streaming and streaming text is verified for Sonnet 5 / Opus 5.
 
 ### Google Gemini
 
@@ -164,7 +250,7 @@ Use `max_tokens` on the Chat endpoint; do not send the GPT-only `reasoning_effor
 - `gemini-2.5-pro` — 200K long-context tier; native protocol verified
 - `gemini-2.5-flash-lite` — native protocol verified
 
-Besides the OpenAI-compatible endpoint, Gemini has a native entry `POST /v1beta/models/{model}:generateContent` (streaming: `:streamGenerateContent?alt=sse`), see [Gemini native API](/en/api-reference/text/gemini-native). Native responses report usage in `usageMetadata` without `usage.cost`; `candidatesTokenCount` and `thoughtsTokenCount` are reported separately and billed output is their sum. The Pro models (`gemini-2.5-pro` / `gemini-3.1-pro-preview`) have a 200K long-context tier that switches the whole request above 200,000 total input. 3.6 / 3.7 / 3.8 Flash have an implicit cache-read rate whose hits are decided upstream; the other models bill two rates. Gemini explicit caching, built-in tools, `web_search_options` and any `service_tier` other than `standard` / `default` are rejected before reservation.
+Besides the OpenAI-compatible endpoint, Gemini has a native entry `POST /v1beta/models/{model}:generateContent` (streaming: `:streamGenerateContent?alt=sse`), see [Gemini native API](/en/api-reference/text/gemini-native). Native responses report usage in `usageMetadata` without `usage.cost`; `candidatesTokenCount` and `thoughtsTokenCount` are reported separately and billed output is their sum. The Pro models (`gemini-2.5-pro` / `gemini-3.1-pro-preview`) have a 200K long-context tier that switches the whole request above 200,000 total input. 3.6 / 3.7 / 3.8 Flash have an implicit cache-read rate whose hits are decided upstream; the other models bill two rates. Explicit caching (`cache_control` / `cachedContent`) is rejected before reservation **across the whole Gemini line** — only automatic caching is open. Built-in tools, `web_search_options` and any `service_tier` other than `standard` / `default` are rejected as well.
 
 ### DeepSeek
 
@@ -209,7 +295,7 @@ V4 Pro / Flash are priced by the **UTC time slot at request start** (Beijing tim
 - `qwen3.6-plus` — 256K long-context tier
 - `qwen3.6-flash` — 256K long-context tier
 
-Qwen3.8 Max exposes implicit caching only (read rate 0.1854, a hit was exercised, hits are not guaranteed); explicit cache create / read via `cache_control` is rejected before reservation and its rates must not be confused with the implicit rate. Plus / Flash have a 256K tier switched on total input for the whole request. Reasoning consumes the output budget; turning it off is not guaranteed.
+Qwen3.8 Max exposes implicit caching only (read rate 0.1854, a hit was exercised, hits are not guaranteed); explicit `cache_control` is rejected before reservation — explicit and implicit reads carry different rates, and the two are not mixed until both dimensions are configured. Plus / Flash have a 256K tier switched on total input for the whole request. Reasoning consumes the output budget; turning it off is not guaranteed.
 
 ### Kimi (Moonshot)
 
