@@ -1,78 +1,594 @@
 ---
 title: "通用对话接口"
-api: "POST http://localhost:40081/v1/chat/completions"
+api: "POST https://www.qingbo.dev/v1/chat/completions"
 ---
 
-通过 `model` 选择公开模型，同一接口支持非流式、流式和函数调用，不需要知道上游渠道或 Profile。参数是否可用以模型组的已验证能力为准，不承诺所有 OpenAI 参数在每条渠道都支持。
+- 统一的对话 API 接口，支持所有主流文本生成模型
+- 完全兼容 OpenAI Chat Completions API 格式
+- 通过 `model` 参数无缝切换不同 AI 模型
+- 支持流式输出、函数调用等高级功能
 
-当前联调使用 `http://localhost:40081`；部署后替换为你的网关地址。使用 WaveAPI Key 作为 Bearer 凭据，不能使用生态登录 token 代替模型 Key。
-
-## 已校验的模型指南
-
-- [GPT-5.6 Luna / Terra / Sol](/cn/api-reference/text/gpt-5-6)
-- [GPT-5.4 / GPT-5.5](/cn/api-reference/text/gpt-5-4-and-5-5)
-- [Gemini 3.6 Flash](/cn/api-reference/text/gemini-3-6-flash)
-- [Claude Sonnet 5 / Opus 5](/cn/api-reference/text/claude-5)
-- [Claude Fable 5.1](/cn/api-reference/text/claude-fable-5-1)
-- [Grok 4.6](/cn/api-reference/text/grok-4-6)
-
-可用性以当前模型目录和 Key 权限为准。旧目录中的模型不自动代表已上架；2024 年 9 月以前发布或已经退役的模型不在新目录中开放。
-
-## 最小调用
-
-```bash
-curl http://localhost:40081/v1/chat/completions \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
+<RequestExample>
+```bash cURL
+curl -X POST https://www.qingbo.dev/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"gpt-5.6-luna","messages":[{"role":"user","content":"Reply with the single word OK."}],"reasoning_effort":"none","max_completion_tokens":128,"stream":false}'
+  -d '{
+    "model": "gpt-5.6-luna",
+    "messages": [
+      {
+        "role": "system",
+        "content": "你是一个专业的AI助手。"
+      },
+      {
+        "role": "user",
+        "content": "解释一下冒泡排序算法。"
+      }
+    ],
+    "temperature": 0.7,
+    "max_tokens": 1024
+  }'
 ```
 
-`model` 和 `messages` 必填。GPT 示例使用已验证的 `reasoning_effort: "none"` 和 `max_completion_tokens`；Claude 示例使用 `max_tokens`。这些参数不能不加区分地复制到所有模型。`temperature`、推理档位和多模态输入同样按模型指南选择。
+```python Python
+from openai import OpenAI
 
-## 流式
+client = OpenAI(
+    base_url="https://www.qingbo.dev/v1",
+    api_key="YOUR_API_KEY"
+)
 
-在同一请求添加 `stream: true` 和 `stream_options: {"include_usage": true}`。响应为 SSE：累加 `choices[].delta.content`，独立读取最终 `usage` 帧，再处理 `[DONE]`。最终用量帧可以没有 choices；不能因为内容已结束就忽略它。连接中断不等于调用免费，先查看已有账单再决定是否重发。
+response = client.chat.completions.create(
+    model="gpt-5.6-luna",
+    messages=[
+        {"role": "system", "content": "你是一个专业的AI助手。"},
+        {"role": "user", "content": "解释一下冒泡排序算法。"}
+    ],
+    temperature=0.7,
+    max_tokens=1024
+)
 
-## 结构化输出
+print(response.choices[0].message.content)
+```
 
-以下请求已在 GPT-5.6 Luna 路由验证。只有明确支持此能力的模型才能使用；当前 Claude 路由会在预扣前拒绝 JSON Schema / JSON 模式。
+```javascript JavaScript
+import OpenAI from 'openai';
 
-```json
-{
-  "model": "gpt-5.6-luna",
-  "messages": [{"role": "user", "content": "Return an object whose answer is OK."}],
-  "reasoning_effort": "none",
-  "max_completion_tokens": 128,
-  "response_format": {
-    "type": "json_schema",
-    "json_schema": {
-      "name": "answer",
-      "strict": true,
-      "schema": {"type": "object", "properties": {"answer": {"type": "string", "enum": ["OK"]}}, "required": ["answer"], "additionalProperties": false}
+const client = new OpenAI({
+  baseURL: 'https://www.qingbo.dev/v1',
+  apiKey: 'YOUR_API_KEY'
+});
+
+const response = await client.chat.completions.create({
+  model: 'gpt-5.6-luna',
+  messages: [
+    { role: 'system', content: '你是一个专业的AI助手。' },
+    { role: 'user', content: '解释一下冒泡排序算法。' }
+  ],
+  temperature: 0.7,
+  max_tokens: 1024
+});
+
+console.log(response.choices[0].message.content);
+```
+
+```go Go
+package main
+
+import (
+    "bytes"
+    "encoding/json"
+    "fmt"
+    "io"
+    "net/http"
+)
+
+func main() {
+    payload := map[string]interface{}{
+        "model": "gpt-5.6-luna",
+        "messages": []map[string]string{
+            {"role": "system", "content": "你是一个专业的AI助手。"},
+            {"role": "user", "content": "解释一下冒泡排序算法。"},
+        },
+        "temperature": 0.7,
+        "max_tokens": 1024,
+    }
+
+    body, _ := json.Marshal(payload)
+    req, _ := http.NewRequest("POST", "https://www.qingbo.dev/v1/chat/completions", bytes.NewBuffer(body))
+    req.Header.Set("Authorization", "Bearer YOUR_API_KEY")
+    req.Header.Set("Content-Type", "application/json")
+
+    resp, err := http.DefaultClient.Do(req)
+    if err != nil {
+        panic(err)
+    }
+    defer resp.Body.Close()
+
+    result, _ := io.ReadAll(resp.Body)
+    fmt.Println(string(result))
+}
+```
+
+```java Java
+import java.net.http.*;
+import java.net.URI;
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        String payload = """
+        {
+          "model": "gpt-5.6-luna",
+          "messages": [
+            {"role": "system", "content": "你是一个专业的AI助手。"},
+            {"role": "user", "content": "解释一下冒泡排序算法。"}
+          ],
+          "temperature": 0.7,
+          "max_tokens": 1024
+        }
+        """;
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create("https://www.qingbo.dev/v1/chat/completions"))
+            .header("Authorization", "Bearer YOUR_API_KEY")
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(payload))
+            .build();
+
+        HttpResponse<String> response = client.send(request,
+            HttpResponse.BodyHandlers.ofString());
+        System.out.println(response.body());
+    }
+}
+```
+</RequestExample>
+
+<ResponseExample>
+  ```json 200 theme={null}
+  {
+    "id": "chatcmpl-CdA8u0qPqzeN2gu8QLuQfjaP9CHU4",
+    "object": "chat.completion",
+    "created": 1763449816,
+    "model": "gpt-5.6-luna",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "冒泡排序（Bubble Sort）是一种简单的比较交换排序。它通过重复遍历序列，比较相邻元素并把较大的“冒泡”到右侧末端，直到序列有序。\n\n核心思想\n- 每一趟从左到右比较相邻元素，若前者大于后者则交换。一次趟结束后，当前未排部分中最大的元素被放到末尾。\n- 重复多趟，直到没有发生交换或已完成 n−1 趟。\n\n流程示例（以 [5, 1, 4, 2] 为例）\n- 第1趟：比较并交换 → [1, 5, 4, 2] → [1, 4, 5, 2] → [1, 4, 2, 5]（最大元素5到末尾）\n- 第2趟：比较并交换 → [1, 4, 2, 5] → [1, 2, 4, 5]（已整体有序，可提前结束）\n\n性质\n- 时间复杂度：平均/最坏 O(n^2)，最好 O(n)（当已基本有序且使用提前退出优化）\n- 空间复杂度：O(1)（就地排序）\n- 稳定性：稳定（相等元素相对次序不变）\n- 适用场景：数据量小或序列几乎有序；不适合大规模无序数据\n\n常见优化\n- 提前退出：某趟未发生交换则已排序完成。\n- 缩短边界：记录本趟最后一次交换的位置，下一趟只需遍历到该位置。\n- 双向冒泡（鸡尾酒排序）：从左到右、再从右到左各走一遍，更快收敛。\n\n简要伪代码\nfunction bubbleSort(a):\n    n = length(a)\n    repeat\n        swapped = false\n        for j = 0 to n-2:\n            if a[j] > a[j+1]:\n                swap(a[j], a[j+1])\n                swapped = true\n        n = n - 1    // 末尾已就位，缩短范围\n    until swapped == false\n\n如需，我可以给出某种语言的实现代码或更多变体说明。",
+          "refusal": null,
+          "annotations": []
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 24,
+      "completion_tokens": 1030,
+      "total_tokens": 1054,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 512,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
     }
   }
-}
+  ```
+
+  ```json 400 theme={null}
+  {
+    "error": {
+      "code": 400,
+      "message": "请求参数无效",
+      "type": "invalid_request_error"
+    }
+  }
+  ```
+
+  ```json 401 theme={null}
+  {
+    "error": {
+      "code": 401,
+      "message": "身份验证失败，请检查您的API密钥",
+      "type": "authentication_error"
+    }
+  }
+  ```
+
+  ```json 402 theme={null}
+  {
+    "error": {
+      "code": 402,
+      "message": "账户余额不足，请充值后再试",
+      "type": "payment_required"
+    }
+  }
+  ```
+
+  ```json 403 theme={null}
+  {
+    "error": {
+      "code": 403,
+      "message": "访问被禁止，您没有权限访问此资源",
+      "type": "permission_error"
+    }
+  }
+  ```
+
+  ```json 429 theme={null}
+  {
+    "error": {
+      "code": 429,
+      "message": "请求过于频繁，请稍后再试",
+      "type": "rate_limit_error"
+    }
+  }
+  ```
+
+  ```json 500 theme={null}
+  {
+    "error": {
+      "code": 500,
+      "message": "服务器内部错误，请稍后重试",
+      "type": "server_error"
+    }
+  }
+  ```
+
+  ```json 502 theme={null}
+  {
+    "error": {
+      "code": 502,
+      "message": "网关错误，服务器暂时不可用",
+      "type": "bad_gateway"
+    }
+  }
+  ```
+</ResponseExample>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用Bearer Token进行认证
+
+  获取 API Key：
+
+  访问 [API Key 管理页面](https://qingbo.dev/dashboard/keys) 获取您的 API Key
+
+  使用时在请求头中添加：
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" required>
+  模型 ID
+
+  完整的可用模型、价格与已验证能力见[文本模型总览](/cn/api-reference/text/overview)；实时可用性以 `GET /v1/models` 为准。
+
+  切换模型只改这一个字段。参数是否可用以该模型的已验证能力为准，不是所有 OpenAI 参数在每个模型上都可用：GPT-5 及之后的型号用 `max_completion_tokens` 和 `reasoning_effort`，Claude 用 `max_tokens`；GPT Pro / Codex / o3-pro 只接受 [Responses 接口](/cn/api-reference/text/openai-multimodal)。
+</ParamField>
+
+<ParamField body="messages" type="array" required>
+  对话消息列表
+
+  <Expandable title="消息对象属性">
+    <ParamField body="role" type="string" required>
+      角色类型：`system`（系统提示）、`user`（用户输入）、`assistant`（模型回复）
+    </ParamField>
+
+    <ParamField body="content" type="string" required>
+      消息内容，支持字符串或多模态内容数组
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="temperature" type="number">
+  控制输出随机性，范围 0-2
+
+  * 较低的值（如 0.2）使输出更确定
+  * 较高的值（如 1.8）使输出更随机
+
+  默认值：1.0
+</ParamField>
+
+<ParamField body="max_tokens" type="integer">
+  生成的最大token数量
+
+  不同模型有不同的最大值限制，请参考具体模型文档
+</ParamField>
+
+<ParamField body="stream" type="boolean">
+  是否使用流式输出
+
+  * `true`: 流式返回（SSE格式）
+  * `false`: 一次性返回完整响应
+
+  默认值：false
+</ParamField>
+
+<ParamField body="top_p" type="number">
+  核采样参数，范围 0-1
+
+  控制生成文本的多样性，建议与 temperature 二选一使用
+
+  默认值：1.0
+</ParamField>
+
+<ParamField body="frequency_penalty" type="number">
+  频率惩罚，范围 -2.0 到 2.0
+
+  正值会降低重复使用相同词汇的可能性
+
+  默认值：0
+</ParamField>
+
+<ParamField body="presence_penalty" type="number">
+  存在惩罚，范围 -2.0 到 2.0
+
+  正值会增加谈论新主题的可能性
+
+  默认值：0
+</ParamField>
+
+<ParamField body="stop" type="string or array">
+  停止序列
+
+  最多4个序列，遇到这些序列时将停止生成
+</ParamField>
+
+<ParamField body="n" type="integer">
+  生成的回复数量
+
+  默认值：1
+</ParamField>
+
+<ParamField body="max_completion_tokens" type="integer">
+  输出 token 上限（GPT-5 及之后的 OpenAI 型号）
+
+  这些型号拒绝 `max_tokens`，必须用本字段。思考 token 也从这个预算里扣：`finish_reason: "length"` 表示输出可能没写完，不能当作完整回答。
+</ParamField>
+
+<ParamField body="reasoning_effort" type="string">
+  推理档位（OpenAI 推理型号）
+
+  取值 `none` / `low` / `medium` / `high`。GPT-5.6 与 GPT-5.4 / 5.5 已验证 `none`；GPT-6 Astra 只验证了 `low`，且不接受 `none`。非 OpenAI 型号不要传这个字段。
+</ParamField>
+
+<ParamField body="stream_options" type="object">
+  流式附加选项
+
+  设 `{"include_usage": true}` 时，SSE 会在 `[DONE]` 之前多发一帧只带 `usage` 的事件。**这一帧的 `choices` 可能是空数组**，读取时先取 usage 再判断文本增量，否则会因数组越界丢掉费用信息。详见[流式输出](/cn/docs/streaming)。
+</ParamField>
+
+<ParamField body="response_format" type="object">
+  结构化输出
+
+  `{"type": "json_schema", "json_schema": {...}}` 按 JSON Schema 约束返回，`{"type": "json_object"}` 只保证是合法 JSON。仅在总览表「已验证」列含 JSON 的模型上可用；**当前 Claude 全系拒绝**（预扣前返回 400），DeepSeek V3.2-Exp / V3.1-Terminus 不提供严格 schema。
+</ParamField>
+
+<ParamField body="tools" type="array">
+  可调用的函数声明
+
+  `[{"type": "function", "function": {"name": ..., "description": ..., "parameters": {JSON Schema}}}]`。模型只生成函数名和参数并放在响应的 `tool_calls` 里，**网关不执行任何工具**，执行与结果回传由你的应用负责。仅在总览表「已验证」列含工具的模型上可用。
+</ParamField>
+
+<ParamField body="tool_choice" type="string or object">
+  工具选择方式
+
+  `"auto"`（默认）、`"none"`，或 `{"type": "function", "function": {"name": "..."}}` 强制调用指定函数。**Claude Fable 系列只接受 `"auto"`**，`required` 或指定函数会被上游拒绝（400，预扣全额退回）。
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  响应的唯一标识符
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  对象类型，固定为 `chat.completion`
+</ResponseField>
+
+<ResponseField name="created" type="integer">
+  创建时间戳
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  实际使用的模型名称
+</ResponseField>
+
+<ResponseField name="choices" type="array">
+  生成的回复列表
+
+  <Expandable title="属性">
+    <ResponseField name="index" type="integer">
+      选项索引
+    </ResponseField>
+
+    <ResponseField name="message" type="object">
+      消息内容
+
+      <Expandable title="属性">
+        <ResponseField name="role" type="string">
+          角色类型（assistant）
+        </ResponseField>
+
+        <ResponseField name="content" type="string">
+          生成的文本内容
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+
+    <ResponseField name="logprobs" type="object">
+      对数概率信息（默认为 null）
+    </ResponseField>
+
+    <ResponseField name="finish_reason" type="string">
+      结束原因
+
+      可能的值：
+
+      * `stop` - 自然结束
+      * `length` - 达到最大长度
+      * `content_filter` - 内容过滤
+      * `function_call` - 函数调用
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="usage" type="object">
+  token使用统计
+
+  <Expandable title="属性">
+    <ResponseField name="prompt_tokens" type="integer">
+      输入消息的 token 数
+    </ResponseField>
+
+    <ResponseField name="completion_tokens" type="integer">
+      生成内容的 token 数
+    </ResponseField>
+
+    <ResponseField name="total_tokens" type="integer">
+      总 token 数
+    </ResponseField>
+
+    <ResponseField name="prompt_tokens_details" type="object">
+      输入 token 详细信息
+
+      <Expandable title="属性">
+        <ResponseField name="cached_tokens" type="integer">
+          缓存的 token 数
+        </ResponseField>
+
+        <ResponseField name="text_tokens" type="integer">
+          文本 token 数
+        </ResponseField>
+
+        <ResponseField name="audio_tokens" type="integer">
+          音频 token 数
+        </ResponseField>
+
+        <ResponseField name="image_tokens" type="integer">
+          图像 token 数
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+
+    <ResponseField name="completion_tokens_details" type="object">
+      生成 token 详细信息
+
+      <Expandable title="属性">
+        <ResponseField name="text_tokens" type="integer">
+          文本 token 数
+        </ResponseField>
+
+        <ResponseField name="audio_tokens" type="integer">
+          音频 token 数
+        </ResponseField>
+
+        <ResponseField name="reasoning_tokens" type="integer">
+          推理 token 数（思考模型专用）
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="system_fingerprint" type="string">
+  系统指纹标识（用于追踪后端配置）
+</ResponseField>
+
+## 可用模型
+
+模型 ID、价格、长上下文分档和各模型已验证的能力集中在[文本模型总览](/cn/api-reference/text/overview)，本页不再重复一份清单以免两处漂移。实时可用性与价格配置以目录接口为准：
+
+```bash
+curl https://www.qingbo.dev/v1/models \
+  -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
-## 函数调用
+## 用量与计费
 
-函数声明与普通文本共用同一个 URL。返回 `tool_calls` 的函数名与 JSON 参数由你的应用检查并执行；生成工具参数不代表工具已执行。多轮工具流程需按模型支持情况另行验证。
+`usage.prompt_tokens` 是输入总量，已包含 `prompt_tokens_details.cached_tokens`；`usage.completion_tokens` 已包含 `completion_tokens_details.reasoning_tokens`。缓存部分按缓存价替代普通输入价，思考 token 按输出价计一次，两者都不叠加。
 
-```json
+响应里的 `usage.cost` 是整数 **quota**，不是美元（500,000 quota = 1 USD）。最终扣款以本人账单的文本账务记录为准；`pricing_pending` 表示仍待核对，不是零费用。完整口径、状态含义和计算公式见[文本模型总览 · 计费口径](/cn/api-reference/text/overview#计费口径)。
+
+<Warning>
+没有收到完整 `usage`、连接中断或响应缺少费用字段，都不代表本次调用免费。先到控制台核对已有用量记录，不要自动重发。
+</Warning>
+
+## 使用示例
+
+### 基础对话
+
+```json  theme={null}
 {
   "model": "gpt-5.6-luna",
-  "messages": [{"role": "user", "content": "Call record_result with answer OK."}],
-  "reasoning_effort": "none",
-  "max_completion_tokens": 128,
-  "tools": [{"type": "function", "function": {"name": "record_result", "description": "Return a result to the caller.", "parameters": {"type": "object", "properties": {"answer": {"type": "string"}}, "required": ["answer"], "additionalProperties": false}}}],
-  "tool_choice": {"type": "function", "function": {"name": "record_result"}}
+  "messages": [
+    {"role": "user", "content": "你好"}
+  ]
 }
 ```
 
-## 用量与费用
+### 系统提示词
 
-`prompt_tokens` 包含普通输入及缓存部分；缓存命中和写入是其中的不同计费部分，不能在总输入之外再加一次。`completion_tokens` 包含思考 token，不能重复计费。`usage.cost` 是整数 quota，不是美元；当前换算为 500,000 quota = 1 USD。最终费用以本人文本账本为准，`pricing_pending` 表示仍需核对，不能显示为零费用。
+```json  theme={null}
+{
+  "model": "claude-sonnet-5",
+  "messages": [
+    {"role": "system", "content": "你是一位专业的Python编程导师"},
+    {"role": "user", "content": "如何使用列表推导式？"}
+  ]
+}
+```
 
-## 当前不开放的参数
+### 多轮对话
 
-内置联网、托管搜索/执行工具和非标准 `service_tier` 尚未配置完整费用，因此在预扣前拒绝。客户端函数调用不属于这些托管工具。Gemini 显式缓存存储同样未开放。原生协议分别见 [Gemini](/cn/api-reference/text/gemini-native)和 [Claude Messages](/cn/api-reference/text/claude-messages)，无需为每个渠道增加一套 URL。
+```json  theme={null}
+{
+  "model": "gemini-3.5-flash",
+  "messages": [
+    {"role": "user", "content": "什么是机器学习？"},
+    {"role": "assistant", "content": "机器学习是人工智能的一个分支..."},
+    {"role": "user", "content": "能举个例子吗？"}
+  ]
+}
+```
+
+### 流式输出
+
+```json  theme={null}
+{
+  "model": "gpt-5.6-luna",
+  "messages": [
+    {"role": "user", "content": "写一首关于春天的诗"}
+  ],
+  "stream": true
+}
+```
+
+## 相关文档
+
+<CardGroup cols={2}>
+  <Card title="文本模型总览" icon="table-list" href="/cn/api-reference/text/overview">
+    模型目录、价格、已验证能力与统一计费口径
+  </Card>
+  <Card title="流式输出" icon="bolt" href="/cn/docs/streaming">
+    SSE 事件处理与 usage 末帧的读法
+  </Card>
+  <Card title="Responses 接口" icon="layer-group" href="/cn/api-reference/text/openai-multimodal">
+    图像输入、托管工具与 GPT Pro / Codex 系列
+  </Card>
+  <Card title="原生信封" icon="code-branch" href="/cn/api-reference/text/claude-messages">
+    [Claude Messages](/cn/api-reference/text/claude-messages) · [Gemini 原生](/cn/api-reference/text/gemini-native)
+  </Card>
+</CardGroup>
