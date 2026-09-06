@@ -57,13 +57,13 @@ console.log(data.total_available_usd);
 ```
 </ResponseExample>
 
-## Authorizations
+## 鉴权
 
 <ParamField header="Authorization" type="string" required>
   `Bearer YOUR_API_KEY`，用[控制台](https://qingbo.dev/dashboard/keys)里的任意一把 Key 即可。
 </ParamField>
 
-## Response
+## 响应
 
 <ResponseField name="object" type="string">
   固定为 `credit_summary`。
@@ -95,15 +95,15 @@ console.log(data.total_available_usd);
 - **美元是换算值。** 内部计量单位是整数 quota，**500,000 quota = 1 USD**；任务与文本响应里的 `cost` 就是 quota，不是美元。
 - 本端点只返回你自己的账号数据。
 
-## 三个端点怎么选
+## 如何选择
 
-| 想知道 | 用这个 |
+| 需要的数据 | 端点 |
 |---|---|
-| 还剩多少钱、用了多少、总共多少 | **本页**，一次拿全，推荐新接入用 |
-| 只要累计已用（OpenAI 口径，单位美分） | [查询已用量](/cn/api-reference/account/usage) |
-| 只要总额度（OpenAI 口径 `hard_limit_usd`） | [查询总额度](/cn/api-reference/account/subscription) |
+| 余额、已用量与总额度，一次请求取全 | **本端点**，新接入推荐 |
+| 仅累计已用量（OpenAI 口径，单位美分） | [查询已用量](/cn/api-reference/account/usage) |
+| 仅总额度（OpenAI 口径 `hard_limit_usd`） | [查询总额度](/cn/api-reference/account/subscription) |
 
-后两个是为**兼容既有的 OpenAI 额度查询工具**保留的形状（用量看板、成本统计脚本等）。自己写代码时用本页这个更直观。
+后两个端点保留 OpenAI 的响应形状，用于兼容既有的额度查询工具，例如用量看板与成本统计脚本。
 
 ## 相关文档
 

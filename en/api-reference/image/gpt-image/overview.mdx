@@ -1,9 +1,9 @@
 ---
 title: "GPT Image Series"
-description: "Call official and reverse GPT Image lines through one task endpoint"
+description: "The official and reverse lines of GPT Image 2: one set of request parameters, two billing models"
 ---
 
-Every GPT Image model uses `POST /v1/tasks`. Choose the model ID by capability and billing method; the request URL stays the same across lines.
+GPT Image 2 comes in an official and a reverse line, both served on `POST /v1/tasks` — the request URL does not change between them. The parameters are largely the same; the differences are line-specific parameters and billing. Pick the model ID that fits.
 
 ## Available models
 
@@ -25,12 +25,12 @@ Every GPT Image model uses `POST /v1/tasks`. Choose the model ID by capability a
 | Multi-image reference editing | Either | Official accepts up to 16 images; reverse accepts up to 15 |
 
 <Note>
-QWave does not switch between these lines automatically. Store the model ID as a product choice and send only the parameters documented for that line.
+The two lines never switch automatically: the model ID selects the line, and its own page is authoritative for the parameters it accepts.
 </Note>
 
 ## What both lines share
 
-These are identical across the family, so you do not need to re-check them per model page:
+These are identical on both lines:
 
 | Item | Value |
 |---|---|
@@ -41,7 +41,7 @@ These are identical across the family, so you do not need to re-check them per m
 | Output count | One image per request |
 | Not supported | `seed` |
 
-The differences are concentrated in **line-specific parameters** and **billing** — see the table above.
+The differences are concentrated in **line-specific parameters** and **billing** — see "Choose a line" above.
 
 ## Unified request
 
@@ -59,4 +59,12 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   }'
 ```
 
-The response contains a `task_id`. Poll [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), or configure a webhook for terminal updates.
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
+
+## Related
+
+- [GPT Image 2 Official](/en/api-reference/image/gpt-image/gpt-image-2)
+- [GPT Image 2 Reverse](/en/api-reference/image/gpt-image/gpt-image-2-rev)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

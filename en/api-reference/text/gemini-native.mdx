@@ -1,10 +1,10 @@
 ---
 title: "Gemini Native Format"
-description: "Use the Google Gemini native API format"
+description: "The native Gemini endpoint, kept for existing Gemini clients; supports text and streaming"
 api: "POST https://www.qingbo.dev/v1beta/models/{model}:generateContent"
 ---
 
-The native endpoint kept for existing Gemini clients, supporting non-streaming and streaming text. It exposes nothing beyond what Chat offers, so new integrations should use the [General Chat API](/en/api-reference/text/general-chat).
+The path and request body follow Google's native Gemini format, using `contents` and `generationConfig`, and authenticate with `x-goog-api-key`. This endpoint exposes nothing beyond what Chat offers, so new integrations should use the [General Chat API](/en/api-reference/text/general-chat).
 
 <RequestExample>
 ```bash cURL
@@ -153,10 +153,22 @@ public class Main {
 ```
 </RequestExample>
 
-## Request Parameters
+## Authorizations
+
+<ParamField header="x-goog-api-key" type="string" required>
+  Your WaveAPI key. The native endpoint keeps Gemini's header name — it is **not** `Authorization: Bearer`.
+
+  ```
+  x-goog-api-key: YOUR_API_KEY
+  ```
+
+  Create a key in the [console](https://qingbo.dev/dashboard/keys); see [Authentication](/en/docs/authentication) for details.
+</ParamField>
+
+## Body
 
 <ParamField path="model" type="string" required>
-  Model ID, used as a URL path parameter. **Only models declaring the `gemini_native` protocol are served here** — eight in total:
+  Model ID, used as a URL path parameter. **Eight models can be called here**:
 
   - `gemini-3.8-flash`
   - `gemini-3.7-flash`
@@ -204,7 +216,33 @@ public class Main {
   </Expandable>
 </ParamField>
 
-## Request Example
+## Response
+
+```json
+{
+  "candidates": [
+    {
+      "content": {
+        "role": "model",
+        "parts": [
+          {
+            "text": "量子计算是一种利用量子力学原理..."
+          }
+        ]
+      },
+      "finishReason": "STOP",
+      "safetyRatings": [...]
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 12,
+    "candidatesTokenCount": 156,
+    "totalTokenCount": 168
+  }
+}
+```
+
+## Examples
 
 <CodeGroup>
 
@@ -280,33 +318,7 @@ console.log(result.response.text());
 
 </CodeGroup>
 
-## Response Format
-
-```json
-{
-  "candidates": [
-    {
-      "content": {
-        "role": "model",
-        "parts": [
-          {
-            "text": "量子计算是一种利用量子力学原理..."
-          }
-        ]
-      },
-      "finishReason": "STOP",
-      "safetyRatings": [...]
-    }
-  ],
-  "usageMetadata": {
-    "promptTokenCount": 12,
-    "candidatesTokenCount": 156,
-    "totalTokenCount": 168
-  }
-}
-```
-
-## Streaming Output
+## Streaming
 
 ```python
 response = model.generate_content(
@@ -320,33 +332,26 @@ for chunk in response:
 
 ## Usage and billing
 
-Native responses report usage in `usageMetadata` and carry **no gateway `usage.cost` field**; check the console
+Native responses report usage in `usageMetadata` and carry **no `usage.cost` field**; check the console
 usage record for the actual charge. `promptTokenCount` already includes `cachedContentTokenCount`, and billed
-output is `candidatesTokenCount + thoughtsTokenCount` — do not read `candidatesTokenCount` as Chat's
-`completion_tokens`, which already includes reasoning.
+output is `candidatesTokenCount + thoughtsTokenCount`. `candidatesTokenCount` is not the equivalent of Chat's
+`completion_tokens`, which already includes reasoning tokens.
 
-For streaming, take the final cumulative usage rather than summing per-frame values; the last frame can carry
+For streaming, the final cumulative usage is authoritative and per-frame values are not summed; the last frame can carry
 usage only, with `candidates` as an empty array, so read `usageMetadata` before checking for candidate content.
 Rates and the shared rules are in the [Text Models Overview · Billing rules](/en/api-reference/text/overview#billing-rules).
 
-## Not available
+## Not supported
 
 The following return `400` and are not billed:
 
 - **Explicit context caching** — `cachedContent` / `cached_content` / `cache_control` are rejected across the whole Gemini line; only automatic caching is open, see [Caching](/en/api-reference/text/overview#caching).
 - **Built-in tools** — grounding, hosted search and other vendor built-ins. Client-executed function tools are not in this group.
 - **`service_tier`** set to anything other than `standard` / `default`.
-
-This endpoint does not support function calling or structured output — use the
-[General Chat API](/en/api-reference/text/general-chat) when you need either.
+- **Function calling and structured output** — use the [General Chat API](/en/api-reference/text/general-chat) when you need either.
 
 ## Related
 
-<CardGroup cols={2}>
-  <Card title="Text Models Overview" icon="table-list" href="/en/api-reference/text/overview">
-    Prices, cache tiers and verified capabilities for the eight models
-  </Card>
-  <Card title="General Chat API" icon="comments" href="/en/api-reference/text/general-chat">
-    The default entry for new integrations
-  </Card>
-</CardGroup>
+- [Text Models Overview](/en/api-reference/text/overview)
+- [General Chat API](/en/api-reference/text/general-chat)
+- [Streaming](/en/docs/streaming)

@@ -1,6 +1,6 @@
 ---
 title: "GPT Image 2 逆向版"
-description: "GPT Image 2 逆向线路：固定张价的文生图与参考图编辑"
+description: "文生图与参考图编辑，按输出分辨率固定张价"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
@@ -47,7 +47,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 </CodeGroup>
 
-提交成功后使用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果。
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
 
 ## 请求参数
 
@@ -77,12 +77,12 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="n" type="integer" default="1">
-  生成数量。本线路每次请求只出 1 张。
+  生成数量，取值 `1`。每次请求返回一张图。
 </ParamField>
 
 通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
 
-逆向线路不支持 `quality`、`mask_url`、`background`、`output_format`、`output_compression`、`moderation` 和 `seed`，这些是官方线路独有的参数。本页未列出的参数会返回 `400`，不计费。
+逆向线路不支持 `quality`、`mask_url`、`background`、`output_format`、`output_compression`、`moderation` 和 `seed`，这些是官方线路独有的参数。以上之外的参数会返回 `400`，不计费。
 
 ## 限制
 
@@ -96,11 +96,11 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 按成功生成的图片**固定张价**收费，`1k` / `2k` / `4k` 三档价格不同。
 
-各模型的单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。单次调用的实际花费见任务响应里的 `cost`（整数额度，500,000 额度 = 1 USD）。
+单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。单次调用的实际花费见任务响应里的 `cost`——整数 quota，**500,000 quota = 1 USD**，不是美元。
 
-`generate` 与 `edit` 使用同一张价，参考图不加价。分辨率之外没有其他计费维度——不像官方线路，这里画幅和提示词长度都不影响单张价格，**提交前就能确定这一单花多少**。
+`generate` 与 `edit` 同价，参考图不加价，画幅与提示词长度都不影响单张价格——**分辨率是唯一的计费维度，提交前即可确定单次费用**。`resolution` 不是 `1k` / `2k` / `4k` 时，按 `1k` 的价格结算。
 
-分辨率不在上述三档内时，按 `1k` 的价格结算。只有成功出图才计费，任务失败、取消，或没有返回可用图片时全额退款。
+只有成功出图才计费。任务失败、取消，或没有返回可用图片时，全额退款。
 
 ## 响应
 
@@ -123,6 +123,8 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 }
 ```
 
+`result.images` 返回生成的图片。完整字段说明见[任务状态](/cn/api-reference/task/status)。
+
 ## 与官方线路的区别
 
 | | `gpt-image-2-rev` | [`gpt-image-2`](/cn/api-reference/image/gpt-image/gpt-image-2) |
@@ -137,8 +139,8 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 ## 相关文档
 
+- [GPT Image 系列](/cn/api-reference/image/gpt-image/overview)
+- [GPT Image 2 官方版](/cn/api-reference/image/gpt-image/gpt-image-2)
 - [提交任务](/cn/api-reference/task/submit)
 - [查询任务状态](/cn/api-reference/task/status)
 - [任务系统](/cn/docs/task-system)
-- [GPT Image 模型家族](/cn/api-reference/image/gpt-image/overview)
-- [GPT Image 2 官方线路](/cn/api-reference/image/gpt-image/gpt-image-2)

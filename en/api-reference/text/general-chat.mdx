@@ -1,12 +1,10 @@
 ---
 title: "General Chat API"
+description: "Call every text model through one OpenAI-compatible endpoint — switching models means changing `model`"
 api: "POST https://www.qingbo.dev/v1/chat/completions"
 ---
 
-- Unified chat API supporting all major text generation models
-- Fully compatible with the OpenAI Chat Completions API format
-- Switch between AI models seamlessly via the `model` parameter
-- Supports streaming, function calling, and other advanced features
+An OpenAI Chat Completions-compatible endpoint and the default entry for every text model. Switching models means changing `model` — the URL and key stay the same. What each model supports is in the [Text Models Overview](/en/api-reference/text/overview).
 
 <RequestExample>
 ```bash cURL
@@ -273,7 +271,7 @@ public class Main {
 <ParamField body="model" type="string" required>
   Model ID.
 
-  For the full list of models with prices and verified capabilities, see the [Text Models Overview](/en/api-reference/text/overview); live availability comes from `GET /v1/models`.
+  For the full list of models and what each supports, see the [Text Models Overview](/en/api-reference/text/overview); live availability comes from `GET /v1/models`.
 
   Switching models means changing this field only. Which parameters work depends on the model — not every OpenAI option is available everywhere: GPT-5 and later use `max_completion_tokens` and `reasoning_effort`, Claude uses `max_tokens`, and `gpt-5-pro`, `gpt-5.2-pro`, `gpt-5.4-pro`, `gpt-5.3-codex` and `o3-pro` accept only the [Responses API](/en/api-reference/text/openai-multimodal).
 </ParamField>
@@ -287,7 +285,7 @@ public class Main {
     </ParamField>
 
     <ParamField body="content" type="string" required>
-      Message content. Accepts a string or an array of multimodal content parts.
+      Message content. Accepts a string or an array of content parts.
     </ParamField>
   </Expandable>
 </ParamField>
@@ -509,22 +507,12 @@ public class Main {
 
 ## Available models
 
-Model IDs, prices, long-context tiers and per-model verified capabilities all live in the [Text Models Overview](/en/api-reference/text/overview); this page does not keep a second copy that would drift. Live availability and price configuration come from the catalog API:
+Every model ID, what it supports, its long-context tier and how it is billed are in the [Text Models Overview](/en/api-reference/text/overview). Live availability and rates come from the catalog API:
 
 ```bash
 curl https://www.qingbo.dev/v1/models \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
-
-## Usage and billing
-
-`usage.prompt_tokens` is total input and already includes `prompt_tokens_details.cached_tokens`; `usage.completion_tokens` already includes `completion_tokens_details.reasoning_tokens`. Cached tokens are billed at the cache rate instead of the ordinary input rate, and reasoning is billed once at the output rate — neither is added twice.
-
-`usage.cost` in the response is an integer **quota**, not dollars (500,000 quota = 1 USD). The final charge is the text ledger entry in your billing records; `pricing_pending` means reconciliation is outstanding, not a zero charge. Full rules, ledger states and the cost formula are in the [Text Models Overview · Billing rules](/en/api-reference/text/overview#billing-rules).
-
-<Warning>
-A missing final `usage`, a dropped connection or a response without a cost field does not make the call free. Check the existing usage record in the console before resubmitting.
-</Warning>
 
 ## Examples
 
@@ -576,19 +564,31 @@ A missing final `usage`, a dropped connection or a response without a cost field
 }
 ```
 
+## Usage and billing
+
+`usage.prompt_tokens` is total input and already includes `prompt_tokens_details.cached_tokens`; `usage.completion_tokens` already includes `completion_tokens_details.reasoning_tokens`. Cached tokens are billed at the cache rate instead of the ordinary input rate, and reasoning is billed once at the output rate — neither is added twice.
+
+`usage.cost` in the response is an integer **quota**, not dollars (500,000 quota = 1 USD). The final charge is the text ledger entry in the console billing records; `pricing_pending` means reconciliation is outstanding, not a zero charge. Full rules, ledger states and the cost formula are in the [Text Models Overview · Billing rules](/en/api-reference/text/overview#billing-rules).
+
+<Warning>
+A missing final `usage`, a dropped connection or a response without a cost field does not make the call free. Check the existing usage record in the console before resubmitting.
+</Warning>
+
+## Not supported
+
+The following return `400` and are not billed:
+
+- **Vendor built-in tools** — any entry in `tools` whose type is not `function` or `custom`. Client-executed function tools work normally.
+- **`web_search_options`**.
+- **`service_tier`** set to anything other than `standard` / `default`.
+- **Explicit `cache_control`** — allowed only on the four Claude 5 / Fable models, see [Text Models Overview · Caching](/en/api-reference/text/overview#caching).
+
+Sending `tools`, `tool_choice` or `response_format` to a model that does not support tool calling or structured output also returns `400`. What each model supports is in the [Text Models Overview](/en/api-reference/text/overview).
+
 ## Related
 
-<CardGroup cols={2}>
-  <Card title="Text Models Overview" icon="table-list" href="/en/api-reference/text/overview">
-    Model catalog, pricing, verified capabilities and the shared billing rules
-  </Card>
-  <Card title="Streaming" icon="bolt" href="/en/docs/streaming">
-    SSE event handling and how to read the final usage frame
-  </Card>
-  <Card title="Responses API" icon="layer-group" href="/en/api-reference/text/openai-multimodal">
-    The five Responses-only models
-  </Card>
-  <Card title="Native envelopes" icon="code-branch" href="/en/api-reference/text/claude-messages">
-    [Claude Messages](/en/api-reference/text/claude-messages) · [Gemini native](/en/api-reference/text/gemini-native)
-  </Card>
-</CardGroup>
+- [Text Models Overview](/en/api-reference/text/overview)
+- [Streaming](/en/docs/streaming)
+- [Responses API](/en/api-reference/text/openai-multimodal)
+- [Claude Messages API](/en/api-reference/text/claude-messages)
+- [Gemini Native API](/en/api-reference/text/gemini-native)

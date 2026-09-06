@@ -26,13 +26,13 @@ curl https://www.qingbo.dev/v1/dashboard/billing/usage \
 ```
 </ResponseExample>
 
-## Authorizations
+## 鉴权
 
 <ParamField header="Authorization" type="string" required>
   `Bearer YOUR_API_KEY`。
 </ParamField>
 
-## Response
+## 响应
 
 <ResponseField name="object" type="string">
   固定为 `list`。
@@ -42,7 +42,7 @@ curl https://www.qingbo.dev/v1/dashboard/billing/usage \
   累计已用，**单位为美分**。除以 100 得到美元；上面的 `348.2914` 即 $3.482914。
 </ResponseField>
 
-## 算剩余余额
+## 计算剩余余额
 
 OpenAI 的工具习惯用「总额度 − 已用」算剩余：
 
@@ -50,7 +50,7 @@ OpenAI 的工具习惯用「总额度 − 已用」算剩余：
 剩余 USD = subscription.hard_limit_usd - usage.total_usage / 100
 ```
 
-直接要余额的话，[查询余额](/cn/api-reference/account/balance) 的 `total_available_usd` 一个字段就够，不用两次请求相减。
+[查询余额](/cn/api-reference/account/balance) 的 `total_available_usd` 一个字段即为剩余余额，无需两次请求相减。
 
 ## 相关文档
 

@@ -1,6 +1,6 @@
 ---
 title: "GPT Image 2 Official"
-description: "Official GPT Image 2 line for image generation, reference editing, and inpainting"
+description: "Text-to-image, reference editing and masked inpainting, billed from token usage"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
@@ -64,7 +64,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 </CodeGroup>
 
-The submission response contains a `task_id`. Retrieve the image with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), or use [`Prefer: wait`](/en/api-reference/task/submit#request-waiting-prefer-wait) or a webhook.
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
 
 ## Request parameters
 
@@ -123,7 +123,7 @@ The submission response contains a `task_id`. Retrieve the image with [`GET /v1/
 
 See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key`, and the maximum-cost header.
 
-The official line does not support `seed`. Parameters not listed on this page return `400` and are not billed.
+The official line does not support `seed`. Any other parameter returns `400` and is not billed.
 
 ## Limits
 
@@ -140,7 +140,7 @@ The official line does not support `seed`. Parameters not listed on this page re
 
 The official line is **billed from actual token usage** across five dimensions: text input, cached text input, image input, cached image input and image output.
 
-Per-model rates are in `price_config` on `GET /v1/models` and in the console's Model Market. What a single call actually cost is the `cost` field on the task response (an integer credit amount, 500,000 credits = 1 USD).
+Rates are in `price_config` on `GET /v1/models` and in the console's Model Market. What a single call actually cost is the `cost` field on the task response — an integer quota at **500,000 quota = 1 USD**, not dollars.
 
 Image input includes reference images and masks. Cached rates apply only when the upstream response reports cache usage that can be settled. Otherwise, billing uses ordinary input and image-output usage.
 
@@ -152,7 +152,7 @@ Submitting a task places a hold for the estimated usage; the task then settles f
 - **Text input** — a floor of 32 tokens
 - **Reference images** — 4,096 tokens each; masks count as image input too
 
-Output token counts vary enormously: at a given aspect ratio, `high` is estimated at roughly **36×** the tokens of `low`, and `4k` is several times `1k` again — combined, per-image cost spans two orders of magnitude. **Quality is by far the biggest cost lever on this line**, so start with `low` when unsure. Wider frames are cheaper: at the same tier, `16:9` uses noticeably fewer output tokens than `1:1`.
+Output token counts vary enormously: at a given aspect ratio, `high` is estimated at roughly **36×** the tokens of `low`, and `4k` is several times `1k` again — combined, per-image cost spans two orders of magnitude. `quality` is the parameter with the largest effect on cost on this line, and it defaults to `low`. Aspect ratio matters too: at the same quality, `16:9` uses fewer output tokens than `1:1`.
 
 The estimated output tokens for every aspect-ratio / resolution / quality combination are in `price_config.image_usage_reservation` on `GET /v1/models`.
 
@@ -183,8 +183,8 @@ Generated images are returned in `result.images`. Failed and cancelled tasks ref
 
 ## Related
 
-- [Submit a task](/en/api-reference/task/submit)
-- [Retrieve a task](/en/api-reference/task/status)
-- [Task system](/en/docs/task-system)
-- [GPT Image family](/en/api-reference/image/gpt-image/overview)
+- [GPT Image Series](/en/api-reference/image/gpt-image/overview)
 - [GPT Image 2 Reverse](/en/api-reference/image/gpt-image/gpt-image-2-rev)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

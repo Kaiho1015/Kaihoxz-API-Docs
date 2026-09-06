@@ -30,13 +30,13 @@ curl https://www.qingbo.dev/v1/dashboard/billing/subscription \
 ```
 </ResponseExample>
 
-## Authorizations
+## 鉴权
 
 <ParamField header="Authorization" type="string" required>
   `Bearer YOUR_API_KEY`。
 </ParamField>
 
-## Response
+## 响应
 
 <ResponseField name="object" type="string">
   固定为 `billing_subscription`。
@@ -62,14 +62,14 @@ curl https://www.qingbo.dev/v1/dashboard/billing/subscription \
   恒为 `0`——钱包制没有固定到期时间，额度用完为止，不会按时间失效。
 </ResponseField>
 
-## 算剩余余额
+## 计算剩余余额
 
 ```text
 剩余 USD = hard_limit_usd - usage.total_usage / 100
 ```
 
 其中 `usage.total_usage` 来自 [查询已用量](/cn/api-reference/account/usage)，单位是美分。
-一次请求拿到剩余余额请用 [查询余额](/cn/api-reference/account/balance)。
+一次请求即可取得剩余余额的接口见[查询余额](/cn/api-reference/account/balance)。
 
 ## 相关文档
 

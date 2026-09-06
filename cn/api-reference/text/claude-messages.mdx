@@ -1,11 +1,10 @@
 ---
 title: "Claude 消息接口"
+description: "为已有 Anthropic SDK 的应用保留的原生 Messages 接口"
 api: "POST https://www.qingbo.dev/v1/messages"
 ---
 
-- 完全兼容 Claude Messages API 格式
-- 支持多轮对话和单次查询
-- 支持文本、图像等多模态内容
+Anthropic 原生 Messages 接口，为已有 Anthropic SDK 的应用保留，只服务 `claude-sonnet-5` 与 `claude-opus-5`。本接口不提供 Chat 之外的额外能力，新接入建议直接用[通用对话接口](/cn/api-reference/text/general-chat)。
 
 <RequestExample>
 ```bash cURL
@@ -201,7 +200,7 @@ public class Main {
   ```
 </ResponseExample>
 
-## Authorizations
+## 鉴权
 
 <ParamField header="x-api-key" type="string" required>
   API 密钥用于身份验证
@@ -223,14 +222,16 @@ public class Main {
   示例：`2023-06-01`
 </ParamField>
 
-## Body
+Anthropic SDK 的 base URL 设为 `https://www.qingbo.dev`，SDK 会自行追加 `/v1/messages`，不需要再补 `/v1`。
+
+## 请求参数
 
 <ParamField body="model" type="string" required>
   模型 ID
 
   本接口只服务 `claude-sonnet-5` 与 `claude-opus-5`。其余 Claude 模型（Fable 系列与 4.x 全部）只走 Chat，发到本接口会返回 `400`，请改用[通用对话接口](/cn/api-reference/text/general-chat)。
 
-  这两个型号的价格、缓存档位与已验证能力见[文本模型总览 · Anthropic](/cn/api-reference/text/overview#anthropic)。
+  这两个模型的缓存档位与支持的能力见[文本模型总览 · Anthropic](/cn/api-reference/text/overview#anthropic)。
 
   函数调用请走 Chat 接口；本接口不支持多轮工具流程与图像输入。
 </ParamField>
@@ -244,7 +245,7 @@ public class Main {
     </ParamField>
 
     <ParamField body="content" type="string" required>
-      消息内容，支持字符串或内容块数组（多模态）
+      消息内容：字符串，或文本内容块数组
     </ParamField>
   </Expandable>
 </ParamField>
@@ -335,7 +336,7 @@ public class Main {
   用于追踪或标识请求的对象。
 </ParamField>
 
-## Response
+## 响应
 
 <ResponseField name="id" type="string">
   消息的唯一标识符
@@ -453,25 +454,24 @@ public class Main {
 }
 ```
 
-## 流式与用量
+## 流式
 
-使用相同 URL 并设置 `stream: true`。读取 `message_start`、内容块事件，最后读取 `message_delta` 里的实际 usage 和 `stop_reason`，再处理 `message_stop`。**`message_start` 的初始用量不是最终账单**，不能据此计费。
+在同一个 URL 上设置 `stream: true`。依次读取 `message_start`、内容块事件、`message_delta`（携带实际 usage 与 `stop_reason`），最后是 `message_stop`。**`message_start` 里的初始用量不是最终账单**，不能据此计费。
 
-原生 `input_tokens` 与 Chat 的 `prompt_tokens` 语义不同：原生的 `input_tokens` **不包含**缓存命中和缓存写入，总输入等于三者相加；`output_tokens` 已包含思考 token。原生响应不插入网关的 `usage.cost` 字段，实际扣费到控制台用量记录查询。计费口径见[文本模型总览 · 计费口径](/cn/api-reference/text/overview#计费口径)。
+## 用量与计费
 
-## 当前限制
+原生 `input_tokens` 与 Chat 的 `prompt_tokens` 语义不同：原生的 `input_tokens` **不包含**缓存命中和缓存写入，总输入等于三者相加；`output_tokens` 已包含思考 token。原生响应不带 `usage.cost` 字段，实际扣费到控制台用量记录查询。计费口径见[文本模型总览 · 计费口径](/cn/api-reference/text/overview#计费口径)。
 
-这两个模型不支持结构化输出，相关配置会返回 `400`。显式缓存可用：把要复用的长前缀放进 `system` 数组即可，写法与命中条件见[文本模型总览 · 缓存](/cn/api-reference/text/overview#缓存)。各模型支持的能力以[总览表](/cn/api-reference/text/overview#anthropic)为准。
+## 当前不支持
 
-SDK 的 base URL 应设为网关根地址（`https://www.qingbo.dev`），由 Anthropic SDK 自行追加 `/v1/messages`，不要重复添加 `/v1`。生态登录 token 不能代替模型 Key。
+- **结构化输出**——这两个模型不接受 `response_format` 的 `json_schema` 与 `json_object`。
+- **函数调用与多轮工具流程**——走[通用对话接口](/cn/api-reference/text/general-chat)。
+- **图像输入**。
+
+以上请求返回 `400`，不计费。显式缓存在本接口可用：把要复用的长前缀放进 `system` 数组，写法与命中条件见[文本模型总览 · 缓存](/cn/api-reference/text/overview#缓存)。
 
 ## 相关文档
 
-<CardGroup cols={2}>
-  <Card title="文本模型总览" icon="table-list" href="/cn/api-reference/text/overview">
-    Claude 全系价格、缓存档位与已验证能力
-  </Card>
-  <Card title="通用对话接口" icon="comments" href="/cn/api-reference/text/general-chat">
-    新接入的默认入口，支持全部厂商
-  </Card>
-</CardGroup>
+- [文本模型总览](/cn/api-reference/text/overview)
+- [通用对话接口](/cn/api-reference/text/general-chat)
+- [流式输出](/cn/docs/streaming)

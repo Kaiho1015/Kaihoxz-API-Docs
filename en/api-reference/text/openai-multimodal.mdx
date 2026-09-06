@@ -1,11 +1,10 @@
 ---
 title: "Responses API"
+description: "The OpenAI Responses protocol endpoint, serving GPT Pro / Codex and o3-pro"
 api: "POST https://www.qingbo.dev/v1/responses"
 ---
 
-- The OpenAI Responses protocol entry, serving only the models that declare it
-- Supports non-streaming and streaming text output
-- Hosted tools, image input and video input are not open on this entry
+The OpenAI Responses protocol endpoint, serving `gpt-5-pro`, `gpt-5.2-pro`, `gpt-5.4-pro`, `gpt-5.3-codex` and `o3-pro`. These five models do not accept Chat Completions; every other text model uses the [General Chat API](/en/api-reference/text/general-chat).
 
 <RequestExample>
 ```bash cURL
@@ -278,7 +277,7 @@ public class Main {
 <ParamField body="model" type="string" required>
   Model ID.
 
-  **Only models declaring the `openai_responses` protocol are served here** — five in total:
+  **Five models are served here**:
 
   * `gpt-5-pro`
   * `gpt-5.2-pro`
@@ -533,6 +532,52 @@ public class Main {
   Metadata.
 </ResponseField>
 
+## Examples
+
+### Single input
+
+```json
+{
+  "model": "gpt-5.3-codex",
+  "input": "Explain the bubble sort algorithm."
+}
+```
+
+### Multi-turn input
+
+```json
+{
+  "model": "gpt-5.4-pro",
+  "input": [
+    {"role": "user", "content": "What is machine learning?"},
+    {"role": "assistant", "content": "Machine learning is a branch of AI..."},
+    {"role": "user", "content": "Can you give an example?"}
+  ]
+}
+```
+
+### Capping the output budget
+
+```json
+{
+  "model": "o3-pro",
+  "input": "Prove that there are infinitely many primes.",
+  "max_output_tokens": 4096
+}
+```
+
+Reasoning tokens come out of `max_output_tokens` as well. A response with `status: "incomplete"` means the budget ran out and the output may be cut short.
+
+### Streaming
+
+```json
+{
+  "model": "gpt-5.2-pro",
+  "input": "Write a poem about spring.",
+  "stream": true
+}
+```
+
 ## Usage and billing
 
 `usage.input_tokens` is total input (including `input_tokens_details.cached_tokens`), and `usage.output_tokens` already includes `output_tokens_details.reasoning_tokens` — reasoning is billed once, at the output rate. All five models bill input and output only, with no separate cache rate; any cache statistics in the response bill at the ordinary input rate. Rates and the shared rules are in the [Text Models Overview · Billing rules](/en/api-reference/text/overview#billing-rules).
@@ -550,16 +595,10 @@ The following return `400` and are not billed:
 - **Hosted tools** — `web_search`, `file_search`, `remote_mcp` and other vendor built-ins.
 - **Tool calling and structured output** — see the `tools` note above.
 - **`service_tier`** set to anything other than `standard` / `default`.
-
-**Image and video input** are not supported.
+- **Image and video input**.
 
 ## Related
 
-<CardGroup cols={2}>
-  <Card title="Text Models Overview" icon="table-list" href="/en/api-reference/text/overview">
-    Prices, tiers and billing rules for the five models
-  </Card>
-  <Card title="General Chat API" icon="comments" href="/en/api-reference/text/general-chat">
-    The default entry for every other text model
-  </Card>
-</CardGroup>
+- [Text Models Overview](/en/api-reference/text/overview)
+- [General Chat API](/en/api-reference/text/general-chat)
+- [Streaming](/en/docs/streaming)

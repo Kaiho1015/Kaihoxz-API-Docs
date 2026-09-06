@@ -1,11 +1,10 @@
 ---
 title: "Responses 接口"
+description: "OpenAI Responses 协议入口，服务 GPT Pro / Codex 与 o3-pro"
 api: "POST https://www.qingbo.dev/v1/responses"
 ---
 
-- OpenAI Responses 协议入口，只服务声明了该协议的型号
-- 支持非流式与流式文本输出
-- 托管工具、图像与视频输入在本入口未开放
+OpenAI Responses 协议入口，服务 `gpt-5-pro`、`gpt-5.2-pro`、`gpt-5.4-pro`、`gpt-5.3-codex` 与 `o3-pro` 五个模型。这五个模型不接受 Chat Completions，其余文本模型走[通用对话接口](/cn/api-reference/text/general-chat)。
 
 <RequestExample>
 ```bash cURL
@@ -257,7 +256,7 @@ public class Main {
   ```
 </ResponseExample>
 
-## Authorizations
+## 鉴权
 
 <ParamField header="Authorization" type="string" required>
   所有接口均需要使用 Bearer Token 进行认证
@@ -273,12 +272,12 @@ public class Main {
   ```
 </ParamField>
 
-## Body
+## 请求参数
 
 <ParamField body="model" type="string" required>
   模型 ID
 
-  **只有声明了 `openai_responses` 协议的型号走这个入口**，共五个：
+  **走这个接口的共五个模型**：
 
   * `gpt-5-pro`
   * `gpt-5.2-pro`
@@ -337,7 +336,7 @@ public class Main {
   默认值：false
 </ParamField>
 
-## Response
+## 响应
 
 <ResponseField name="id" type="string">
   响应的唯一标识符
@@ -533,9 +532,55 @@ public class Main {
   元数据信息
 </ResponseField>
 
+## 使用示例
+
+### 单次输入
+
+```json
+{
+  "model": "gpt-5.3-codex",
+  "input": "解释一下冒泡排序算法。"
+}
+```
+
+### 多轮输入
+
+```json
+{
+  "model": "gpt-5.4-pro",
+  "input": [
+    {"role": "user", "content": "什么是机器学习？"},
+    {"role": "assistant", "content": "机器学习是人工智能的一个分支……"},
+    {"role": "user", "content": "能举个例子吗？"}
+  ]
+}
+```
+
+### 限制输出预算
+
+```json
+{
+  "model": "o3-pro",
+  "input": "证明素数有无穷多个。",
+  "max_output_tokens": 4096
+}
+```
+
+思考 token 也从 `max_output_tokens` 里扣。响应 `status` 为 `"incomplete"` 时表示预算用尽，输出可能没写完。
+
+### 流式输出
+
+```json
+{
+  "model": "gpt-5.2-pro",
+  "input": "写一首关于春天的诗。",
+  "stream": true
+}
+```
+
 ## 用量与计费
 
-`usage.input_tokens` 是输入总量（含 `input_tokens_details.cached_tokens`），`usage.output_tokens` 已包含 `output_tokens_details.reasoning_tokens`，思考 token 只按输出价计一次。这五个型号目前都是输入 / 输出两项计价，没有独立缓存价，响应里的缓存统计按普通输入价计。单价与计费通则见[文本模型总览 · 计费口径](/cn/api-reference/text/overview#计费口径)。
+`usage.input_tokens` 是输入总量（含 `input_tokens_details.cached_tokens`），`usage.output_tokens` 已包含 `output_tokens_details.reasoning_tokens`，思考 token 只按输出价计一次。这五个模型目前都是输入 / 输出两项计价，没有独立缓存价，响应里的缓存统计按普通输入价计。单价与计费通则见[文本模型总览 · 计费口径](/cn/api-reference/text/overview#计费口径)。
 
 **流式计费取终态用量**：以 `response.completed`、`response.incomplete`、`response.failed` 或 `response.cancelled` 事件里的 `usage` 为准。失败或截断的响应同样可能产生 token 费用；HTTP 200、部分文本或 `[DONE]` 都不足以证明拿到了完整用量。
 
@@ -550,16 +595,10 @@ public class Main {
 - **托管工具** —— `web_search`、`file_search`、`remote_mcp` 等厂商内置工具。
 - **工具调用与结构化输出** —— 见上方 `tools` 说明。
 - **`service_tier`** 取 `standard` / `default` 以外的值。
-
-**图像与视频输入**当前不支持。
+- **图像与视频输入**。
 
 ## 相关文档
 
-<CardGroup cols={2}>
-  <Card title="文本模型总览" icon="table-list" href="/cn/api-reference/text/overview">
-    五个型号的价格、分档与计费通则
-  </Card>
-  <Card title="通用对话接口" icon="comments" href="/cn/api-reference/text/general-chat">
-    其余全部文本型号的默认入口
-  </Card>
-</CardGroup>
+- [文本模型总览](/cn/api-reference/text/overview)
+- [通用对话接口](/cn/api-reference/text/general-chat)
+- [流式输出](/cn/docs/streaming)

@@ -1,12 +1,10 @@
 ---
 title: "通用对话接口"
+description: "通过一个 OpenAI 兼容接口调用全部文本模型，换模型只改 `model`"
 api: "POST https://www.qingbo.dev/v1/chat/completions"
 ---
 
-- 统一的对话 API 接口，支持所有主流文本生成模型
-- 完全兼容 OpenAI Chat Completions API 格式
-- 通过 `model` 参数无缝切换不同 AI 模型
-- 支持流式输出、函数调用等高级功能
+OpenAI Chat Completions 兼容接口，是全部文本模型的默认入口。换模型只改 `model`，不需要更换 URL 或 Key。各模型支持的能力见[文本模型总览](/cn/api-reference/text/overview)。
 
 <RequestExample>
 ```bash cURL
@@ -252,7 +250,7 @@ public class Main {
   ```
 </ResponseExample>
 
-## Authorizations
+## 鉴权
 
 <ParamField header="Authorization" type="string" required>
   所有接口均需要使用Bearer Token进行认证
@@ -268,14 +266,14 @@ public class Main {
   ```
 </ParamField>
 
-## Body
+## 请求参数
 
 <ParamField body="model" type="string" required>
   模型 ID
 
-  完整的可用模型、价格与已验证能力见[文本模型总览](/cn/api-reference/text/overview)；实时可用性以 `GET /v1/models` 为准。
+  全部可用模型与各自支持的能力见[文本模型总览](/cn/api-reference/text/overview)；实时可用性以 `GET /v1/models` 为准。
 
-  切换模型只改这一个字段。参数是否可用取决于具体模型，不是所有 OpenAI 参数在每个模型上都可用：GPT-5 及之后的型号用 `max_completion_tokens` 和 `reasoning_effort`，Claude 用 `max_tokens`；`gpt-5-pro` / `gpt-5.2-pro` / `gpt-5.4-pro` / `gpt-5.3-codex` / `o3-pro` 只接受 [Responses 接口](/cn/api-reference/text/openai-multimodal)。
+  切换模型只改这一个字段。参数是否可用取决于具体模型，不是所有 OpenAI 参数在每个模型上都可用：GPT-5 及之后的模型用 `max_completion_tokens` 和 `reasoning_effort`，Claude 用 `max_tokens`；`gpt-5-pro` / `gpt-5.2-pro` / `gpt-5.4-pro` / `gpt-5.3-codex` / `o3-pro` 只接受 [Responses 接口](/cn/api-reference/text/openai-multimodal)。
 </ParamField>
 
 <ParamField body="messages" type="array" required>
@@ -287,7 +285,7 @@ public class Main {
     </ParamField>
 
     <ParamField body="content" type="string" required>
-      消息内容，支持字符串或多模态内容数组
+      消息内容：字符串，或内容块数组
     </ParamField>
   </Expandable>
 </ParamField>
@@ -353,15 +351,15 @@ public class Main {
 </ParamField>
 
 <ParamField body="max_completion_tokens" type="integer">
-  输出 token 上限（GPT-5 及之后的 OpenAI 型号）
+  输出 token 上限（GPT-5 及之后的 OpenAI 模型）
 
-  这些型号拒绝 `max_tokens`，必须用本字段。思考 token 也从这个预算里扣：`finish_reason: "length"` 表示输出可能没写完，不能当作完整回答。
+  这些模型拒绝 `max_tokens`，必须用本字段。思考 token 也从这个预算里扣：`finish_reason: "length"` 表示输出可能没写完，不能当作完整回答。
 </ParamField>
 
 <ParamField body="reasoning_effort" type="string">
-  推理档位（OpenAI 推理型号）
+  推理档位（OpenAI 推理模型）
 
-  取值 `none` / `low` / `medium` / `high`。GPT-5.6 与 GPT-5.4 / 5.5 已验证 `none`；GPT-6 Astra 只验证了 `low`，且不接受 `none`。非 OpenAI 型号不要传这个字段。
+  取值 `none` / `low` / `medium` / `high`。GPT-5.6 与 GPT-5.4 / 5.5 支持 `none`；GPT-6 Astra 只支持 `low`。非 OpenAI 模型不要传这个字段。
 </ParamField>
 
 <ParamField body="stream_options" type="object">
@@ -379,7 +377,7 @@ public class Main {
 <ParamField body="tools" type="array">
   可调用的函数声明
 
-  `[{"type": "function", "function": {"name": ..., "description": ..., "parameters": {JSON Schema}}}]`。模型只生成函数名和参数并放在响应的 `tool_calls` 里，**网关不执行任何工具**，执行与结果回传由你的应用负责。只在总览表「JSON / 工具」一列右侧为 `✓` 的模型上可用。
+  `[{"type": "function", "function": {"name": ..., "description": ..., "parameters": {JSON Schema}}}]`。模型只生成函数名和参数并放在响应的 `tool_calls` 里，**平台不执行任何工具**，执行与结果回传由你的应用负责。只在总览表「JSON / 工具」一列右侧为 `✓` 的模型上可用。
 </ParamField>
 
 <ParamField body="tool_choice" type="string or object">
@@ -388,7 +386,7 @@ public class Main {
   `"auto"`（默认）、`"none"`，或 `{"type": "function", "function": {"name": "..."}}` 强制调用指定函数。Claude Fable 系列只接受 `"auto"`，`"required"` 或指定函数名会返回 `400`。
 </ParamField>
 
-## Response
+## 响应
 
 <ResponseField name="id" type="string">
   响应的唯一标识符
@@ -509,22 +507,12 @@ public class Main {
 
 ## 可用模型
 
-模型 ID、价格、长上下文分档和各模型已验证的能力集中在[文本模型总览](/cn/api-reference/text/overview)，本页不再重复一份清单以免两处漂移。实时可用性与价格配置以目录接口为准：
+全部模型 ID、支持的能力、长上下文分档与计费方式见[文本模型总览](/cn/api-reference/text/overview)。实时可用性与单价以目录接口为准：
 
 ```bash
 curl https://www.qingbo.dev/v1/models \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
-
-## 用量与计费
-
-`usage.prompt_tokens` 是输入总量，已包含 `prompt_tokens_details.cached_tokens`；`usage.completion_tokens` 已包含 `completion_tokens_details.reasoning_tokens`。缓存部分按缓存价替代普通输入价，思考 token 按输出价计一次，两者都不叠加。
-
-响应里的 `usage.cost` 是整数 **quota**，不是美元（500,000 quota = 1 USD）。最终扣款以本人账单的文本账务记录为准；`pricing_pending` 表示仍待核对，不是零费用。完整口径、状态含义和计算公式见[文本模型总览 · 计费口径](/cn/api-reference/text/overview#计费口径)。
-
-<Warning>
-没有收到完整 `usage`、连接中断或响应缺少费用字段，都不代表本次调用免费。先到控制台核对已有用量记录，不要自动重发。
-</Warning>
 
 ## 使用示例
 
@@ -576,19 +564,31 @@ curl https://www.qingbo.dev/v1/models \
 }
 ```
 
+## 用量与计费
+
+`usage.prompt_tokens` 是输入总量，已包含 `prompt_tokens_details.cached_tokens`；`usage.completion_tokens` 已包含 `completion_tokens_details.reasoning_tokens`。缓存部分按缓存价替代普通输入价，思考 token 按输出价计一次，两者都不叠加。
+
+响应里的 `usage.cost` 是整数 **quota**，不是美元（500,000 quota = 1 USD）。最终扣款以控制台账单中的文本账务记录为准；`pricing_pending` 表示仍待核对，不是零费用。完整口径、状态含义和计算公式见[文本模型总览 · 计费口径](/cn/api-reference/text/overview#计费口径)。
+
+<Warning>
+没有收到完整 `usage`、连接中断或响应缺少费用字段，都不代表本次调用免费。先到控制台核对已有用量记录，不要自动重发。
+</Warning>
+
+## 当前不支持
+
+以下请求返回 `400`，不计费：
+
+- **厂商内置工具**——`tools` 里出现 `function` / `custom` 之外的类型。由调用方自己执行的函数工具正常使用。
+- **`web_search_options`**。
+- **`service_tier`** 取 `standard` / `default` 以外的值。
+- **显式 `cache_control`**——只有 Claude 5 与 Fable 四个模型放行，见[文本模型总览 · 缓存](/cn/api-reference/text/overview#缓存)。
+
+在不支持工具调用或结构化输出的模型上传 `tools`、`tool_choice`、`response_format`，同样返回 `400`。各模型支持的能力见[文本模型总览](/cn/api-reference/text/overview)。
+
 ## 相关文档
 
-<CardGroup cols={2}>
-  <Card title="文本模型总览" icon="table-list" href="/cn/api-reference/text/overview">
-    模型目录、价格、已验证能力与统一计费口径
-  </Card>
-  <Card title="流式输出" icon="bolt" href="/cn/docs/streaming">
-    SSE 事件处理与 usage 末帧的读法
-  </Card>
-  <Card title="Responses 接口" icon="layer-group" href="/cn/api-reference/text/openai-multimodal">
-    那五个只走 Responses 的型号
-  </Card>
-  <Card title="原生信封" icon="code-branch" href="/cn/api-reference/text/claude-messages">
-    [Claude Messages](/cn/api-reference/text/claude-messages) · [Gemini 原生](/cn/api-reference/text/gemini-native)
-  </Card>
-</CardGroup>
+- [文本模型总览](/cn/api-reference/text/overview)
+- [流式输出](/cn/docs/streaming)
+- [Responses 接口](/cn/api-reference/text/openai-multimodal)
+- [Claude Messages 接口](/cn/api-reference/text/claude-messages)
+- [Gemini 原生接口](/cn/api-reference/text/gemini-native)

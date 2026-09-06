@@ -97,13 +97,13 @@ console.log(data.total_available_usd);
 
 ## Which of the three to use
 
-| You want | Use |
+| Data needed | Endpoint |
 |---|---|
-| Balance, usage and total in one call | **This page** — recommended for new integrations |
+| Balance, usage and total credit in one request | **This endpoint** — recommended for new integrations |
 | Usage to date only (OpenAI shape, in cents) | [Get usage](/en/api-reference/account/usage) |
 | Total credit only (OpenAI's `hard_limit_usd`) | [Get subscription](/en/api-reference/account/subscription) |
 
-The other two exist to stay compatible with **existing OpenAI credit-checking tools** (usage dashboards, cost-tracking scripts). When writing your own code, this endpoint is the direct one.
+The other two keep OpenAI's response shape so existing credit-checking tools — usage dashboards, cost-tracking scripts — work unchanged.
 
 ## Related
 

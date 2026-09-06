@@ -1,17 +1,17 @@
 ---
 title: "GPT Image 系列"
-description: "通过统一任务接口调用 GPT Image 官方与逆向线路"
+description: "GPT Image 2 的官方版与逆向版：同一套请求参数，两种计费方式"
 ---
 
-GPT Image 模型家族统一使用 `POST /v1/tasks`。你只需要根据能力和计费方式选择模型 ID，请求地址不随线路变化。
+GPT Image 2 有官方版和逆向版两条线路，都走 `POST /v1/tasks`，请求地址不随线路变化。两条线路的参数基本一致，主要差别在专有参数和计费方式，按需要选一个模型 ID 即可。
 
-## 当前可用模型
+## 可用模型
 
 <CardGroup cols={2}>
-  <Card title="GPT Image 2 官方线路" href="/cn/api-reference/image/gpt-image/gpt-image-2">
+  <Card title="GPT Image 2 官方版" href="/cn/api-reference/image/gpt-image/gpt-image-2">
     `gpt-image-2` · 文生图、最多 16 张参考图编辑、掩码重绘、透明背景与输出格式控制；按实际 token 用量结算
   </Card>
-  <Card title="GPT Image 2 逆向线路" href="/cn/api-reference/image/gpt-image/gpt-image-2-rev">
+  <Card title="GPT Image 2 逆向版" href="/cn/api-reference/image/gpt-image/gpt-image-2-rev">
     `gpt-image-2-rev` · 文生图与最多 15 张参考图编辑；按 1K / 2K / 4K 固定张价结算
   </Card>
 </CardGroup>
@@ -25,12 +25,12 @@ GPT Image 模型家族统一使用 `POST /v1/tasks`。你只需要根据能力�
 | 多图参考编辑 | 两者都支持 | 官方最多 16 张，逆向最多 15 张 |
 
 <Note>
-两条线路不会自动互相切换。请把模型 ID 作为产品选择保存，并按对应子文档发送参数。
+两条线路不会自动互相切换：模型 ID 决定走哪条线路，参数以该线路的页面为准。
 </Note>
 
-## 家族共同点
+## 两条线路的共同点
 
-两条线路以下部分完全一致，按各自模型页发送参数时不用重新确认：
+以下部分两条线路完全一致：
 
 | 项目 | 取值 |
 |---|---|
@@ -41,7 +41,7 @@ GPT Image 模型家族统一使用 `POST /v1/tasks`。你只需要根据能力�
 | 每次输出 | 1 张 |
 | 不支持 | `seed` |
 
-差异集中在**专有参数**和**计费方式**两处，见上面的选择表。
+差异集中在**专有参数**和**计费方式**两处，见「如何选择」。
 
 ## 统一调用方式
 
@@ -59,4 +59,12 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   }'
 ```
 
-成功后会返回 `task_id`。使用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，或配置 Webhook 接收终态通知。
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
+
+## 相关文档
+
+- [GPT Image 2 官方版](/cn/api-reference/image/gpt-image/gpt-image-2)
+- [GPT Image 2 逆向版](/cn/api-reference/image/gpt-image/gpt-image-2-rev)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

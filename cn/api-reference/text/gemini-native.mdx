@@ -1,10 +1,10 @@
 ---
 title: "Gemini 原生格式"
-description: "使用 Google Gemini 原生 API 格式"
+description: "为已有 Gemini 客户端保留的原生接口，支持文本与流式输出"
 api: "POST https://www.qingbo.dev/v1beta/models/{model}:generateContent"
 ---
 
-为已有 Gemini 客户端保留的原生接口，支持非流式与流式文本。本接口不提供 Chat 之外的额外能力，新接入建议直接用[通用对话接口](/cn/api-reference/text/general-chat)。
+路径与请求体沿用 Google Gemini 的原生格式，用 `contents` 与 `generationConfig`，鉴权头是 `x-goog-api-key`。本接口不提供 Chat 之外的额外能力，新接入建议直接用[通用对话接口](/cn/api-reference/text/general-chat)。
 
 <RequestExample>
 ```bash cURL
@@ -153,10 +153,22 @@ public class Main {
 ```
 </RequestExample>
 
+## 鉴权
+
+<ParamField header="x-goog-api-key" type="string" required>
+  你的 WaveAPI Key。原生接口沿用 Gemini 的请求头名，**不是** `Authorization: Bearer`。
+
+  ```
+  x-goog-api-key: YOUR_API_KEY
+  ```
+
+  Key 在[控制台](https://qingbo.dev/dashboard/keys)获取，用法见[认证](/cn/docs/authentication)。
+</ParamField>
+
 ## 请求参数
 
 <ParamField path="model" type="string" required>
-  模型 ID，作为 URL 路径参数。**只有声明了 `gemini_native` 协议的型号能走这个入口**，共八个：
+  模型 ID，作为 URL 路径参数。**可以走这个接口的共八个模型**：
 
   - `gemini-3.8-flash`
   - `gemini-3.7-flash`
@@ -204,7 +216,33 @@ public class Main {
   </Expandable>
 </ParamField>
 
-## 请求示例
+## 响应
+
+```json
+{
+  "candidates": [
+    {
+      "content": {
+        "role": "model",
+        "parts": [
+          {
+            "text": "量子计算是一种利用量子力学原理..."
+          }
+        ]
+      },
+      "finishReason": "STOP",
+      "safetyRatings": [...]
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 12,
+    "candidatesTokenCount": 156,
+    "totalTokenCount": 168
+  }
+}
+```
+
+## 使用示例
 
 <CodeGroup>
 
@@ -280,33 +318,7 @@ console.log(result.response.text());
 
 </CodeGroup>
 
-## 响应格式
-
-```json
-{
-  "candidates": [
-    {
-      "content": {
-        "role": "model",
-        "parts": [
-          {
-            "text": "量子计算是一种利用量子力学原理..."
-          }
-        ]
-      },
-      "finishReason": "STOP",
-      "safetyRatings": [...]
-    }
-  ],
-  "usageMetadata": {
-    "promptTokenCount": 12,
-    "candidatesTokenCount": 156,
-    "totalTokenCount": 168
-  }
-}
-```
-
-## 流式输出
+## 流式
 
 ```python
 response = model.generate_content(
@@ -320,30 +332,24 @@ for chunk in response:
 
 ## 用量与计费
 
-原生响应在 `usageMetadata` 里报告用量，**不带网关的 `usage.cost` 字段**，实际扣费到控制台用量记录核对。
+原生响应在 `usageMetadata` 里报告用量，**不带 `usage.cost` 字段**，实际扣费到控制台用量记录核对。
 `promptTokenCount` 已包含 `cachedContentTokenCount`；计费的输出是 `candidatesTokenCount + thoughtsTokenCount`
-两者之和——不要把 `candidatesTokenCount` 当成 Chat 的 `completion_tokens`（后者已含思考）。
+两者之和；`candidatesTokenCount` 与 Chat 的 `completion_tokens` 语义不同，后者已含思考 token。
 
-流式请以最终的累计用量为准，不要把各帧的用量相加；末帧可以只有用量、`candidates` 为空数组，读取时先取
+流式以最终的累计用量为准，各帧用量不相加；末帧可以只有用量、`candidates` 为空数组，读取时先取
 `usageMetadata` 再判断候选内容。单价与计费通则见[文本模型总览 · 计费口径](/cn/api-reference/text/overview#计费口径)。
 
-## 当前不开放
+## 当前不支持
 
 以下请求会返回 `400`，不计费：
 
-- **显式上下文缓存** —— `cachedContent` / `cached_content` / `cache_control` 在 Gemini 全系拒绝，只开放自动缓存，原因见[缓存](/cn/api-reference/text/overview#缓存)。
+- **显式上下文缓存** —— `cachedContent` / `cached_content` / `cache_control` 在 Gemini 全系拒绝，只开放自动缓存，见[缓存](/cn/api-reference/text/overview#缓存)。
 - **内置工具** —— grounding、托管搜索等厂商内置工具；由调用方自己执行的函数工具不在此列。
 - **`service_tier`** 取 `standard` / `default` 以外的值。
-
-本接口不支持函数调用与结构化输出，需要这两项请走[通用对话接口](/cn/api-reference/text/general-chat)。
+- **函数调用与结构化输出**——需要这两项时走[通用对话接口](/cn/api-reference/text/general-chat)。
 
 ## 相关文档
 
-<CardGroup cols={2}>
-  <Card title="文本模型总览" icon="table-list" href="/cn/api-reference/text/overview">
-    八个型号的价格、缓存档位与已验证能力
-  </Card>
-  <Card title="通用对话接口" icon="comments" href="/cn/api-reference/text/general-chat">
-    新接入的默认入口
-  </Card>
-</CardGroup>
+- [文本模型总览](/cn/api-reference/text/overview)
+- [通用对话接口](/cn/api-reference/text/general-chat)
+- [流式输出](/cn/docs/streaming)

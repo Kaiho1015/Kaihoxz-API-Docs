@@ -50,7 +50,7 @@ OpenAI's tools compute what is left as total credit minus usage:
 remaining USD = subscription.hard_limit_usd - usage.total_usage / 100
 ```
 
-If you just want the balance, [Get balance](/en/api-reference/account/balance) returns `total_available_usd` in a single request — no subtraction needed.
+[Get balance](/en/api-reference/account/balance) returns the remaining balance directly as `total_available_usd`, with no subtraction needed.
 
 ## Related
 

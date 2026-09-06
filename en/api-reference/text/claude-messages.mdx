@@ -1,11 +1,10 @@
 ---
 title: "Claude Messages API"
+description: "The native Messages endpoint, kept for apps already built on the Anthropic SDK"
 api: "POST https://www.qingbo.dev/v1/messages"
 ---
 
-- Fully compatible with the Claude Messages API format
-- Supports multi-turn conversations and one-shot queries
-- Supports multimodal content including text and images
+The native Anthropic Messages endpoint, kept for apps already built on the Anthropic SDK. It serves `claude-sonnet-5` and `claude-opus-5` only, and exposes nothing beyond what Chat offers, so new integrations should use the [General Chat API](/en/api-reference/text/general-chat).
 
 <RequestExample>
 ```bash cURL
@@ -223,6 +222,8 @@ public class Main {
   Example: `2023-06-01`
 </ParamField>
 
+Set the Anthropic SDK base URL to `https://www.qingbo.dev`; the SDK appends `/v1/messages` itself, so `/v1` does not need to be added again.
+
 ## Body
 
 <ParamField body="model" type="string" required>
@@ -230,7 +231,7 @@ public class Main {
 
   This endpoint serves `claude-sonnet-5` and `claude-opus-5` only. Every other Claude model (the Fable family and the whole 4.x line) is Chat-only and returns `400` here — use the [General Chat API](/en/api-reference/text/general-chat) instead.
 
-  Prices, cache tiers and verified capabilities for these two are in the [Text Models Overview · Anthropic](/en/api-reference/text/overview#anthropic).
+  Cache tiers and supported capabilities for these two are in the [Text Models Overview · Anthropic](/en/api-reference/text/overview#anthropic).
 
   Function-call argument generation is verified on the Chat endpoint only; native multi-turn tool workflows and image input are outside the accepted scope.
 </ParamField>
@@ -244,7 +245,7 @@ public class Main {
     </ParamField>
 
     <ParamField body="content" type="string" required>
-      Message content. Accepts a string or an array of content blocks (multimodal).
+      Message content. Accepts a string or an array of text content blocks.
     </ParamField>
   </Expandable>
 </ParamField>
@@ -453,25 +454,24 @@ public class Main {
 }
 ```
 
-## Streaming and usage
+## Streaming
 
-Use the same URL with `stream: true`. Read `message_start`, then the content block events, then the actual usage and `stop_reason` in `message_delta`, and finally `message_stop`. **The initial usage in `message_start` is not the final bill** and must not be billed against.
+Set `stream: true` on the same URL. Read `message_start`, then the content block events, then `message_delta` (which carries the actual usage and `stop_reason`), and finally `message_stop`. **The initial usage in `message_start` is not the final bill** and must not be billed against.
 
-Native `input_tokens` differs from Chat's `prompt_tokens`: the native field **excludes** cache reads and cache writes, so total input is the sum of all three. `output_tokens` already includes reasoning tokens. Native responses carry no gateway `usage.cost` field; check the console usage record for the actual charge. Billing rules are in the [Text Models Overview · Billing rules](/en/api-reference/text/overview#billing-rules).
+## Usage and billing
 
-## Current limits
+Native `input_tokens` differs from Chat's `prompt_tokens`: the native field **excludes** cache reads and cache writes, so total input is the sum of all three. `output_tokens` already includes reasoning tokens. Native responses carry no `usage.cost` field; check the console usage record for the actual charge. Billing rules are in the [Text Models Overview · Billing rules](/en/api-reference/text/overview#billing-rules).
 
-Neither model supports structured output; sending that configuration returns `400`. Explicit `cache_control` is supported: put the reusable long prefix in the `system` array — request shape and hit conditions are in the [Text Models Overview · Caching](/en/api-reference/text/overview#caching). What each model supports is in the [overview table](/en/api-reference/text/overview#anthropic). Cache TTLs, context limits, native tool workflows and multimodal capabilities are verified per model against the scope shown in the overview table — official support does not make a capability accepted on this route.
+## Not supported
 
-Set the SDK base URL to the gateway root (`https://www.qingbo.dev`) and let the Anthropic SDK append `/v1/messages`; do not add `/v1` twice. An ecosystem login token is not a model key.
+- **Structured output** — neither model accepts `response_format` with `json_schema` or `json_object`.
+- **Function calling and multi-turn tool workflows** — use the [General Chat API](/en/api-reference/text/general-chat).
+- **Image input**.
+
+These return `400` and are not billed. Explicit `cache_control` does work here: put the reusable long prefix in the `system` array — request shape and hit conditions are in the [Text Models Overview · Caching](/en/api-reference/text/overview#caching).
 
 ## Related
 
-<CardGroup cols={2}>
-  <Card title="Text Models Overview" icon="table-list" href="/en/api-reference/text/overview">
-    Prices, cache tiers and verified capabilities for the whole Claude line
-  </Card>
-  <Card title="General Chat API" icon="comments" href="/en/api-reference/text/general-chat">
-    The default entry for new integrations, covering every vendor
-  </Card>
-</CardGroup>
+- [Text Models Overview](/en/api-reference/text/overview)
+- [General Chat API](/en/api-reference/text/general-chat)
+- [Streaming](/en/docs/streaming)
