@@ -42,7 +42,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="gpt-5.6-luna",
     messages=[
         {"role": "user", "content": "你好，介绍一下你自己"}
     ]
@@ -60,7 +60,7 @@ const client = new OpenAI({
 });
 
 const response = await client.chat.completions.create({
-  model: 'gpt-4o',
+  model: 'gpt-5.6-luna',
   messages: [
     { role: 'user', content: '你好，介绍一下你自己' }
   ]
@@ -74,7 +74,7 @@ curl https://www.qingbo.dev/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-luna",
     "messages": [
       {"role": "user", "content": "你好，介绍一下你自己"}
     ]
@@ -90,7 +90,7 @@ curl https://www.qingbo.dev/v1/chat/completions \
   "id": "chatcmpl-123",
   "object": "chat.completion",
   "created": 1677652288,
-  "model": "gpt-4o",
+  "model": "gpt-5.6-luna",
   "choices": [{
     "index": 0,
     "message": {
@@ -109,7 +109,14 @@ curl https://www.qingbo.dev/v1/chat/completions \
 
 ## 下一步
 
+<Tip>
+`gpt-5.6-luna` 只是示例。可用的文本模型、单价与各自已验证的能力见[文本模型总览](/cn/api-reference/text/overview)；参数在不同厂商之间有差异（GPT-5 及之后用 `max_completion_tokens`，Claude 用 `max_tokens`），照总览里对应厂商那一段写。
+</Tip>
+
 <CardGroup cols={2}>
+  <Card title="文本模型总览" href="/cn/api-reference/text/overview">
+    模型目录、价格与计费口径
+  </Card>
   <Card title="认证与密钥" href="/cn/docs/authentication">
     了解认证方式和密钥管理
   </Card>

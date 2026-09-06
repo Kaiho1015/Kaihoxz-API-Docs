@@ -1,11 +1,11 @@
 ---
-title: "Multimodal Responses API"
+title: "Responses API"
 api: "POST https://www.qingbo.dev/v1/responses"
 ---
 
-- Fully compatible with the OpenAI Responses API format
-- Supports multimodal input (text and images)
-- Supports tool extensions: web search, file search, function calling, remote MCP
+- The OpenAI Responses protocol entry, serving only the models that declare it
+- Accepted scope: non-streaming and streaming text output
+- Hosted tools, image input and video input are not open on this entry
 
 <RequestExample>
 ```bash cURL
@@ -13,7 +13,7 @@ curl -X POST https://www.qingbo.dev/v1/responses \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-5",
+    "model": "gpt-5.3-codex",
     "input": "解释一下冒泡排序算法。"
   }'
 ```
@@ -27,7 +27,7 @@ client = OpenAI(
 )
 
 response = client.responses.create(
-    model="gpt-5",
+    model="gpt-5.3-codex",
     input="解释一下冒泡排序算法。"
 )
 
@@ -43,7 +43,7 @@ const client = new OpenAI({
 });
 
 const response = await client.responses.create({
-  model: 'gpt-5',
+  model: 'gpt-5.3-codex',
   input: '解释一下冒泡排序算法。'
 });
 
@@ -63,7 +63,7 @@ import (
 
 func main() {
     payload := map[string]interface{}{
-        "model": "gpt-5",
+        "model": "gpt-5.3-codex",
         "input": "解释一下冒泡排序算法。",
     }
 
@@ -91,7 +91,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String payload = """
         {
-          "model": "gpt-5",
+          "model": "gpt-5.3-codex",
           "input": "解释一下冒泡排序算法。"
         }
         """;
@@ -118,7 +118,7 @@ public class Main {
     "id": "resp_09e342953eda0be6006905acbcvoik1nhmezpmzzl7lex552vq",
     "object": "response",
     "created_at": 1761979488,
-    "model": "gpt-5-2025-08-07",
+    "model": "gpt-5.3-codex",
     "status": "completed",
     "output": [
       {
@@ -134,7 +134,7 @@ public class Main {
         "content": [
           {
             "type": "output_text",
-            "text": "一幅温暖的插画：一只灰色虎斑猫正抱着一只带红色围巾的水獭，两只动物都闭着眼微笑，呈现亲密友好的场景。",
+            "text": "Bubble sort is a simple comparison-and-swap sort: it walks the sequence repeatedly, swapping adjacent elements that are out of order so the largest value of the unsorted part settles at the end, and stops once a pass makes no swaps.",
             "annotations": [],
             "logprobs": []
           }
@@ -276,75 +276,49 @@ public class Main {
 ## Body
 
 <ParamField body="model" type="string" required>
-  Model name.
+  Model ID.
 
-  Supported models include:
+  **Only models declaring the `openai_responses` protocol are served here** — five in total:
 
-  * `gpt-5` — GPT-5 base model
-  * `gpt-5-pro` — GPT-5 Pro (this endpoint only)
-  * `gpt-5-codex` — GPT-5 Codex code model (this endpoint only)
-  * `gpt-5.1-codex` — GPT-5.1 Codex code model (this endpoint only)
-  * `gpt-5.1-codex-mini` — GPT-5.1 Codex Mini (this endpoint only)
-  * `gpt-5.2-codex` — GPT-5.2 Codex code model (this endpoint only)
-  * `gpt-5.3-codex` — GPT-5.3 Codex code model (this endpoint only)
-  * Plus every model supported by `/v1/chat/completions`
+  * `gpt-5-pro`
+  * `gpt-5.2-pro`
+  * `gpt-5.4-pro`
+  * `gpt-5.3-codex`
+  * `o3-pro`
 
   <Note>
-  `gpt-5-pro` and all Codex models are only available on this endpoint (`/v1/responses`). They are not supported on `/v1/chat/completions`.
+  These five accept **only** this endpoint and are rejected before reservation on `/v1/chat/completions`; conversely, every other text model is Chat-only and is rejected before reservation here. Prices are in the [Text Models Overview](/en/api-reference/text/overview).
   </Note>
 </ParamField>
 
 <ParamField body="input" type="string or array" required>
-  Input content. Accepts a string or an array of messages.
+  Input content — a string or an array of messages.
 
-  A string is treated as plain text input; the array form supports multi-turn conversations and multimodal content:
+  A string is a one-shot text input; the array form carries multiple turns:
 
   <Expandable title="Message object properties">
     <ParamField body="role" type="string" required>
-      Role: `user`, `assistant`, or `system`.
+      Role: `user`, `assistant` or `system`.
     </ParamField>
 
     <ParamField body="content" type="array" required>
-      Content array. Each item has a `type` field:
-
-      - `input_text` — Text input, requires the `text` field
-      - `input_image` — Image input, requires the `image_url` field
-      - `input_video` — Video input (supported by some models)
+      Array of content parts, each with a `type`. **Only `input_text` (with a `text` field) is accepted on this entry today**; image and video input are covered under "Not available" below.
     </ParamField>
   </Expandable>
 </ParamField>
 
+<ParamField body="max_output_tokens" type="integer">
+  Output budget for this request.
+
+  Reasoning tokens come out of the same budget. `status: "incomplete"` means the answer may be unfinished and must not be accepted as complete.
+</ParamField>
+
 <ParamField body="tools" type="array">
-  Tool list (optional).
+  Tool list.
 
-  Supported tool types:
-
-  * `web_search` — Web search
-  * `file_search` — File search
-  * `function` — Function calling
-  * `remote_mcp` — Remote MCP service
-
-  <Expandable title="Example">
-    ```json
-    [
-      {"type": "web_search"},
-      {
-        "type": "function",
-        "function": {
-          "name": "get_weather",
-          "description": "获取天气信息",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "city": {"type": "string"}
-            },
-            "required": ["city"]
-          }
-        }
-      }
-    ]
-    ```
-  </Expandable>
+  <Warning>
+  These five models are declared in their model groups as **not supporting tool calling or structured output**, so `tools`, `tool_choice` and `response_format` are rejected before quota is reserved (HTTP 400, no charge). For function calling, use a tool-capable model on the [Chat API](/en/api-reference/text/general-chat).
+  </Warning>
 </ParamField>
 
 <ParamField body="temperature" type="number">
@@ -427,7 +401,6 @@ public class Main {
           Content type.
 
           * `output_text` — Text output
-          * `output_image` — Image output
         </ResponseField>
 
         <ResponseField name="text" type="string">
@@ -560,352 +533,33 @@ public class Main {
   Metadata.
 </ResponseField>
 
-## Examples
+## Usage and billing
 
-### Image analysis
+`usage.input_tokens` is total input (including `input_tokens_details.cached_tokens`), and `usage.output_tokens` already includes `output_tokens_details.reasoning_tokens` — reasoning is billed once, at the output rate. All five models bill input and output only, with no separate cache rate; any cache statistics in the response bill at the ordinary input rate. Rates and the shared rules are in the [Text Models Overview · Billing rules](/en/api-reference/text/overview#billing-rules).
 
-```json theme={null}
-{
-  "model": "gpt-5",
-  "input": [
-    {
-      "role": "user",
-      "content": [
-        {
-          "type": "input_text",
-          "text": "这张图片里有什么？请详细描述"
-        },
-        {
-          "type": "input_image",
-          "image_url": "https://example.com/image.jpg"
-        }
-      ]
-    }
-  ]
-}
-```
+**Streaming bills from the terminal usage**: take `usage` from the `response.completed`, `response.incomplete`, `response.failed` or `response.cancelled` event. A failed or truncated response can still incur token charges; HTTP 200, partial text or `[DONE]` do not prove you received complete usage.
 
-### Video analysis
+<Warning>
+Without reliable terminal usage the reservation is held pending reconciliation. Check the existing usage record in the console before resubmitting; never retry automatically.
+</Warning>
 
-```json theme={null}
-{
-  "model": "gemini-2.5-pro",
-  "input": [
-    {
-      "role": "user",
-      "content": [
-        {
-          "type": "input_text",
-          "text": "分析一下这个视频的内容"
-        },
-        {
-          "type": "input_video",
-          "video_url": "https://example.com/video.mp4"
-        }
-      ]
-    }
-  ],
-  "max_tokens": 5000
-}
-```
+## Not available
 
-### Using the web search tool
+The following are rejected before quota is reserved (HTTP 400, no charge):
 
-```json theme={null}
-{
-  "model": "gpt-5",
-  "tools": [
-    {"type": "web_search"}
-  ],
-  "input": [
-    {
-      "role": "user",
-      "content": [
-        {
-          "type": "input_text",
-          "text": "2025年最新的AI技术趋势是什么？"
-        }
-      ]
-    }
-  ]
-}
-```
+- **Hosted tools** — `web_search`, `file_search`, `remote_mcp` and other vendor built-ins, whose extra charge dimensions are not wired into billing.
+- **Tool calling and structured output** — declared unsupported on these five models, see the `tools` note above.
+- **`service_tier`** set to anything other than `standard` / `default`.
 
-### Using function calling
+**Image and video input** are not declared on any model group and have not been through acceptance, so this page makes no promise about them; wait until the capability is declared before building on it.
 
-```json theme={null}
-{
-  "model": "gpt-5",
-  "tools": [
-    {
-      "type": "function",
-      "function": {
-        "name": "get_weather",
-        "description": "获取城市天气信息",
-        "parameters": {
-          "type": "object",
-          "properties": {
-            "city": {
-              "type": "string",
-              "description": "城市名称，例如：北京"
-            }
-          },
-          "required": ["city"]
-        }
-      }
-    }
-  ],
-  "input": "北京今天天气怎么样？"
-}
-```
+## Related
 
-## Content Types
-
-### input_text
-
-Text input.
-
-**Properties:**
-
-* `type`: always `"input_text"`
-* `text`: text content (string)
-
-### input_image
-
-Image input.
-
-**Properties:**
-
-* `type`: always `"input_image"`
-* `image_url`: image URL or base64-encoded data URI
-
-**Supported image formats:**
-
-* JPEG
-* PNG
-* GIF
-* WebP
-
-**Image size limits:**
-
-* Max file size: 20MB
-* Recommended resolution: up to 2048x2048 pixels
-
-### input_video
-
-Video input (supported by some models).
-
-**Properties:**
-
-* `type`: always `"input_video"`
-* `video_url`: video URL
-
-**Supported video formats:**
-
-* MP4
-* MOV
-* AVI
-* WebM
-
-**Video size limits:**
-
-* Max file size: 200MB
-* Max duration: 10 minutes
-* Recommended resolution: 1080p
-
-## Tools in Detail
-
-### Web search
-
-The web search tool gives the model access to real-time information from the internet.
-
-**Configuration example:**
-
-```json theme={null}
-{
-  "tools": [{"type": "web_search"}]
-}
-```
-
-**Use cases:**
-
-* Latest news and current events
-* Real-time data (stocks, weather, exchange rates, etc.)
-* Latest technical docs and references
-* Fact verification
-
-### File search
-
-The file search tool lets the model search through documents you have uploaded.
-
-**Configuration example:**
-
-```json theme={null}
-{
-  "tools": [{"type": "file_search"}]
-}
-```
-
-**Use cases:**
-
-* Analyzing internal company documents
-* Searching technical specifications and manuals
-* Querying contracts and legal documents
-* Knowledge-base Q&A systems
-
-### Function calling
-
-Define custom functions so the model can call external APIs or perform specific actions.
-
-**Full configuration example:**
-
-```json theme={null}
-{
-  "tools": [
-    {
-      "type": "function",
-      "function": {
-        "name": "get_stock_price",
-        "description": "获取股票的实时价格",
-        "parameters": {
-          "type": "object",
-          "properties": {
-            "symbol": {
-              "type": "string",
-              "description": "股票代码，例如：AAPL"
-            },
-            "currency": {
-              "type": "string",
-              "enum": ["USD", "CNY"],
-              "description": "货币单位",
-              "default": "USD"
-            }
-          },
-          "required": ["symbol"]
-        }
-      }
-    }
-  ]
-}
-```
-
-**Parameters:**
-
-* `name`: function name (required)
-* `description`: function description (required)
-* `parameters`: parameter definitions in JSON Schema format
-  * `type`: parameter type
-  * `properties`: parameter property definitions
-  * `required`: list of required parameters
-
-**Use cases:**
-
-* Calling third-party APIs
-* Running database queries
-* Triggering business workflows
-* Integrating with internal systems
-
-### Remote MCP
-
-Connect to a remote Model Context Protocol (MCP) service to extend the model's capabilities.
-
-**Configuration example:**
-
-```json theme={null}
-{
-  "tools": [
-    {
-      "type": "remote_mcp",
-      "remote_mcp": {
-        "url": "https://your-mcp-server.com/api",
-        "auth_token": "your_auth_token",
-        "timeout": 30
-      }
-    }
-  ]
-}
-```
-
-**Parameters:**
-
-* `url`: MCP server URL (required)
-* `auth_token`: authentication token (optional)
-* `timeout`: timeout in seconds, default 30
-
-**Use cases:**
-
-* Connecting to enterprise AI services
-* Using domain-specific models
-* Accessing protected data sources
-* Integrating distributed AI systems
-
-## Tool Response Format
-
-When the model uses a tool, the response includes tool call information:
-
-```json theme={null}
-{
-  "id": "resp-123456",
-  "object": "response",
-  "created": 1677652288,
-  "model": "gpt-5",
-  "choices": [
-    {
-      "index": 0,
-      "message": {
-        "role": "assistant",
-        "content": null,
-        "tool_calls": [
-          {
-            "id": "call_abc123",
-            "type": "function",
-            "function": {
-              "name": "get_weather",
-              "arguments": "{\"city\": \"北京\"}"
-            }
-          }
-        ]
-      },
-      "finish_reason": "tool_calls"
-    }
-  ]
-}
-```
-
-**Tool call flow:**
-
-1. The model receives user input
-2. Decides whether a tool is needed
-3. If yes, returns a tool call request
-4. The client executes the tool call
-5. The result is returned to the model
-6. The model produces the final response
-
-## Notes
-
-1. **Image URL requirements:**
-   * Must be a publicly accessible URL
-   * Or use a base64-encoded data URI
-
-2. **Token billing:**
-   * Images consume tokens based on resolution
-   * High-resolution images are auto-resized to optimize cost
-   * Tool calls also consume additional tokens
-
-3. **Content order:**
-   * The order of items in the content array affects how the model interprets them
-   * We recommend placing the text instruction first, followed by images/videos
-
-4. **Multimodal mixing:**
-   * A single request can mix multiple text and image inputs
-   * Multi-turn conversations preserve context
-
-5. **Tool usage limits:**
-   * When multiple tools are available, the model picks the most appropriate one
-   * Function calling requires explicit function and parameter definitions
-   * Web search results may be subject to regional and time limits
-
-6. **API compatibility:**
-   * Fully compatible with the OpenAI Responses API format
-   * Existing OpenAI code can be migrated seamlessly
-   * Supports all OpenAI tool extensions
+<CardGroup cols={2}>
+  <Card title="Text Models Overview" icon="table-list" href="/en/api-reference/text/overview">
+    Prices, tiers and billing rules for the five models
+  </Card>
+  <Card title="General Chat API" icon="comments" href="/en/api-reference/text/general-chat">
+    The default entry for every other text model
+  </Card>
+</CardGroup>

@@ -1,11 +1,11 @@
 ---
-title: "多模态响应接口"
+title: "Responses 接口"
 api: "POST https://www.qingbo.dev/v1/responses"
 ---
 
-- 完全兼容 OpenAI Responses API 格式
-- 支持文本和图像的多模态输入
-- 支持工具扩展：网络搜索、文件搜索、函数调用、远程 MCP
+- OpenAI Responses 协议入口，只服务声明了该协议的型号
+- 已验收范围：文本非流式与流式输出
+- 托管工具、图像与视频输入在本入口未开放
 
 <RequestExample>
 ```bash cURL
@@ -13,7 +13,7 @@ curl -X POST https://www.qingbo.dev/v1/responses \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-5",
+    "model": "gpt-5.3-codex",
     "input": "解释一下冒泡排序算法。"
   }'
 ```
@@ -27,7 +27,7 @@ client = OpenAI(
 )
 
 response = client.responses.create(
-    model="gpt-5",
+    model="gpt-5.3-codex",
     input="解释一下冒泡排序算法。"
 )
 
@@ -43,7 +43,7 @@ const client = new OpenAI({
 });
 
 const response = await client.responses.create({
-  model: 'gpt-5',
+  model: 'gpt-5.3-codex',
   input: '解释一下冒泡排序算法。'
 });
 
@@ -63,7 +63,7 @@ import (
 
 func main() {
     payload := map[string]interface{}{
-        "model": "gpt-5",
+        "model": "gpt-5.3-codex",
         "input": "解释一下冒泡排序算法。",
     }
 
@@ -91,7 +91,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String payload = """
         {
-          "model": "gpt-5",
+          "model": "gpt-5.3-codex",
           "input": "解释一下冒泡排序算法。"
         }
         """;
@@ -118,7 +118,7 @@ public class Main {
     "id": "resp_09e342953eda0be6006905acbcvoik1nhmezpmzzl7lex552vq",
     "object": "response",
     "created_at": 1761979488,
-    "model": "gpt-5-2025-08-07",
+    "model": "gpt-5.3-codex",
     "status": "completed",
     "output": [
       {
@@ -134,7 +134,7 @@ public class Main {
         "content": [
           {
             "type": "output_text",
-            "text": "一幅温暖的插画：一只灰色虎斑猫正抱着一只带红色围巾的水獭，两只动物都闭着眼微笑，呈现亲密友好的场景。",
+            "text": "冒泡排序是一种简单的比较交换排序：重复遍历序列，比较相邻元素并把较大的一个换到右侧，每一趟把当前未排部分的最大值放到末尾，直到某一趟没有发生交换。",
             "annotations": [],
             "logprobs": []
           }
@@ -276,28 +276,25 @@ public class Main {
 ## Body
 
 <ParamField body="model" type="string" required>
-  模型名称
+  模型 ID
 
-  支持的模型包括：
+  **只有声明了 `openai_responses` 协议的型号走这个入口**，共五个：
 
-  * `gpt-5` - GPT-5 基础模型
-  * `gpt-5-pro` - GPT-5 专业增强版（仅支持此接口）
-  * `gpt-5-codex` - GPT-5 Codex 代码模型（仅支持此接口）
-  * `gpt-5.1-codex` - GPT-5.1 Codex 代码模型（仅支持此接口）
-  * `gpt-5.1-codex-mini` - GPT-5.1 Codex Mini（仅支持此接口）
-  * `gpt-5.2-codex` - GPT-5.2 Codex 代码模型（仅支持此接口）
-  * `gpt-5.3-codex` - GPT-5.3 Codex 代码模型（仅支持此接口）
-  * 以及所有支持 `/v1/chat/completions` 的模型
+  * `gpt-5-pro`
+  * `gpt-5.2-pro`
+  * `gpt-5.4-pro`
+  * `gpt-5.3-codex`
+  * `o3-pro`
 
   <Note>
-  `gpt-5-pro` 和所有 Codex 系列模型仅支持此接口（`/v1/responses`），不支持 `/v1/chat/completions`。
+  这五个型号**只**接受本接口，打到 `/v1/chat/completions` 会在预扣前拒绝；反过来，其余文本型号只走 Chat，打到本接口同样在预扣前拒绝。各型号价格见[文本模型总览](/cn/api-reference/text/overview)。
   </Note>
 </ParamField>
 
 <ParamField body="input" type="string or array" required>
   输入内容，支持字符串或消息数组
 
-  字符串形式为简单文本输入，数组形式支持多轮对话和多模态：
+  字符串形式即一次性文本输入；数组形式用于多轮：
 
   <Expandable title="消息对象属性">
     <ParamField body="role" type="string" required>
@@ -305,46 +302,23 @@ public class Main {
     </ParamField>
 
     <ParamField body="content" type="array" required>
-      内容数组，每项包含 `type` 字段：
-
-      - `input_text` — 文本输入，需提供 `text` 字段
-      - `input_image` — 图像输入，需提供 `image_url` 字段
-      - `input_video` — 视频输入（部分模型支持）
+      内容数组，每项包含 `type` 字段。**本入口当前只验收了 `input_text`**（需提供 `text` 字段）；图像与视频输入见页尾「当前不开放」。
     </ParamField>
   </Expandable>
 </ParamField>
 
+<ParamField body="max_output_tokens" type="integer">
+  本次请求的输出预算
+
+  思考 token 也从这个预算里扣。`status: "incomplete"` 表示输出可能没写完，不能当作完整回答。
+</ParamField>
+
 <ParamField body="tools" type="array">
-  工具列表，可选配置
+  工具列表
 
-  支持的工具类型：
-
-  * `web_search` - 网络搜索
-  * `file_search` - 文件搜索
-  * `function` - 函数调用
-  * `remote_mcp` - 远程 MCP 服务
-
-  <Expandable title="示例">
-    ```json
-    [
-      {"type": "web_search"},
-      {
-        "type": "function",
-        "function": {
-          "name": "get_weather",
-          "description": "获取天气信息",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "city": {"type": "string"}
-            },
-            "required": ["city"]
-          }
-        }
-      }
-    ]
-    ```
-  </Expandable>
+  <Warning>
+  这五个型号在模型组里声明为**不支持工具调用与结构化输出**，因此 `tools`、`tool_choice`、`response_format` 都会在额度预扣前被拒绝（HTTP 400，不计费）。需要函数调用请用 [Chat 接口](/cn/api-reference/text/general-chat)上支持工具的型号。
+  </Warning>
 </ParamField>
 
 <ParamField body="temperature" type="number">
@@ -378,7 +352,7 @@ public class Main {
 </ResponseField>
 
 <ResponseField name="model" type="string">
-  实际使用的模型名称（如 `gpt-5-2025-08-07`）
+  实际使用的模型名称
 </ResponseField>
 
 <ResponseField name="status" type="string">
@@ -427,7 +401,6 @@ public class Main {
           内容类型
 
           * `output_text` - 文本输出
-          * `output_image` - 图像输出
         </ResponseField>
 
         <ResponseField name="text" type="string">
@@ -560,352 +533,33 @@ public class Main {
   元数据信息
 </ResponseField>
 
-## 使用示例
+## 用量与计费
 
-### 图片分析
+`usage.input_tokens` 是输入总量（含 `input_tokens_details.cached_tokens`），`usage.output_tokens` 已包含 `output_tokens_details.reasoning_tokens`，思考 token 只按输出价计一次。这五个型号目前都是输入 / 输出两项计价，没有独立缓存价，响应里的缓存统计按普通输入价计。单价与计费通则见[文本模型总览 · 计费口径](/cn/api-reference/text/overview#计费口径)。
 
-```json theme={null}
-{
-  "model": "gpt-5",
-  "input": [
-    {
-      "role": "user",
-      "content": [
-        {
-          "type": "input_text",
-          "text": "这张图片里有什么？请详细描述"
-        },
-        {
-          "type": "input_image",
-          "image_url": "https://example.com/image.jpg"
-        }
-      ]
-    }
-  ]
-}
-```
+**流式计费取终态用量**：以 `response.completed`、`response.incomplete`、`response.failed` 或 `response.cancelled` 事件里的 `usage` 为准。失败或截断的响应同样可能产生 token 费用；HTTP 200、部分文本或 `[DONE]` 都不足以证明拿到了完整用量。
 
-### 视频分析
+<Warning>
+缺少可靠的终态用量时，已预扣额度会保留为待核对状态。先到控制台核对已有用量记录，不要自动重发。
+</Warning>
 
-```json theme={null}
-{
-  "model": "gemini-2.5-pro",
-  "input": [
-    {
-      "role": "user",
-      "content": [
-        {
-          "type": "input_text",
-          "text": "分析一下这个视频的内容"
-        },
-        {
-          "type": "input_video",
-          "video_url": "https://example.com/video.mp4"
-        }
-      ]
-    }
-  ],
-  "max_tokens": 5000
-}
-```
+## 当前不开放
 
-### 使用网络搜索工具
+以下请求在额度预扣前被拒绝（HTTP 400，不计费）：
 
-```json theme={null}
-{
-  "model": "gpt-5",
-  "tools": [
-    {"type": "web_search"}
-  ],
-  "input": [
-    {
-      "role": "user",
-      "content": [
-        {
-          "type": "input_text",
-          "text": "2025年最新的AI技术趋势是什么？"
-        }
-      ]
-    }
-  ]
-}
-```
+- **托管工具** —— `web_search`、`file_search`、`remote_mcp` 等厂商内置工具，其额外收费维度尚未接入计费。
+- **工具调用与结构化输出** —— 这五个型号声明为不支持，见上方 `tools` 说明。
+- **`service_tier`** 取 `standard` / `default` 以外的值。
 
-### 使用函数调用
+**图像与视频输入**当前没有在模型组里声明，也没有完成验收，因此本页不承诺可用；需要看图的场景请等待该能力正式声明后再接入。
 
-```json theme={null}
-{
-  "model": "gpt-5",
-  "tools": [
-    {
-      "type": "function",
-      "function": {
-        "name": "get_weather",
-        "description": "获取城市天气信息",
-        "parameters": {
-          "type": "object",
-          "properties": {
-            "city": {
-              "type": "string",
-              "description": "城市名称，例如：北京"
-            }
-          },
-          "required": ["city"]
-        }
-      }
-    }
-  ],
-  "input": "北京今天天气怎么样？"
-}
-```
+## 相关文档
 
-## 内容类型说明
-
-### input_text
-
-文本输入类型
-
-**属性：**
-
-* `type`: 固定为 `"input_text"`
-* `text`: 文本内容（字符串）
-
-### input_image
-
-图像输入类型
-
-**属性：**
-
-* `type`: 固定为 `"input_image"`
-* `image_url`: 图像 URL 或 Base64 编码的数据 URI
-
-**支持的图像格式：**
-
-* JPEG
-* PNG
-* GIF
-* WebP
-
-**图像大小限制：**
-
-* 最大文件大小：20MB
-* 推荐分辨率：不超过 2048x2048 像素
-
-### input_video
-
-视频输入类型（部分模型支持）
-
-**属性：**
-
-* `type`: 固定为 `"input_video"`
-* `video_url`: 视频 URL
-
-**支持的视频格式：**
-
-* MP4
-* MOV
-* AVI
-* WebM
-
-**视频大小限制：**
-
-* 最大文件大小：200MB
-* 最大时长：10 分钟
-* 推荐分辨率：1080p
-
-## 工具使用详解
-
-### 网络搜索 (Web Search)
-
-使用网络搜索工具可以让模型访问实时互联网信息。
-
-**配置示例：**
-
-```json theme={null}
-{
-  "tools": [{"type": "web_search"}]
-}
-```
-
-**适用场景：**
-
-* 查询最新新闻和时事
-* 获取实时数据（股票、天气、汇率等）
-* 搜索最新的技术文档和资料
-* 验证事实信息
-
-### 文件搜索 (File Search)
-
-文件搜索工具允许模型在已上传的文档中搜索相关信息。
-
-**配置示例：**
-
-```json theme={null}
-{
-  "tools": [{"type": "file_search"}]
-}
-```
-
-**适用场景：**
-
-* 分析企业内部文档
-* 搜索技术规范和手册
-* 查询合同和法律文件
-* 知识库问答系统
-
-### 函数调用 (Function Calling)
-
-定义自定义函数，让模型能够调用外部 API 或执行特定操作。
-
-**完整配置示例：**
-
-```json theme={null}
-{
-  "tools": [
-    {
-      "type": "function",
-      "function": {
-        "name": "get_stock_price",
-        "description": "获取股票的实时价格",
-        "parameters": {
-          "type": "object",
-          "properties": {
-            "symbol": {
-              "type": "string",
-              "description": "股票代码，例如：AAPL"
-            },
-            "currency": {
-              "type": "string",
-              "enum": ["USD", "CNY"],
-              "description": "货币单位",
-              "default": "USD"
-            }
-          },
-          "required": ["symbol"]
-        }
-      }
-    }
-  ]
-}
-```
-
-**参数说明：**
-
-* `name`: 函数名称（必需）
-* `description`: 函数功能描述（必需）
-* `parameters`: 参数定义，使用 JSON Schema 格式
-  * `type`: 参数类型
-  * `properties`: 参数属性定义
-  * `required`: 必需参数列表
-
-**适用场景：**
-
-* 调用第三方 API
-* 执行数据库查询
-* 触发业务流程
-* 与内部系统集成
-
-### 远程 MCP (Remote MCP)
-
-连接到远程模型上下文协议（MCP）服务，扩展模型能力。
-
-**配置示例：**
-
-```json theme={null}
-{
-  "tools": [
-    {
-      "type": "remote_mcp",
-      "remote_mcp": {
-        "url": "https://your-mcp-server.com/api",
-        "auth_token": "your_auth_token",
-        "timeout": 30
-      }
-    }
-  ]
-}
-```
-
-**参数说明：**
-
-* `url`: MCP 服务器地址（必需）
-* `auth_token`: 认证令牌（可选）
-* `timeout`: 超时时间（秒），默认 30 秒
-
-**适用场景：**
-
-* 连接企业级 AI 服务
-* 使用专业领域模型
-* 访问受保护的数据源
-* 分布式 AI 系统集成
-
-## 工具响应格式
-
-当模型使用工具时，响应格式会包含工具调用信息：
-
-```json theme={null}
-{
-  "id": "resp-123456",
-  "object": "response",
-  "created": 1677652288,
-  "model": "gpt-5",
-  "choices": [
-    {
-      "index": 0,
-      "message": {
-        "role": "assistant",
-        "content": null,
-        "tool_calls": [
-          {
-            "id": "call_abc123",
-            "type": "function",
-            "function": {
-              "name": "get_weather",
-              "arguments": "{\"city\": \"北京\"}"
-            }
-          }
-        ]
-      },
-      "finish_reason": "tool_calls"
-    }
-  ]
-}
-```
-
-**工具调用流程：**
-
-1. 模型接收用户输入
-2. 分析是否需要使用工具
-3. 如需要，返回工具调用请求
-4. 客户端执行工具调用
-5. 将工具结果返回给模型
-6. 模型生成最终响应
-
-## 注意事项
-
-1. **图像 URL 要求**：
-   * 必须是公开可访问的 URL
-   * 或使用 Base64 编码的 Data URI 格式
-
-2. **Token 计费**：
-   * 图像会根据其分辨率消耗相应的 tokens
-   * 高分辨率图像会自动调整大小以优化成本
-   * 工具调用也会消耗额外的 tokens
-
-3. **内容顺序**：
-   * content 数组中的元素顺序会影响模型理解
-   * 建议先放置文本指令，再放置图像/视频
-
-4. **多模态组合**：
-   * 可以在一个请求中混合多个文本和图像
-   * 支持多轮对话，保持上下文连贯性
-
-5. **工具使用限制**：
-   * 同时使用多个工具时，模型会智能选择最合适的工具
-   * 函数调用需要明确的函数定义和参数说明
-   * 网络搜索结果可能受地域和时间限制
-
-6. **API 兼容性**：
-   * 完全兼容 OpenAI Responses API 格式
-   * 可无缝迁移现有 OpenAI 代码
-   * 支持所有 OpenAI 工具扩展功能
+<CardGroup cols={2}>
+  <Card title="文本模型总览" icon="table-list" href="/cn/api-reference/text/overview">
+    五个型号的价格、分档与计费通则
+  </Card>
+  <Card title="通用对话接口" icon="comments" href="/cn/api-reference/text/general-chat">
+    其余全部文本型号的默认入口
+  </Card>
+</CardGroup>

@@ -42,7 +42,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="gpt-5.6-luna",
     messages=[
         {"role": "user", "content": "你好，介绍一下你自己"}
     ]
@@ -60,7 +60,7 @@ const client = new OpenAI({
 });
 
 const response = await client.chat.completions.create({
-  model: 'gpt-4o',
+  model: 'gpt-5.6-luna',
   messages: [
     { role: 'user', content: '你好，介绍一下你自己' }
   ]
@@ -74,7 +74,7 @@ curl https://www.qingbo.dev/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-luna",
     "messages": [
       {"role": "user", "content": "你好，介绍一下你自己"}
     ]
@@ -90,7 +90,7 @@ curl https://www.qingbo.dev/v1/chat/completions \
   "id": "chatcmpl-123",
   "object": "chat.completion",
   "created": 1677652288,
-  "model": "gpt-4o",
+  "model": "gpt-5.6-luna",
   "choices": [{
     "index": 0,
     "message": {
@@ -109,7 +109,14 @@ curl https://www.qingbo.dev/v1/chat/completions \
 
 ## Next Steps
 
+<Tip>
+`gpt-5.6-luna` is only an example. Available text models, their rates and each model's verified capabilities are in the [Text Models Overview](/en/api-reference/text/overview); parameters differ by vendor (GPT-5 and later take `max_completion_tokens`, Claude takes `max_tokens`), so follow that vendor's section there.
+</Tip>
+
 <CardGroup cols={2}>
+  <Card title="Text Models Overview" href="/en/api-reference/text/overview">
+    Model catalog, pricing and billing rules
+  </Card>
   <Card title="Authentication & Keys" href="/en/docs/authentication">
     Learn about authentication and API key management
   </Card>

@@ -275,7 +275,7 @@ public class Main {
 
   完整的可用模型、价格与已验证能力见[文本模型总览](/cn/api-reference/text/overview)；实时可用性以 `GET /v1/models` 为准。
 
-  切换模型只改这一个字段。参数是否可用以该模型的已验证能力为准，不是所有 OpenAI 参数在每个模型上都可用：GPT-5 及之后的型号用 `max_completion_tokens` 和 `reasoning_effort`，Claude 用 `max_tokens`；GPT Pro / Codex / o3-pro 只接受 [Responses 接口](/cn/api-reference/text/openai-multimodal)。
+  切换模型只改这一个字段。参数是否可用以该模型的已验证能力为准，不是所有 OpenAI 参数在每个模型上都可用：GPT-5 及之后的型号用 `max_completion_tokens` 和 `reasoning_effort`，Claude 用 `max_tokens`；`gpt-5-pro` / `gpt-5.2-pro` / `gpt-5.4-pro` / `gpt-5.3-codex` / `o3-pro` 只接受 [Responses 接口](/cn/api-reference/text/openai-multimodal)。
 </ParamField>
 
 <ParamField body="messages" type="array" required>
@@ -586,7 +586,7 @@ curl https://www.qingbo.dev/v1/models \
     SSE 事件处理与 usage 末帧的读法
   </Card>
   <Card title="Responses 接口" icon="layer-group" href="/cn/api-reference/text/openai-multimodal">
-    图像输入、托管工具与 GPT Pro / Codex 系列
+    那五个只走 Responses 的型号
   </Card>
   <Card title="原生信封" icon="code-branch" href="/cn/api-reference/text/claude-messages">
     [Claude Messages](/cn/api-reference/text/claude-messages) · [Gemini 原生](/cn/api-reference/text/gemini-native)

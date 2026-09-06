@@ -4,11 +4,11 @@ description: "使用 Google Gemini 原生 API 格式"
 api: "POST https://www.qingbo.dev/v1beta/models/{model}:generateContent"
 ---
 
-Gemini 原生格式 API 提供了与 Google Gemini 模型交互的原生接口，支持多模态输入和高级功能。
+为已有 Gemini 客户端保留的原生信封。已验收范围是原生非流式与流式文本；本入口不提供 Chat 之外的额外能力，新接入建议直接用[通用对话接口](/cn/api-reference/text/general-chat)。
 
 <RequestExample>
 ```bash cURL
-curl -X POST https://www.qingbo.dev/v1beta/models/gemini-2.5-flash:generateContent \
+curl -X POST https://www.qingbo.dev/v1beta/models/gemini-3.6-flash:generateContent \
   -H "x-goog-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -36,7 +36,7 @@ genai.configure(
     client_options={"api_endpoint": "https://www.qingbo.dev/v1beta"}
 )
 
-model = genai.GenerativeModel("gemini-2.5-flash")
+model = genai.GenerativeModel("gemini-3.6-flash")
 
 response = model.generate_content(
     "解释一下冒泡排序算法。",
@@ -54,7 +54,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI('YOUR_API_KEY');
 const model = genAI.getGenerativeModel({
-  model: 'gemini-2.5-flash',
+  model: 'gemini-3.6-flash',
   baseUrl: 'https://www.qingbo.dev/v1beta'
 });
 
@@ -100,7 +100,7 @@ func main() {
     }
 
     body, _ := json.Marshal(payload)
-    url := "https://www.qingbo.dev/v1beta/models/gemini-2.5-flash:generateContent"
+    url := "https://www.qingbo.dev/v1beta/models/gemini-3.6-flash:generateContent"
     req, _ := http.NewRequest("POST", url, bytes.NewBuffer(body))
     req.Header.Set("x-goog-api-key", "YOUR_API_KEY")
     req.Header.Set("Content-Type", "application/json")
@@ -139,7 +139,7 @@ public class Main {
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create("https://www.qingbo.dev/v1beta/models/gemini-2.5-flash:generateContent"))
+            .uri(URI.create("https://www.qingbo.dev/v1beta/models/gemini-3.6-flash:generateContent"))
             .header("x-goog-api-key", "YOUR_API_KEY")
             .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(payload))
@@ -153,37 +153,23 @@ public class Main {
 ```
 </RequestExample>
 
-## 概述
-
-## 支持的模型
-
-<CardGroup cols={2}>
-  <Card title="Gemini 3.1 Pro Preview">
-    最新一代预览版
-  </Card>
-  <Card title="Gemini 3 Flash Preview">
-    新一代快速版
-  </Card>
-  <Card title="Gemini 2.5 Pro">
-    专业版，强大的推理能力
-  </Card>
-  <Card title="Gemini 2.5 Flash">
-    快速版，速度与性能平衡
-  </Card>
-  <Card title="Gemini 2.5 Flash Lite">
-    超轻量版，极致响应速度
-  </Card>
-</CardGroup>
-
 ## 请求参数
 
 <ParamField path="model" type="string" required>
-  模型 ID，作为 URL 路径参数：
+  模型 ID，作为 URL 路径参数。**只有声明了 `gemini_native` 协议的型号能走这个入口**，共八个：
+
+  - `gemini-3.8-flash`
+  - `gemini-3.7-flash`
+  - `gemini-3.6-flash`
+  - `gemini-3.5-flash`
   - `gemini-3.1-pro-preview`
   - `gemini-3-flash-preview`
   - `gemini-2.5-pro`
-  - `gemini-2.5-flash`
   - `gemini-2.5-flash-lite`
+
+  <Note>
+  `gemini-3.5-flash-lite` 只走 Chat，打到本接口会在额度预扣前拒绝。价格与已验证能力见[文本模型总览 · Google Gemini](/cn/api-reference/text/overview#google-gemini)。
+  </Note>
 </ParamField>
 
 <ParamField body="contents" type="array" required>
@@ -223,7 +209,7 @@ public class Main {
 <CodeGroup>
 
 ```bash cURL
-curl https://www.qingbo.dev/v1beta/models/gemini-2.5-flash:generateContent \
+curl https://www.qingbo.dev/v1beta/models/gemini-3.6-flash:generateContent \
   -H "Content-Type: application/json" \
   -H "x-goog-api-key: YOUR_API_KEY" \
   -d '{
@@ -254,7 +240,7 @@ genai.configure(
     client_options={"api_endpoint": "https://www.qingbo.dev/v1beta"}
 )
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+model = genai.GenerativeModel('gemini-3.6-flash')
 
 response = model.generate_content(
     "解释量子计算的基本原理",
@@ -273,7 +259,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI('YOUR_API_KEY');
 const model = genAI.getGenerativeModel({ 
-  model: 'gemini-2.5-flash',
+  model: 'gemini-3.6-flash',
   baseUrl: 'https://www.qingbo.dev/v1beta'
 });
 
@@ -320,47 +306,6 @@ console.log(result.response.text());
 }
 ```
 
-## 多模态输入
-
-Gemini 支持文本和图像的混合输入：
-
-<CodeGroup>
-
-```python Python
-import PIL.Image
-
-# 加载图像
-img = PIL.Image.open('image.jpg')
-
-# 发送文本和图像
-response = model.generate_content([
-    "描述这张图片中的内容",
-    img
-])
-
-print(response.text)
-```
-
-```javascript JavaScript
-// 使用 base64 编码的图像
-const result = await model.generateContent({
-  contents: [{
-    role: 'user',
-    parts: [
-      { text: '描述这张图片中的内容' },
-      {
-        inlineData: {
-          mimeType: 'image/jpeg',
-          data: base64ImageData
-        }
-      }
-    ]
-  }]
-});
-```
-
-</CodeGroup>
-
 ## 流式输出
 
 ```python
@@ -373,28 +318,32 @@ for chunk in response:
     print(chunk.text, end="")
 ```
 
-## 安全设置
+## 用量与计费
 
-控制内容过滤级别：
+原生响应在 `usageMetadata` 里报告用量，**不带网关的 `usage.cost` 字段**，实际扣费到控制台用量记录核对。
+`promptTokenCount` 已包含 `cachedContentTokenCount`；计费的输出是 `candidatesTokenCount + thoughtsTokenCount`
+两者之和——不要把 `candidatesTokenCount` 当成 Chat 的 `completion_tokens`（后者已含思考）。
 
-```python
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
+流式请以最终的累计用量为准，不要把各帧的用量相加；末帧可以只有用量、`candidates` 为空数组，读取时先取
+`usageMetadata` 再判断候选内容。单价与计费通则见[文本模型总览 · 计费口径](/cn/api-reference/text/overview#计费口径)。
 
-response = model.generate_content(
-    "你的提示词",
-    safety_settings={
-        HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-        HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-    }
-)
-```
+## 当前不开放
 
-## 特性对比
+以下请求在额度预扣前被拒绝（HTTP 400，不计费）：
 
-| 特性 | Gemini 3.1 Pro | Gemini 3 Flash | Gemini 2.5 Pro | Gemini 2.5 Flash | Gemini 2.5 Flash Lite |
-|------|---------------|----------------|----------------|------------------|-----------------------|
-| 上下文窗口 | 100万 tokens | 100万 tokens | 100万 tokens | 100万 tokens | 100万 tokens |
-| 多模态输入 | 可用 | 可用 | 可用 | 可用 | 可用 |
-| 代码生成 | 可用 | 可用 | 可用 | 可用 | 可用 |
-| 速度 | 快 | 极快 | 快 | 极快 | 极快 |
+- **显式上下文缓存** —— `cachedContent` / `cached_content` / `cache_control` 在 Gemini 全系拒绝，只开放自动缓存，原因见[缓存](/cn/api-reference/text/overview#缓存)。
+- **内置工具** —— grounding、托管搜索等厂商内置工具；由调用方自己执行的函数工具不在此列。
+- **`service_tier`** 取 `standard` / `default` 以外的值。
 
+原生格式的函数调用与结构化输出**尚未在本渠道验收**，需要这两项请走 [通用对话接口](/cn/api-reference/text/general-chat)。
+
+## 相关文档
+
+<CardGroup cols={2}>
+  <Card title="文本模型总览" icon="table-list" href="/cn/api-reference/text/overview">
+    八个型号的价格、缓存档位与已验证能力
+  </Card>
+  <Card title="通用对话接口" icon="comments" href="/cn/api-reference/text/general-chat">
+    新接入的默认入口
+  </Card>
+</CardGroup>

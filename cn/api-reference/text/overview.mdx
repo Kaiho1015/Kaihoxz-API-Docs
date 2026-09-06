@@ -194,7 +194,7 @@ Chat 响应里 `usage.prompt_tokens_details.cached_tokens` 是命中量；原生
 - `gpt-5-pro` — 仅 `/v1/responses`，该入口只验收了文本与流式
 - `o3-pro` — 仅 `/v1/responses`，该入口只验收了文本与流式
 
-GPT-5 及之后的型号用 `max_completion_tokens` 限制输出、用 `reasoning_effort` 选推理档位（验收用 `"none"`；GPT-6 Astra 只验收了 `"low"`）。`max_tokens` 会被拒绝。Pro / Codex / o3-pro 只接受 `/v1/responses`，Chat 接口不路由这些型号。272K 分档以**输入总量**判断：恰好 272,000 用普通档，超过则整单（含缓存与输出）切到长上下文档。GPT-5.6 的缓存写入价是本档输入价的 1.25 倍，替代普通输入计费而不是叠加；GPT-5.4 / 5.5 没有独立缓存写入价。
+GPT-5 及之后的型号用 `max_completion_tokens` 限制输出、用 `reasoning_effort` 选推理档位（验收用 `"none"`；GPT-6 Astra 只验收了 `"low"`）。`max_tokens` 会被拒绝。`gpt-5-pro` / `gpt-5.2-pro` / `gpt-5.4-pro` / `gpt-5.3-codex` / `o3-pro` 只声明了 `openai_responses` 协议，只能走 [Responses 接口](/cn/api-reference/text/openai-multimodal)，打到 Chat 会在预扣前拒绝。272K 分档以**输入总量**判断：恰好 272,000 用普通档，超过则整单（含缓存与输出）切到长上下文档。GPT-5.6 的缓存写入价是本档输入价的 1.25 倍，替代普通输入计费而不是叠加；GPT-5.4 / 5.5 没有独立缓存写入价。
 
 ### Anthropic
 
@@ -216,10 +216,10 @@ GPT-5 及之后的型号用 `max_completion_tokens` 限制输出、用 `reasonin
 
 - `claude-fable-5-1` — 缓存写 5 分钟 11.25、1 小时 18；渠道声明上限 1M 入 / 128K 出；JSON Schema 未开放（实测返回 Markdown 包裹）；工具只接受 `tool_choice: "auto"`，required / 指定函数被上游拒绝；缓存价已配置，命中与 TTL 写入未验收
 - `claude-fable-5` — 缓存写 5 分钟 11.25、1 小时 18；渠道声明上限 1M 入 / 128K 出；JSON Schema 未开放；工具只接受 `tool_choice: "auto"`；缓存价已配置，未验收
-- `claude-opus-5` — 缓存写 5 分钟 5.625、1 小时 9；渠道声明上限 128K 入 / 16K 出；JSON Schema / json_object 预扣前拒绝；原生 `/v1/messages` 非流式与流式已验证；缓存价已配置，未验收
-- `claude-sonnet-5` — 缓存写 5 分钟 2.25、1 小时 3.6；渠道声明上限 1M 入 / 128K 出；JSON Schema / json_object 预扣前拒绝；原生 `/v1/messages` 非流式与流式已验证；缓存价已配置，未验收
+- `claude-opus-5` — 缓存写 5 分钟 5.625、1 小时 9；渠道声明上限 128K 入 / 16K 出；JSON Schema / json_object 预扣前拒绝；原生 `/v1/messages` 可用（Claude 里仅此型号与另一个 5 系型号声明该协议）；缓存价已配置，未验收
+- `claude-sonnet-5` — 缓存写 5 分钟 2.25、1 小时 3.6；渠道声明上限 1M 入 / 128K 出；JSON Schema / json_object 预扣前拒绝；原生 `/v1/messages` 可用（Claude 里仅此型号与另一个 5 系型号声明该协议）；缓存价已配置，未验收
 
-Chat 接口用 `max_tokens`，不要带 GPT 专用的 `reasoning_effort` / `max_completion_tokens`。Claude 5 与 Fable 四个型号是三段缓存价（读 / 5 分钟写 / 1 小时写），也是目前**唯一放行显式 `cache_control`** 的一组，写法见[缓存](#缓存)；**结构化输出未开放**——实测不遵循 schema，`response_format` 的 `json_schema` / `json_object` 在预扣前拒绝。Fable 系列工具只接受 `tool_choice: "auto"`，`required` 或指定函数会被上游 400（预扣全额退回）。4.x 系列只有输入 / 输出两项计价，`cache_control` 预扣前拒绝。已有 Anthropic SDK 的应用可走原生 [Messages 接口](/cn/api-reference/text/claude-messages)，Sonnet 5 / Opus 5 的原生文本非流式与流式已验证。
+Chat 接口用 `max_tokens`，不要带 GPT 专用的 `reasoning_effort` / `max_completion_tokens`。Claude 5 与 Fable 四个型号是三段缓存价（读 / 5 分钟写 / 1 小时写），也是目前**唯一放行显式 `cache_control`** 的一组，写法见[缓存](#缓存)；**结构化输出未开放**——实测不遵循 schema，`response_format` 的 `json_schema` / `json_object` 在预扣前拒绝。Fable 系列工具只接受 `tool_choice: "auto"`，`required` 或指定函数会被上游 400（预扣全额退回）。4.x 系列只有输入 / 输出两项计价，`cache_control` 预扣前拒绝。已有 Anthropic SDK 的应用可走原生 [Messages 接口](/cn/api-reference/text/claude-messages)，但**只有 `claude-sonnet-5` 与 `claude-opus-5` 声明了 `anthropic_messages` 协议**；其余 Claude 型号打到 `/v1/messages` 会在预扣前拒绝，请走 Chat 接口。
 
 ### Google Gemini
 
@@ -237,16 +237,16 @@ Chat 接口用 `max_tokens`，不要带 GPT 专用的 `reasoning_effort` / `max_
 
 **型号备注**
 
-- `gemini-3.8-flash` — 原生协议已验证；隐式缓存读价，命中由上游决定
-- `gemini-3.7-flash` — 原生协议已验证；隐式缓存读价，命中由上游决定
-- `gemini-3.6-flash` — 原生协议已验证；官方规格 1,048,576 / 65,536，本渠道边界未验证；缓存命中未验收
+- `gemini-3.8-flash` — 渠道声明上限 1,048,576 入 / 65,536 出；原生协议已验证；隐式缓存读价，命中由上游决定
+- `gemini-3.7-flash` — 渠道声明上限 1,048,576 入 / 65,536 出；原生协议已验证；隐式缓存读价，命中由上游决定
+- `gemini-3.6-flash` — 渠道声明上限 1,048,576 入 / 65,536 出；原生协议已验证；缓存命中未验收
 - `gemini-3.5-flash` — 原生协议已验证
 - `gemini-3.1-pro-preview` — 200K 长上下文分档；原生协议已验证
 - `gemini-3-flash-preview` — 原生协议已验证
 - `gemini-2.5-pro` — 200K 长上下文分档；原生协议已验证
 - `gemini-2.5-flash-lite` — 原生协议已验证
 
-OpenAI 兼容入口之外，Gemini 还有原生入口 `POST /v1beta/models/{model}:generateContent`（流式 `:streamGenerateContent?alt=sse`），见 [Gemini 原生接口](/cn/api-reference/text/gemini-native)。原生响应用 `usageMetadata` 报告用量、不带 `usage.cost`；`candidatesTokenCount` 与 `thoughtsTokenCount` 分开报告，计费输出是两者之和。Pro 型号（`gemini-2.5-pro` / `gemini-3.1-pro-preview`）有 200K 长上下文分档，超过 200,000 输入总量后整单切换。3.6 / 3.7 / 3.8 Flash 有隐式缓存读价，是否命中由上游决定；其余型号两项计价。Gemini **全系显式缓存**（`cache_control` / `cachedContent`）在预扣前拒绝，只开放自动缓存；内置工具、`web_search_options` 以及 `standard` / `default` 以外的 `service_tier` 同样拒绝。
+OpenAI 兼容入口之外，下列型号还声明了 Gemini 原生协议：`gemini-2.5-flash-lite` `gemini-2.5-pro` `gemini-3-flash-preview` `gemini-3.1-pro-preview` `gemini-3.5-flash` `gemini-3.6-flash` `gemini-3.7-flash` `gemini-3.8-flash`（`gemini-3.5-flash-lite` 只走 Chat）。原生入口是 `POST /v1beta/models/{model}:generateContent`（流式 `:streamGenerateContent?alt=sse`），见 [Gemini 原生接口](/cn/api-reference/text/gemini-native)。原生响应用 `usageMetadata` 报告用量、不带 `usage.cost`；`candidatesTokenCount` 与 `thoughtsTokenCount` 分开报告，计费输出是两者之和。Pro 型号（`gemini-2.5-pro` / `gemini-3.1-pro-preview`）有 200K 长上下文分档，超过 200,000 输入总量后整单切换。3.6 / 3.7 / 3.8 Flash 有隐式缓存读价，是否命中由上游决定；其余型号两项计价。Gemini **全系显式缓存**（`cache_control` / `cachedContent`）在预扣前拒绝，只开放自动缓存；内置工具、`web_search_options` 以及 `standard` / `default` 以外的 `service_tier` 同样拒绝。
 
 ### DeepSeek
 

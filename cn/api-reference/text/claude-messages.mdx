@@ -228,7 +228,9 @@ public class Main {
 <ParamField body="model" type="string" required>
   模型 ID
 
-  原生信封当前只承载 Anthropic 型号。已验证原生非流式与流式文本的是 `claude-sonnet-5` 和 `claude-opus-5`；其余 Claude 型号的价格与已验证能力见[文本模型总览 · Anthropic](/cn/api-reference/text/overview#anthropic)。
+  **只有 `claude-sonnet-5` 与 `claude-opus-5` 声明了 `anthropic_messages` 协议**，本接口只服务这两个型号。其余 Claude 型号（Fable 系列与 4.x 全部）只走 Chat，打到本接口会在**额度预扣前拒绝**，请改用[通用对话接口](/cn/api-reference/text/general-chat)。
+
+  这两个型号的价格、缓存档位与已验证能力见[文本模型总览 · Anthropic](/cn/api-reference/text/overview#anthropic)。
 
   函数调用参数生成目前只在 Chat 接口验证，原生多轮工具流程与图像输入不在已验收范围。
 </ParamField>
@@ -459,7 +461,7 @@ public class Main {
 
 ## 当前限制
 
-结构化输出配置在预扣前拒绝，本接口不承诺完整兼容所有 Claude 参数。缓存 TTL、极限上下文、原生工具流程和多模态能力按各型号在总览表上标明的范围逐项验证，官方支持不等于本渠道已验收。
+结构化输出在这两个型号上声明为不支持，相关配置在预扣前拒绝；本接口也不承诺完整兼容所有 Claude 参数。显式缓存 `cache_control` 在这两个型号上**放行**，把要复用的长前缀放进 `system` 数组即可，写法与命中条件见[文本模型总览 · 缓存](/cn/api-reference/text/overview#缓存)。缓存 TTL、极限上下文、原生工具流程和多模态能力按各型号在总览表上标明的范围逐项验证，官方支持不等于本渠道已验收。
 
 SDK 的 base URL 应设为网关根地址（`https://www.qingbo.dev`），由 Anthropic SDK 自行追加 `/v1/messages`，不要重复添加 `/v1`。生态登录 token 不能代替模型 Key。
 

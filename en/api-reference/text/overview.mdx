@@ -198,7 +198,7 @@ Model groups also declare the protocols and capabilities this route has actually
 - `gpt-5-pro` — `/v1/responses` only; text and streaming are the accepted scope there
 - `o3-pro` — `/v1/responses` only; text and streaming are the accepted scope there
 
-GPT-5 and later use `max_completion_tokens` to cap output and `reasoning_effort` to pick a reasoning tier (acceptance used `"none"`; GPT-6 Astra was accepted with `"low"` only). `max_tokens` is rejected. Pro / Codex / o3-pro are served only on `/v1/responses`; the Chat endpoint does not route them. The 272K tier is judged on **total input**: exactly 272,000 stays on the base rate, anything above moves the whole request (cache and output included) to the long-context rate. GPT-5.6 cache writes cost 1.25× the tier's input rate and replace the ordinary input charge rather than adding to it; GPT-5.4 / 5.5 have no separate cache-write rate.
+GPT-5 and later use `max_completion_tokens` to cap output and `reasoning_effort` to pick a reasoning tier (acceptance used `"none"`; GPT-6 Astra was accepted with `"low"` only). `max_tokens` is rejected. `gpt-5-pro`, `gpt-5.2-pro`, `gpt-5.4-pro`, `gpt-5.3-codex` and `o3-pro` declare only the `openai_responses` protocol: they are served on the [Responses API](/en/api-reference/text/openai-multimodal) and rejected before reservation on Chat. The 272K tier is judged on **total input**: exactly 272,000 stays on the base rate, anything above moves the whole request (cache and output included) to the long-context rate. GPT-5.6 cache writes cost 1.25× the tier's input rate and replace the ordinary input charge rather than adding to it; GPT-5.4 / 5.5 have no separate cache-write rate.
 
 ### Anthropic
 
@@ -220,10 +220,10 @@ GPT-5 and later use `max_completion_tokens` to cap output and `reasoning_effort`
 
 - `claude-fable-5-1` — cache write 5-min 11.25, 1-hour 18; route-declared limits 1M in / 128K out; JSON Schema not enabled (returned Markdown-wrapped text in tests); tools accept only `tool_choice: "auto"`; required / named choices are rejected upstream; cache rates configured; hits and TTL writes not accepted yet
 - `claude-fable-5` — cache write 5-min 11.25, 1-hour 18; route-declared limits 1M in / 128K out; JSON Schema not enabled; tools accept only `tool_choice: "auto"`; cache rates configured, not accepted yet
-- `claude-opus-5` — cache write 5-min 5.625, 1-hour 9; route-declared limits 128K in / 16K out; JSON Schema / json_object rejected before reservation; native `/v1/messages` non-streaming and streaming verified; cache rates configured, not accepted yet
-- `claude-sonnet-5` — cache write 5-min 2.25, 1-hour 3.6; route-declared limits 1M in / 128K out; JSON Schema / json_object rejected before reservation; native `/v1/messages` non-streaming and streaming verified; cache rates configured, not accepted yet
+- `claude-opus-5` — cache write 5-min 5.625, 1-hour 9; route-declared limits 128K in / 16K out; JSON Schema / json_object rejected before reservation; native `/v1/messages` available (only this and one other Claude 5 model declare that protocol); cache rates configured, not accepted yet
+- `claude-sonnet-5` — cache write 5-min 2.25, 1-hour 3.6; route-declared limits 1M in / 128K out; JSON Schema / json_object rejected before reservation; native `/v1/messages` available (only this and one other Claude 5 model declare that protocol); cache rates configured, not accepted yet
 
-Use `max_tokens` on the Chat endpoint; do not send the GPT-only `reasoning_effort` / `max_completion_tokens`. The four Claude 5 / Fable models carry three cache rates (read / 5-minute write / 1-hour write) and are the only models that currently **allow explicit `cache_control`** — see [Caching](#caching) for the request shape. **Structured output is not enabled** — tests did not follow the schema, so `response_format` with `json_schema` / `json_object` is rejected before reservation. Fable models accept only `tool_choice: "auto"`; `required` or a named function returns 400 upstream (the reservation is fully refunded). The 4.x line bills input / output only and rejects `cache_control` before reservation. Apps built on the Anthropic SDK can use the native [Messages endpoint](/en/api-reference/text/claude-messages); native non-streaming and streaming text is verified for Sonnet 5 / Opus 5.
+Use `max_tokens` on the Chat endpoint; do not send the GPT-only `reasoning_effort` / `max_completion_tokens`. The four Claude 5 / Fable models carry three cache rates (read / 5-minute write / 1-hour write) and are the only models that currently **allow explicit `cache_control`** — see [Caching](#caching) for the request shape. **Structured output is not enabled** — tests did not follow the schema, so `response_format` with `json_schema` / `json_object` is rejected before reservation. Fable models accept only `tool_choice: "auto"`; `required` or a named function returns 400 upstream (the reservation is fully refunded). The 4.x line bills input / output only and rejects `cache_control` before reservation. Apps built on the Anthropic SDK can use the native [Messages endpoint](/en/api-reference/text/claude-messages), but **only `claude-sonnet-5` and `claude-opus-5` declare the `anthropic_messages` protocol**; any other Claude model sent to `/v1/messages` is rejected before reservation — use the Chat endpoint instead.
 
 ### Google Gemini
 
@@ -241,16 +241,16 @@ Use `max_tokens` on the Chat endpoint; do not send the GPT-only `reasoning_effor
 
 **Model notes**
 
-- `gemini-3.8-flash` — native protocol verified; implicit cache-read rate; hits decided upstream
-- `gemini-3.7-flash` — native protocol verified; implicit cache-read rate; hits decided upstream
-- `gemini-3.6-flash` — native protocol verified; official spec 1,048,576 / 65,536; route limits not verified; cache hit not accepted yet
+- `gemini-3.8-flash` — route-declared limits 1,048,576 in / 65,536 out; native protocol verified; implicit cache-read rate; hits decided upstream
+- `gemini-3.7-flash` — route-declared limits 1,048,576 in / 65,536 out; native protocol verified; implicit cache-read rate; hits decided upstream
+- `gemini-3.6-flash` — route-declared limits 1,048,576 in / 65,536 out; native protocol verified; cache hit not accepted yet
 - `gemini-3.5-flash` — native protocol verified
 - `gemini-3.1-pro-preview` — 200K long-context tier; native protocol verified
 - `gemini-3-flash-preview` — native protocol verified
 - `gemini-2.5-pro` — 200K long-context tier; native protocol verified
 - `gemini-2.5-flash-lite` — native protocol verified
 
-Besides the OpenAI-compatible endpoint, Gemini has a native entry `POST /v1beta/models/{model}:generateContent` (streaming: `:streamGenerateContent?alt=sse`), see [Gemini native API](/en/api-reference/text/gemini-native). Native responses report usage in `usageMetadata` without `usage.cost`; `candidatesTokenCount` and `thoughtsTokenCount` are reported separately and billed output is their sum. The Pro models (`gemini-2.5-pro` / `gemini-3.1-pro-preview`) have a 200K long-context tier that switches the whole request above 200,000 total input. 3.6 / 3.7 / 3.8 Flash have an implicit cache-read rate whose hits are decided upstream; the other models bill two rates. Explicit caching (`cache_control` / `cachedContent`) is rejected before reservation **across the whole Gemini line** — only automatic caching is open. Built-in tools, `web_search_options` and any `service_tier` other than `standard` / `default` are rejected as well.
+Besides the OpenAI-compatible endpoint, these models also declare the Gemini native protocol: `gemini-2.5-flash-lite`, `gemini-2.5-pro`, `gemini-3-flash-preview`, `gemini-3.1-pro-preview`, `gemini-3.5-flash`, `gemini-3.6-flash`, `gemini-3.7-flash`, `gemini-3.8-flash` (`gemini-3.5-flash-lite` is Chat-only). The native entry is `POST /v1beta/models/{model}:generateContent` (streaming: `:streamGenerateContent?alt=sse`), see [Gemini native API](/en/api-reference/text/gemini-native). Native responses report usage in `usageMetadata` without `usage.cost`; `candidatesTokenCount` and `thoughtsTokenCount` are reported separately and billed output is their sum. The Pro models (`gemini-2.5-pro` / `gemini-3.1-pro-preview`) have a 200K long-context tier that switches the whole request above 200,000 total input. 3.6 / 3.7 / 3.8 Flash have an implicit cache-read rate whose hits are decided upstream; the other models bill two rates. Explicit caching (`cache_control` / `cachedContent`) is rejected before reservation **across the whole Gemini line** — only automatic caching is open. Built-in tools, `web_search_options` and any `service_tier` other than `standard` / `default` are rejected as well.
 
 ### DeepSeek
 

@@ -275,7 +275,7 @@ public class Main {
 
   For the full list of models with prices and verified capabilities, see the [Text Models Overview](/en/api-reference/text/overview); live availability comes from `GET /v1/models`.
 
-  Switching models means changing this field only. Which parameters work depends on that model's verified capabilities — not every OpenAI option is available everywhere: GPT-5 and later use `max_completion_tokens` and `reasoning_effort`, Claude uses `max_tokens`, and GPT Pro / Codex / o3-pro accept only the [Responses API](/en/api-reference/text/openai-multimodal).
+  Switching models means changing this field only. Which parameters work depends on that model's verified capabilities — not every OpenAI option is available everywhere: GPT-5 and later use `max_completion_tokens` and `reasoning_effort`, Claude uses `max_tokens`, and `gpt-5-pro`, `gpt-5.2-pro`, `gpt-5.4-pro`, `gpt-5.3-codex` and `o3-pro` accept only the [Responses API](/en/api-reference/text/openai-multimodal).
 </ParamField>
 
 <ParamField body="messages" type="array" required>
@@ -586,7 +586,7 @@ A missing final `usage`, a dropped connection or a response without a cost field
     SSE event handling and how to read the final usage frame
   </Card>
   <Card title="Responses API" icon="layer-group" href="/en/api-reference/text/openai-multimodal">
-    Image input, hosted tools and the GPT Pro / Codex models
+    The five Responses-only models
   </Card>
   <Card title="Native envelopes" icon="code-branch" href="/en/api-reference/text/claude-messages">
     [Claude Messages](/en/api-reference/text/claude-messages) · [Gemini native](/en/api-reference/text/gemini-native)
