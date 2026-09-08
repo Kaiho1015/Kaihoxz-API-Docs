@@ -4,6 +4,10 @@ description: "OpenAI Sora 2 与 Sora 2 Pro：文生视频与图生视频，原�
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
+<Warning>
+**上游停用预告**：OpenAI 已公告 Sora 2 系列与 Videos API 于 **2026-09-24** 关闭，清波 API `sora-2` / `sora-2-pro` 同日下架，此后提交的任务会被拒绝且不计费。替代模型与说明见 [运营公告](/cn/changelog/notices)。
+</Warning>
+
 OpenAI Sora 2 生成物理表现稳定、自带同步音轨（对白、音效与环境声）的写实视频，多镜头一致性强。本页覆盖 `sora-2` 与 `sora-2-pro`：两个模型的动作、参数集合和取值范围完全相同，只有可选分辨率不同，换档只改 `model`。生成请求统一走 `POST /v1/tasks` 异步提交。
 
 ## 快速开始

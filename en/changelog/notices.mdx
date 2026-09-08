@@ -2,6 +2,56 @@
 title: "Service Notices"
 ---
 
+<Update label="2026-09-10" description="Important · New release (tentative)">
+**The new QWave API portal, catalog and billing rules are live**
+
+The portal, model catalog and documentation have been rebuilt around one idea: one key, every price tier in the open. API paths and API keys are unchanged, so no code changes are needed.
+
+**What is new**
+
+- **Portal and console**: home, the model catalog ([/explore](https://qingbo.dev/explore)), pricing ([/pricing](https://qingbo.dev/pricing)), rankings and the console are all redesigned. English lives at `/`, Chinese at `/zh-Hans-CN`. Old paths under `/v2` and `/zh` redirect automatically.
+- **Model catalog**: 92 media model groups (34 image, 52 video, 6 audio) plus every text model. Each model's price tiers, supported actions and parameters are public on its catalog page, comparable by entry price and filterable by vendor and task.
+- **One task endpoint**: image, video and audio all go through `POST /v1/tasks`, with `action` selecting generate, edit, extend and so on, and `ref_task_id` chaining a follow-up onto an earlier task. Text models keep the OpenAI-compatible `/v1/chat/completions`.
+- **Billing rules**: everything is priced in USD. A task freezes the quoted amount on submission; upstream errors, timeouts and content refusals release it automatically. Models settled on token usage (Nano Banana official, GPT Image official, Gemini Omni) settle on actual usage after completion and refund the difference. Every freeze and release is visible in the console's call log.
+- **Documentation**: every media model page was rewritten with the same structure (Quick start / Request parameters / Billing / Limits). [Model updates](/en/changelog/models) and [Price updates](/en/changelog/pricing) record every launch, delisting and price change.
+
+<Note>
+Existing API keys, request paths and response shapes are unchanged. Prices on the catalog pages and in Price updates are authoritative; if a locally cached price list disagrees, the catalog wins.
+</Note>
+</Update>
+
+<Update label="2026-09-08" description="Upstream shutdown notice · Gemini Omni Flash preview">
+**`gemini-omni-flash-preview` will stop on 2026-09-30 with the upstream**
+
+Google made `gemini-omni-1.1-flash` generally available on 2026-08-27 and turns the preview endpoint off on **September 30, 2026**. `gemini-omni-flash-preview` on QWave API is delisted the same day; tasks submitted afterwards are rejected and not charged.
+
+- **Migration**: change `model` to `gemini-omni-1.1-flash`; the request shape is the same. Note that the GA model defaults to `720p` and adds a `360p` draft tier and `4k`, each priced differently — see the billing table on the model page.
+- **Docs**: [Gemini Omni Flash](/en/api-reference/video/omni/gemini-omni-flash)
+</Update>
+
+<Update label="2026-09-08" description="Upstream shutdown notice · Sora 2">
+**`sora-2` / `sora-2-pro` will stop on 2026-09-24 with the upstream**
+
+OpenAI has announced that the Sora 2 models and the Videos API shut down on **September 24, 2026** (announced 2026-03-24). `sora-2` and `sora-2-pro` on this platform are delisted the same day and stop accepting new tasks.
+
+<Warning>
+Tasks submitted to `sora-2` / `sora-2-pro` after 2026-09-24 are rejected outright and incur no charge. Tasks submitted and completed before then are unaffected; save your output links in time.
+</Warning>
+
+- **Alternatives**: for realistic video with a native audio track, consider `veo3.1-fast` / `veo3.1-quality`, `kling-v3` or `seedance-2.0`. Each model page documents its request shape; text-to-video and image-to-video actions are available on all of them.
+- **Docs**: [Sora 2 Series](/en/api-reference/video/sora)
+</Update>
+
+<Update label="2026-09-08" description="Upstream shutdown notice · Speech to text">
+**`whisper-1` / `gpt-4o-transcribe` / `gpt-4o-mini-transcribe` will stop on 2027-02-26 with the upstream**
+
+OpenAI has announced that these three transcription models shut down on **February 26, 2027** (announced 2026-08-26) and recommends migrating to `gpt-transcribe` / `gpt-live-transcribe`. This platform delists the three models on the upstream shutdown day and will announce the replacement models here ahead of time once they are wired in.
+
+- **Scope**: the three models on `POST /v1/audio/transcriptions`. Speech synthesis via `gpt-4o-mini-tts` is not affected.
+- **Advice**: keep `model` configurable in new transcription integrations so the switch is a one-line change.
+- **Docs**: [Speech to Text](/en/api-reference/audio/whisper-transcription)
+</Update>
+
 <Update label="2026-07-10" description="Important · Access change">
 **Notice: Web access from mainland China will be closed**
 

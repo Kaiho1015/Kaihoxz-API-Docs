@@ -4,6 +4,10 @@ description: "模型自定时长的 Gemini Omni 视频模型：文本、参考�
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
+<Warning>
+**上游停用预告**：Google 将于 **2026-09-30** 关闭 `gemini-omni-flash-preview` 预览端点，清波 API 同日下架该模型；把 `model` 改为 `gemini-omni-1.1-flash` 即可迁移，说明见 [运营公告](/cn/changelog/notices)。
+</Warning>
+
 本页覆盖 Omni 系列里由模型决定时长的两个模型：`gemini-omni-1.1-flash` 与 `gemini-omni-flash-preview`。两者共用同一套请求形状和同一种计费方式（按分辨率档 × 秒数），差别在分辨率档位、参考素材上限和可用的图片入参——换模型只改 `model`。需要成片时长精确落在 4 / 6 / 8 / 10 秒时，用 [Omni-Flash-Ext](/cn/api-reference/video/omni/omni-flash-ext)。
 
 ## 快速开始
