@@ -3,8 +3,36 @@ title: "Pricing Updates"
 ---
 
 <Note>
-Pricing changes apply only to calls made **after** the change takes effect; historical calls are unaffected. Each model's live unit price is shown in the [Models overview](/en/docs/models) and the console "Model Market"; the cost of each call is authoritative as returned in `cost` / `usage.cost`.
+This page lists, newest first, each model's launch pricing and the price changes that followed. Launch entries show the model's **current** unit price (earlier prices are in the corresponding "Price change" entries); retired models are kept and marked with their retirement date. Pricing changes apply only to calls made **after** the change takes effect; historical calls are unaffected. Each model's live unit price is shown in the [Models overview](/en/docs/models) and the console "Model Market"; check each call's cost fields and units against [Request & Response Format](/en/docs/request-response) and the relevant endpoint documentation.
 </Note>
+
+<Update label="2026-09-08" description="Model launch">
+**3 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `claude-fable-5-1` | input \$9 · output \$45 · cache read \$0.225 · cache write \$11.25 · cache write (1h) \$18 (per 1M tokens) |
+| `gemini-3.8-flash` | input \$0.675 · output \$3.375 · cache read \$0.0675 (per 1M tokens) |
+| `gpt-6-astra` | input \$9 · output \$45 · cache read \$0.9 · cache write \$11.25; above 272K input tokens: input \$18 / output \$67.5 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-09-07" description="Pricing change">
+**Two audio prices cut; Kling 3.0 Turbo and Nano Banana Economy re-based on official list prices**
+
+| Model | Change |
+|---|---|
+| `whisper-1` | \$0.03 → **\$0.0271** per minute (re-based on actual supplier cost; a cut) |
+| `gpt-4o-mini-tts` | \$13.5 → **\$2.25** per 1M characters (the upstream settles in text tokens; re-based on actual cost; a cut) |
+| `kling-3.0-turbo` | 720p \$0.112 → **\$0.1287** /s, 1080p \$0.14 → **\$0.1611** /s (aligned to APIMart list price × 0.9) |
+| `gemini-3-pro-image-rev` | `1k` / `2k` \$0.0375 → **\$0.03375** per image; `4k` added at **\$0.045** |
+| `gemini-3.1-flash-image-rev` | Re-based on list price × 0.9: `0.5k` / `1k` **\$0.016875**, `2k` **\$0.0225**, `4k` **\$0.028125** per image |
+| `gemini-3.1-flash-lite-image-rev` | `1k` **\$0.015626** per image |
+
+Effective immediately; only calls made after the change are affected.
+</Update>
 
 <Update label="2026-09-04" description="Pricing change">
 **Reference-video billing realigned per vendor; gpt-image default quality; FLUX.2 reference images by MP tier**
@@ -16,11 +44,11 @@ Calls carrying a reference video used to be approximated as "output seconds × 2
 | Reference seconds counted, tier switched | Seedance 2.x, Wan 2.7 R2V / VideoEdit | (reference-video seconds + output seconds) × the **video-reference** rate |
 | Reference seconds counted, same tier | MiniMax H3 / H3-Max / H3-Regeneration | (reference-video seconds + output seconds) × the same tier's rate |
 | Tier switched, reference seconds free | Kling Omni / Video-O1, SkyReels V4 | output seconds × the **video-reference** rate |
-| Reference seconds only, no clip price | Omni-Flash-Ext | reference-video seconds × a per-second rate ($0.09 at 720p / 1080p, $0.27 at 4K); the clip price is not charged |
+| Reference seconds only, no clip price | Omni-Flash-Ext | reference-video seconds × a per-second rate (\$0.09 at 720p / 1080p, \$0.27 at 4K); the clip price is not charged |
 
 For Kling's two `*-motion-control` models the reference video carries no separate charge; output duration equals the reference video's duration, and `720P` bills at the standard tier, `1080P` at the professional tier.
 
-**Price cuts in this batch**: `seedance-2.0` family with a reference video (480p $0.082 → **$0.045** per second, other tiers reduced proportionally — the video-reference rate is below the text-to-video rate) and Kling `motion-control` at 720P.
+**Price cuts in this batch**: `seedance-2.0` family with a reference video (480p \$0.082 → **\$0.045** per second, other tiers reduced proportionally — the video-reference rate is below the text-to-video rate) and Kling `motion-control` at 720P.
 
 Two more changes:
 
@@ -33,7 +61,7 @@ Effective **immediately**, for calls made after the change. Live prices are in [
 <Update label="2026-09-03" description="Pricing change">
 **whisper-1 price change**
 
-`whisper-1`: $0.0054 → **$0.03** per minute (billed per second, rounded up). The upstream bills whisper-1 above OpenAI's list price and we realign to cost; for cheaper transcription use `gpt-4o-mini-transcribe` ($0.0027/min) or `gpt-4o-transcribe` ($0.0054/min), both with better accuracy. Effective immediately.
+`whisper-1`: \$0.0054 → **\$0.03** per minute (billed per second, rounded up). The upstream bills whisper-1 above OpenAI's list price and we realign to cost; for cheaper transcription use `gpt-4o-mini-transcribe` (\$0.0027/min) or `gpt-4o-transcribe` (\$0.0054/min), both with better accuracy. Effective immediately.
 </Update>
 
 <Update label="2026-09-03" description="Pricing change">
@@ -43,13 +71,25 @@ FLUX.2 is billed upstream by **megapixel (MP) tier**. `1K` (1024×1024 ≈ 1.05 
 
 | Model | `1K` | `2K` | Reference image / each |
 |---|---|---|---|
-| `flux-2-pro` | $0.027 → **$0.0405** | $0.0675 (unchanged) | $0.0135 → **$0.027** |
-| `flux-2-flex` | $0.045 → **$0.09** | $0.18 (unchanged) | $0.045 → **$0.09** |
-| `flux-2-max` | $0.063 → **$0.09** | $0.144 (unchanged) | $0.027 → **$0.054** |
+| `flux-2-pro` | \$0.027 → **\$0.0405** | \$0.0675 (unchanged) | \$0.0135 → **\$0.027** |
+| `flux-2-flex` | \$0.045 → **\$0.09** | \$0.18 (unchanged) | \$0.045 → **\$0.09** |
+| `flux-2-max` | \$0.063 → **\$0.09** | \$0.144 (unchanged) | \$0.027 → **\$0.054** |
 
-`seedream-5.0-lite`: $0.028286 → **$0.035** per image (no upstream discount on the list price; adjusted per our pricing rule).
+`seedream-5.0-lite`: \$0.028286 → **\$0.035** per image (no upstream discount on the list price; adjusted per our pricing rule).
 
 `seedream-4.5` no longer offers `1K` (upstream only bills 2K / 4K); `imagen-4.0` is delisted (upstream no longer serves it). Effective **immediately**.
+</Update>
+
+<Update label="2026-09-03" description="Model launch">
+**2 models launched · pricing**
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gemini-omni-1.1-flash` | Per second: 360p \$0.0333 · 720p \$0.099 · 1080p \$0.1485 · 4k \$0.297/s |
+| `omni-flash-ext` | Per clip: 360p 4s \$0.16875 · 360p 6s \$0.19687 · 360p 8s \$0.225 · 360p 10s \$0.25312 · 720p 4s \$0.28125 · 720p 6s \$0.3375 · 720p 8s \$0.39375 · 720p 10s \$0.45; reference video per second 360p \$0.045 · 720p \$0.09 · 1080p \$0.09 · 4k \$0.27 |
+
 </Update>
 
 <Update label="2026-09-02" description="Billing change">
@@ -63,7 +103,7 @@ For the models below, reference images (`image_urls`) are now **charged per imag
 | `qwen-image-3.0` / `qwen-image-3.0-pro` | $0.002571 |
 | `grok-imagine-image` | $0.0018 |
 | `grok-imagine-image-quality` / `grok-imagine-image-2.0` | $0.009 |
-| `flux-2-pro` / `flux-2-max` / `flux-2-flex` | $0.0135 / $0.027 / $0.045 (up to 8 reference images now accepted) |
+| `flux-2-pro` / `flux-2-max` / `flux-2-flex` | \$0.0135 / \$0.027 / \$0.045 (up to 8 reference images now accepted) |
 | `gpt-image-2` / `gpt-image-1.5` | $0.0025 (gpt-image-2 previously used 1–3 / 4+ image tiers; now linear) |
 | `gpt-image-1` | $0.0031 |
 
@@ -77,8 +117,8 @@ The upstream list price of the standard (`-rev`) tiers dropped; ours follow:
 
 | Model | 1K / 2K | 4K |
 |---|---|---|
-| `gemini-3-pro-image-preview-rev` (Nano Banana Pro, standard) | $0.045 → **$0.03375** | $0.073125 → **$0.045** |
-| `gemini-3.1-flash-image-preview-rev` (Nano Banana 2, standard) | 1K $0.03375 → **$0.016875**, 2K $0.045 → **$0.0225** | $0.0675 → **$0.028125** |
+| `gemini-3-pro-image-preview-rev` (Nano Banana Pro, standard) | \$0.045 → **\$0.03375** | \$0.073125 → **\$0.045** |
+| `gemini-3.1-flash-image-preview-rev` (Nano Banana 2, standard) | 1K \$0.03375 → **\$0.016875**, 2K \$0.045 → **\$0.0225** | \$0.0675 → **\$0.028125** |
 
 Official direct tiers (without `-rev`) are unchanged. Effective **immediately**.
 </Update>
@@ -118,6 +158,173 @@ While onboarding new models we cross-checked existing ones against each vendor's
 Changes take effect **immediately** and apply only to calls made afterwards. Live unit prices are shown in the [Models overview](/en/docs/models) and the console "Model Market".
 </Update>
 
+<Update label="2026-09-01" description="Model launch">
+**`midjourney` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `midjourney` | Per image: imagine \$0.05067 · upscale \$0.06192 · variation \$0.06192 · high-variation \$0.06192 · low-variation \$0.06192 · reroll \$0.06192 · other actions \$0.05067–\$0.06192 |
+
+</Update>
+
+<Update label="2026-08-27" description="Model launch">
+**`suno` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `suno` | Per call: generate \$0.05625 · extend \$0.05625 · cover \$0.05625 · lyrics \$0.009 · stems \$0.1125 · inspo \$0.0765 · download \$0.0018 · other actions \$0.0009–\$0.27 |
+
+</Update>
+
+<Update label="2026-08-20" description="Model launch">
+**`gemini-3.7-flash` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gemini-3.7-flash` | input \$0.675 · output \$3.375 · cache read \$0.0675 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-08-19" description="Model launch">
+**`grok-4.6` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `grok-4.6` | input \$1.8 · output \$5.4 · cache read \$0.45; above 200K input tokens: input \$3.6 / output \$10.8 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-08-14" description="Model launch">
+**2 models launched · pricing**
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `grok-imagine-image-2.0` | Per image: 1k \$0.054 · 2k \$0.072; reference image \$0.009 each |
+| `grok-imagine-image-2.0-rev` | Per image: \$0.01875 |
+
+</Update>
+
+<Update label="2026-08-13" description="Model launch">
+**`wan3.0-video` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `wan3.0-video` | Per second: 480p \$0.045 · 720p \$0.09 · 1080p \$0.18/s |
+
+</Update>
+
+<Update label="2026-08-11" description="Model launch">
+**3 models launched · pricing**
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `qwen-image-3.0` | Per image: 1k \$0.02228 · 2k \$0.02228; reference image \$0.00248 each |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `flux-3-video` | Per second: with reference video fhd \$0.477 · hd \$0.369/s |
+| `flux-3-video-draft` | Per second: with reference video hd \$0.108/s |
+
+</Update>
+
+<Update label="2026-08-10" description="Model launch">
+**`qwen3.8-max` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `qwen3.8-max` | input \$1.485 · output \$4.4559 · cache read \$0.1854 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-08-07" description="Model launch">
+**4 models launched · pricing**
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `minimax-h3` | Per second: 768p \$0.072 · 2k \$0.117/s; with reference video 768p \$0.072 · 2k \$0.117/s; reference video per second 768p \$0.072 · 2k \$0.117; reference images beyond 5: \$0.036 each |
+| `minimax-h3-context-ir` (retired) | input \$0.87 · output \$3.45 (per 1M tokens) |
+| `minimax-h3-regeneration` | Per second: 2k \$0.045/s; with reference video 2k \$0.045/s; reference video per second 2k \$0.045; reference images beyond 5: \$0.0225 each |
+| `seedance-2.5` | Per second: 480p \$0.103 · 720p \$0.231 · 1080p \$0.409/s; with reference video 480p \$0.072 · 720p \$0.1458 · 1080p \$0.25866/s; reference video per second 480p \$0.072 · 720p \$0.1458 · 1080p \$0.25866 |
+
+</Update>
+
+<Update label="2026-07-31" description="Model launch">
+**`claude-opus-5` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `claude-opus-5` | input \$4.5 · output \$22.5 · cache read \$0.45 · cache write \$5.625 · cache write (1h) \$9 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-07-28" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gemini-3.5-flash-lite` | input \$0.27 · output \$2.25 (per 1M tokens) |
+| `gemini-3.6-flash` | input \$1.35 · output \$6.75 · cache read \$0.135 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-07-27" description="Model launch">
+**`qwen-image-3.0-pro` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `qwen-image-3.0-pro` | Per image: 1k \$0.03094 · 2k \$0.06188; reference image \$0.00248 each |
+
+</Update>
+
+<Update label="2026-07-23" description="Model launch">
+**`kimi-k3` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `kimi-k3` | input \$2.7 · output \$13.5 · cache read \$0.27 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-07-16" description="Model launch">
+**3 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-5.6-luna` | input \$0.18 · output \$1.08 · cache read \$0.018 · cache write \$0.225; above 272K input tokens: input \$0.36 / output \$1.62 (per 1M tokens) |
+| `gpt-5.6-sol` | input \$3.6 · output \$18 · cache read \$0.36 · cache write \$4.5; above 272K input tokens: input \$7.2 / output \$27 (per 1M tokens) |
+| `gpt-5.6-terra` | input \$1.8 · output \$10.8 · cache read \$0.18 · cache write \$2.25; above 272K input tokens: input \$3.6 / output \$16.2 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-07-15" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `grok-4.5` | input \$1.8 · output \$5.4; above 200K input tokens: input \$3.6 / output \$10.8 (per 1M tokens) |
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `seedream-5.0-pro` | Per image: 1k \$0.0405 · 2k \$0.081 |
+
+</Update>
+
 <Update label="2026-07-11" description="Pricing change">
 **Pricing synced to official for some image / video models**
 
@@ -134,14 +341,1220 @@ Following upstream official price changes, unit prices for the following models 
 Effective **immediately**; applies only to calls made after the change. Current prices are shown in the [Models overview](/en/docs/models) and the console "Model Market".
 </Update>
 
+<Update label="2026-07-07" description="Model launch">
+**4 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `claude-sonnet-5` | input \$1.8 · output \$9 · cache read \$0.18 · cache write \$2.25 · cache write (1h) \$3.6 (per 1M tokens) |
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gemini-3.1-flash-lite-image` | By actual token usage: image input \$0.225 · image output \$27 · text input \$0.225 · text output \$1.35 (per 1M tokens) |
+| `gemini-3.1-flash-lite-image-rev` | Per image: 1k \$0.01563 |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gemini-omni-flash-preview` | Per second: 720p \$0.099/s |
+
+</Update>
+
+<Update label="2026-06-29" description="Model launch">
+**`happyhorse-1.1` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `happyhorse-1.1` | Per second: 720p \$0.14625 · 1080p \$0.1935/s |
+
+</Update>
+
 <Update label="2026-06-24" description="Pricing change">
 **Seedance 2.0 pricing synced to official**
 
 - `seedance-2.0` unit prices are now synced to official rates, and the new **4K** tier is live for billing. Current prices are shown in the [Models overview](/en/docs/models) and the console "Model Market".
 </Update>
 
+<Update label="2026-06-24" description="Model launch">
+**`kling-3.0-turbo` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `kling-3.0-turbo` | Per second: 720p \$0.1287 · 1080p \$0.1611/s |
+
+</Update>
+
+<Update label="2026-06-23" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `glm-5.2` | input \$1.26 · output \$3.96 (per 1M tokens) |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `seedance-2.0-mini` | Per second: 480p \$0.0144 · 720p \$0.0288/s; with reference video 480p \$0.0072 · 720p \$0.01557/s; reference video per second 480p \$0.0072 · 720p \$0.01557 |
+
+</Update>
+
+<Update label="2026-06-22" description="Model launch">
+**`kimi-k2.7-code-highspeed` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `kimi-k2.7-code-highspeed` | input \$1.71 · output \$7.2 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-06-19" description="Model launch">
+**`kimi-k2.7-code` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `kimi-k2.7-code` | input \$0.855 · output \$3.6 (per 1M tokens) |
+
+</Update>
+
 <Update label="2026-06-17" description="Pricing change">
 **Pricing synced for some video models**
 
 - Unit prices for some video models were synced to official rates. Current prices are shown in the [Models overview](/en/docs/models) and the console "Model Market".
+</Update>
+
+<Update label="2026-06-16" description="Model launch">
+**`claude-fable-5` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `claude-fable-5` | input \$9 · output \$45 · cache read \$0.9 · cache write \$11.25 · cache write (1h) \$18 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-06-08" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `minimax-m3` | input \$0.27 · output \$1.08 (per 1M tokens) |
+| `qwen3.7-plus` | input \$0.2208 · output \$0.8808; above 256K input tokens: input \$0.59472 / output \$2.37672 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-06-06" description="Model launch">
+**4 models launched · pricing**
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `grok-imagine-1.5-edit-rev` | Per image: \$0.01688 |
+| `grok-imagine-1.5-rev` | Per image: \$0.01688 |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `grok-imagine-video-1.5` | Per second: 480p \$0.072 · 720p \$0.126 · 1080p \$0.225/s; reference images beyond 0: \$0.009 each |
+| `grok-imagine-video-1.5-rev` | Per second: 480p \$0.01148 · 720p \$0.02151/s |
+
+</Update>
+
+<Update label="2026-06-05" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `grok-build-0.1` | input \$0.9 · output \$1.8; above 200K input tokens: input \$1.8 / output \$3.6 (per 1M tokens) |
+| `step-3.7-flash` | input \$0.18 · output \$1.035 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-06-04" description="Model launch">
+**`claude-opus-4-8` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `claude-opus-4-8` | input \$4.5 · output \$22.5 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-05-28" description="Model launch">
+**`qwen3.7-max` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `qwen3.7-max` | input \$1.485 · output \$4.4559 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-05-26" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gemini-3.5-flash` | input \$1.35 · output \$8.1 (per 1M tokens) |
+| `gemini-flash-latest` (retired) | input \$1.35 · output \$8.1 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-05-07" description="Model launch">
+**`grok-4.3` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `grok-4.3` | input \$1.125 · output \$2.25; above 200K input tokens: input \$2.25 / output \$4.5 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-05-04" description="Model launch">
+**`happyhorse-1.0` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `happyhorse-1.0` | Per second: 720p \$0.14625 · 1080p \$0.25875/s |
+
+</Update>
+
+<Update label="2026-05-01" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `deepseek-v4-flash` |  (per 1M tokens) |
+| `deepseek-v4-pro` |  (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-04-30" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-5.5` | input \$4.5 · output \$27 · cache read \$0.45; above 272K input tokens: input \$9 / output \$40.5 (per 1M tokens) |
+| `mimo-v2.5-pro` | input \$0.3915 · output \$0.783 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-04-28" description="Model launch">
+**2 models launched · pricing**
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-image-2` | By actual token usage: cached image input \$1.8 · cached text input \$1.125 · image input \$7.2 · image output \$27 · text input \$4.5 (per 1M tokens) |
+| `gpt-image-2-rev` | Per image: 1k \$0.00956 · 2k \$0.01575 · 4k \$0.02363 |
+
+</Update>
+
+<Update label="2026-04-27" description="Model launch">
+**`kimi-k2.6` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `kimi-k2.6` | input \$0.855 · output \$3.6 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-04-25" description="Model launch">
+**`flow-music` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `flow-music` | Per call: generate \$0.0675 · extend \$0.0675 · cover \$0.0675 · lyrics \$0.0225 · stems \$0.0675 · other actions \$0.01125–\$0.0675 |
+
+</Update>
+
+<Update label="2026-04-23" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `claude-opus-4-7` | input \$4.5 · output \$22.5 (per 1M tokens) |
+| `qwen3.6-flash` | input \$0.1485 · output \$0.891; above 256K input tokens: input \$0.594 / output \$3.5649 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-04-20" description="Model launch">
+**2 models launched · pricing**
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `vidu-q3` | Per second: 540p \$0.045 · 720p \$0.09 · 1080p \$0.1125/s |
+| `vidu-q3-mix` | Per second: 720p \$0.1125 · 1080p \$0.135/s |
+
+</Update>
+
+<Update label="2026-04-14" description="Model launch">
+**`glm-5.1` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `glm-5.1` | input \$1.26 · output \$3.96 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-04-10" description="Model launch">
+**4 models launched · pricing**
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `grok-imagine-image-quality` | Per image: 1k \$0.045 · 2k \$0.063; reference image \$0.009 each |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `wan2.7` | Per second: 720p \$0.09 · 1080p \$0.135/s; with reference video 720p \$0.09 · 1080p \$0.135/s; reference video per second 720p \$0.09 · 1080p \$0.135 |
+| `wan2.7-r2v` | Per second: 720p \$0.09 · 1080p \$0.135/s; with reference video 720p \$0.09 · 1080p \$0.135/s; reference video per second 720p \$0.09 · 1080p \$0.135 |
+| `wan2.7-videoedit` | Per second: 720p \$0.09 · 1080p \$0.135/s |
+
+</Update>
+
+<Update label="2026-04-09" description="Model launch">
+**`qwen3.6-plus` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `qwen3.6-plus` | input \$0.2484 · output \$1.4859; above 256K input tokens: input \$0.9909 / output \$5.9418 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-04-08" description="Model launch">
+**2 models launched · pricing**
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `wan2.7-image` | Per image: \$0.027 |
+| `wan2.7-image-pro` | Per image: \$0.0675 |
+
+</Update>
+
+<Update label="2026-04-07" description="Model launch">
+**2 models launched · pricing**
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `pixverse-v6` | Per second: 360p \$0.018 · 540p \$0.027 · 720p \$0.036 · 1080p \$0.072/s; with audio 360p \$0.027 · 540p \$0.036 · 720p \$0.045 · 1080p \$0.09/s |
+| `veo3.1-lite` | Per clip: 720p \$0.07875 · 1080p \$0.07875 |
+
+</Update>
+
+<Update label="2026-03-26" description="Model launch">
+**2 models launched · pricing**
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `skyreels-v4-fast` | Per second: 480p \$0.072 · 720p \$0.099 · 1080p \$0.2475/s; with reference video 480p \$0.135 · 720p \$0.18 · 1080p \$0.45/s |
+| `skyreels-v4-std` | Per second: 480p \$0.099 · 720p \$0.126 · 1080p \$0.315/s; with reference video 480p \$0.162 · 720p \$0.225 · 1080p \$0.5625/s |
+
+</Update>
+
+<Update label="2026-03-25" description="Model launch">
+**`minimax-m2.7` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `minimax-m2.7` | input \$0.27 · output \$1.08 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-03-24" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-5.4-mini` | input \$0.675 · output \$4.05 (per 1M tokens) |
+| `gpt-5.4-nano` | input \$0.18 · output \$1.125 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-03-17" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `grok-4.20-0309-non-reasoning` | input \$1.125 · output \$2.25; above 200K input tokens: input \$2.25 / output \$4.5 (per 1M tokens) |
+| `grok-4.20-0309-reasoning` | input \$1.125 · output \$2.25; above 200K input tokens: input \$2.25 / output \$4.5 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-03-12" description="Model launch">
+**3 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-5.4` | input \$2.25 · output \$13.5 · cache read \$0.225; above 272K input tokens: input \$4.5 / output \$20.25 (per 1M tokens) |
+| `gpt-5.4-pro` | input \$27 · output \$162; above 272K input tokens: input \$54 / output \$243 (per 1M tokens) |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `kling-v3-motion-control` | Per second: 720p \$0.1134 · 1080p \$0.1512/s |
+
+</Update>
+
+<Update label="2026-03-10" description="Model launch">
+**`gemini-3.1-flash-lite-preview` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gemini-3.1-flash-lite-preview` (retired) | input \$0.225 · output \$1.35 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-03-05" description="Model launch">
+**2 models launched · pricing**
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gemini-3.1-flash-image` | By actual token usage: image input \$0.45 · image output \$54 · text input \$0.45 · text output \$2.7 (per 1M tokens) |
+| `gemini-3.1-flash-image-rev` | Per image: 1k \$0.01688 · 2k \$0.0225 · 4k \$0.02813 |
+
+</Update>
+
+<Update label="2026-03-03" description="Model launch">
+**`gpt-5.3-codex` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-5.3-codex` | input \$1.575 · output \$12.6 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-02-26" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gemini-3.1-pro-preview` | input \$1.8 · output \$10.8; above 200K input tokens: input \$3.6 / output \$16.2 (per 1M tokens) |
+| `gemini-3.1-pro-preview-customtools` (retired) | input \$1.8 · output \$10.8; above 200K input tokens: input \$3.6 / output \$16.2 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-02-24" description="Model launch">
+**`claude-sonnet-4-6` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `claude-sonnet-4-6` | input \$2.7 · output \$13.5 (per 1M tokens) |
+
+</Update>
+
+<Update label="2026-02-20" description="Model launch">
+**`seedream-5.0-lite` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `seedream-5.0-lite` | Per image: 2k \$0.0315 · 3k \$0.0315 · 4k \$0.0315 |
+
+</Update>
+
+<Update label="2026-02-19" description="Model launch">
+**6 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `glm-5` | input \$0.9 · output \$2.88 (per 1M tokens) |
+| `minimax-m2.5` | input \$0.27 · output \$1.08 (per 1M tokens) |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `seedance-2.0` | Per second: 480p \$0.07 · 720p \$0.15 · 1080p \$0.37 · 4k \$0.78/s; with reference video 480p \$0.045 · 720p \$0.09657 · 1080p \$0.24264 · 4k \$0.49986/s; reference video per second 480p \$0.045 · 720p \$0.09657 · 1080p \$0.24264 · 4k \$0.49986 |
+| `seedance-2.0-face` (retired 2026-09-08) | Per second: 480p \$0.07 · 720p \$0.15 · 1080p \$0.37/s |
+| `seedance-2.0-fast` | Per second: 480p \$0.0405 · 720p \$0.09/s; with reference video 480p \$0.02664 · 720p \$0.05769/s; reference video per second 480p \$0.02664 · 720p \$0.05769 |
+| `seedance-2.0-fast-face` (retired 2026-09-08) | Per second: 480p \$0.0405 · 720p \$0.09/s |
+
+</Update>
+
+<Update label="2026-02-18" description="Model launch">
+**`vidu-q3-turbo` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `vidu-q3-turbo` | Per second: 540p \$0.036 · 720p \$0.054 · 1080p \$0.063/s |
+
+</Update>
+
+<Update label="2026-02-17" description="Model launch">
+**2 models launched · pricing**
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `qwen-image-2.0` | Per image: \$0.0225 |
+| `qwen-image-2.0-pro` | Per image: \$0.05625 |
+
+</Update>
+
+<Update label="2026-02-12" description="Model launch">
+**3 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `claude-opus-4-6` | input \$4.5 · output \$22.5 (per 1M tokens) |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `kling-v3` | Per second: 720p \$0.0756 · 1080p \$0.1008/s; with audio 720p \$0.1134 · 1080p \$0.1512/s |
+| `kling-v3-omni` | Per second: 720p \$0.0756 · 1080p \$0.1008/s; with audio 720p \$0.1008 · 1080p \$0.126/s; with reference video 720p \$0.1134 · 1080p \$0.1512/s |
+
+</Update>
+
+<Update label="2026-02-09" description="Model launch">
+**3 models launched · pricing**
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `grok-imagine-1.0-edit-rev` (retired 2026-09-08) | Per image: \$0.01688 |
+| `grok-imagine-1.0-rev` (retired 2026-09-08) | Per image: \$0.01688 |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `grok-imagine-1.0-video-rev` | Per second: 480p \$0.01148 · 720p \$0.02151/s |
+
+</Update>
+
+<Update label="2026-02-04" description="Model launch">
+**2 models launched · pricing**
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `grok-imagine-image` | Per image: 1k \$0.018 · 2k \$0.018; reference image \$0.0018 each |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `grok-imagine-video` | Per second: 480p \$0.045 · 720p \$0.063/s |
+
+</Update>
+
+<Update label="2026-02-03" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `kimi-k2.5` (retired) | input \$0.54 · output \$2.7 (per 1M tokens) |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `vidu-q3-pro` | Per second: 540p \$0.063 · 720p \$0.135 · 1080p \$0.144/s |
+
+</Update>
+
+<Update label="2026-01-22" description="Model launch">
+**`wan2.6-i2v-flash` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `wan2.6-i2v-flash` | Per second: 720p \$0.0225 · 1080p \$0.03375/s; with audio 720p \$0.045 · 1080p \$0.0675/s |
+
+</Update>
+
+<Update label="2026-01-21" description="Model launch">
+**`gpt-5.2-codex` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-5.2-codex` (retired) | input \$1.575 · output \$12.6 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-12-29" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `glm-4.7` | input \$0.54 · output \$1.98 (per 1M tokens) |
+| `minimax-m2.1` | input \$0.27 · output \$1.08 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-12-24" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gemini-3-flash-preview` | input \$0.45 · output \$2.7 (per 1M tokens) |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `kling-v2-6-motion-control` | Per second: 720p \$0.063 · 1080p \$0.1008/s |
+
+</Update>
+
+<Update label="2025-12-23" description="Model launch">
+**5 models launched · pricing**
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `flux-2-max` | Per image: \$0.09 |
+| `gpt-image-1.5` | By actual token usage: cached image input \$1.8 · cached text input \$1.125 · image input \$7.2 · image output \$28.8 · text input \$4.5 · text output \$9 (per 1M tokens) |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `seedance-1.5-pro` | Per second: 480p \$0.0216 · 720p \$0.0468 · 1080p \$0.116/s; with audio 480p \$0.0216 · 720p \$0.0468 · 1080p \$0.116/s |
+| `wan2.6` | Per second: 1080p \$0.0945/s |
+| `wan2.6-i2v` | Per second: 720p \$0.0747 · 1080p \$0.1233/s |
+
+</Update>
+
+<Update label="2025-12-18" description="Model launch">
+**3 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-5.2` | input \$1.575 · output \$12.6 (per 1M tokens) |
+| `gpt-5.2-chat-latest` (retired) | input \$1.575 · output \$12.6 (per 1M tokens) |
+| `gpt-5.2-pro` | input \$18.9 · output \$151.2 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-12-11" description="Model launch">
+**`gpt-5.1-codex-max` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-5.1-codex-max` (retired) | input \$1.125 · output \$9 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-12-10" description="Model launch">
+**2 models launched · pricing**
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `seedream-4.5` | Per image: 2k \$0.036 · 4k \$0.036 |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `kling-v2-6` | Per second: 720p \$0.0378 · 1080p \$0.063/s; with audio 1080p \$0.126/s |
+
+</Update>
+
+<Update label="2025-12-08" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `deepseek-v3.2` | input \$0.252 · output \$0.378 (per 1M tokens) |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `kling-video-o1` | Per second: 720p \$0.0756 · 1080p \$0.1008/s; with reference video 720p \$0.1134 · 1080p \$0.1512/s |
+
+</Update>
+
+<Update label="2025-12-04" description="Model launch">
+**`z-image-turbo` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `z-image-turbo` | Per image: \$0.01125 |
+
+</Update>
+
+<Update label="2025-12-02" description="Model launch">
+**2 models launched · pricing**
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `flux-2-flex` | Per image: \$0.09 |
+| `flux-2-pro` | Per image: \$0.0405 |
+
+</Update>
+
+<Update label="2025-12-01" description="Model launch">
+**`claude-opus-4-5` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `claude-opus-4-5` | input \$4.5 · output \$22.5 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-11-27" description="Model launch">
+**2 models launched · pricing**
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gemini-3-pro-image` | By actual token usage: image input \$1.8 · image output \$108 · text input \$1.8 · text output \$10.8 (per 1M tokens) |
+| `gemini-3-pro-image-rev` | Per image: 1k \$0.03375 · 2k \$0.03375 · 4k \$0.045 |
+
+</Update>
+
+<Update label="2025-11-25" description="Model launch">
+**`gemini-3-pro-preview` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gemini-3-pro-preview` (retired) | input \$1.8 · output \$10.8; above 200K input tokens: input \$3.6 / output \$16.2 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-11-20" description="Model launch">
+**5 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-5.1` | input \$1.125 · output \$9 (per 1M tokens) |
+| `gpt-5.1-2025-11-13` (retired) | input \$1.125 · output \$9 (per 1M tokens) |
+| `gpt-5.1-chat-latest` (retired) | input \$1.125 · output \$9 (per 1M tokens) |
+| `gpt-5.1-codex` (retired) | input \$1.125 · output \$9 (per 1M tokens) |
+| `gpt-5.1-codex-mini` (retired) | input \$0.225 · output \$1.8 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-11-04" description="Model launch">
+**2 models launched · pricing**
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `minimax-hailuo-2.3` | Per second: 768p \$0.0549 · 1080p \$0.081/s |
+| `minimax-hailuo-2.3-fast` | Per second: 768p \$0.0279 · 1080p \$0.0477/s |
+
+</Update>
+
+<Update label="2025-10-31" description="Model launch">
+**`seedance-1.0-pro-fast` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `seedance-1.0-pro-fast` | Per second: 480p \$0.009 · 720p \$0.02 · 1080p \$0.0432/s |
+
+</Update>
+
+<Update label="2025-10-27" description="Model launch">
+**`deepseek-ocr` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `deepseek-ocr` (retired) | input \$0.0513 · output \$0.23085 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-10-22" description="Model launch">
+**5 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `claude-haiku-4-5` | input \$0.9 · output \$4.5 (per 1M tokens) |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `veo3.1-fast` | Per second: 720p \$0.072 · 1080p \$0.09/s; with audio 720p \$0.09 · 1080p \$0.108/s |
+| `veo3.1-fast-rev` | Per clip: 720p \$0.1575 · 1080p \$0.1575 |
+| `veo3.1-quality` | Per second: 720p \$0.18 · 1080p \$0.18/s; with audio 720p \$0.36 · 1080p \$0.36/s |
+| `veo3.1-quality-rev` | Per clip: 720p \$1.125 · 1080p \$1.125 |
+
+</Update>
+
+<Update label="2025-10-21" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-5-search-api` (retired) | input \$1.125 · output \$9 (per 1M tokens) |
+| `gpt-5-search-api-2025-10-14` (retired) | input \$1.125 · output \$9 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-10-13" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-5-pro` | input \$13.5 · output \$108 (per 1M tokens) |
+| `gpt-5-pro-2025-10-06` (retired) | input \$13.5 · output \$108 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-10-07" description="Model launch">
+**4 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `glm-4.6` | input \$0.54 · output \$1.98 (per 1M tokens) |
+
+**Video**
+
+| Model ID | Price (USD) |
+|---|---|
+| `sora-2` | Per second: 720p \$0.09/s |
+| `sora-2-preview` (retired 2026-09-03) | Per second: 720p \$0.09/s |
+| `sora-2-pro` | Per second: 720p \$0.27 · 1024p \$0.45 · 1080p \$0.63/s |
+
+</Update>
+
+<Update label="2025-10-06" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `claude-sonnet-4-5` | input \$2.7 · output \$13.5 (per 1M tokens) |
+| `deepseek-v3.2-exp` | input \$0.252 · output \$0.378 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-10-01" description="Model launch">
+**`wan2.5-preview` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `wan2.5-preview` | Per second: 480p \$0.0378 · 720p \$0.0747 · 1080p \$0.1233/s |
+
+</Update>
+
+<Update label="2025-09-30" description="Model launch">
+**`gpt-5-codex` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-5-codex` (retired) | input \$1.125 · output \$9 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-09-29" description="Model launch">
+**`deepseek-v3.1-terminus` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `deepseek-v3.1-terminus` | input \$0.504 · output \$1.512 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-09-16" description="Model launch">
+**`seedream-4.0` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `seedream-4.0` | Per image: 1k \$0.027 · 2k \$0.027 · 4k \$0.027 |
+
+</Update>
+
+<Update label="2025-09-02" description="Model launch">
+**2 models launched · pricing**
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gemini-2.5-flash-image-preview` (retired) | Per image: \$0.01406 |
+| `gemini-2.5-flash-image-preview-rev` | Per image: \$0.01406 |
+
+</Update>
+
+<Update label="2025-08-22" description="Model launch">
+**`imagen-4.0` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `imagen-4.0` (retired 2026-09-03) | Per image: \$0.045 |
+
+</Update>
+
+<Update label="2025-08-14" description="Model launch">
+**7 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-5` | input \$1.125 · output \$9 (per 1M tokens) |
+| `gpt-5-2025-08-07` (retired) | input \$1.125 · output \$9 (per 1M tokens) |
+| `gpt-5-chat-latest` (retired) | input \$1.125 · output \$9 (per 1M tokens) |
+| `gpt-5-mini` | input \$0.225 · output \$1.8 (per 1M tokens) |
+| `gpt-5-mini-2025-08-07` (retired) | input \$0.225 · output \$1.8 (per 1M tokens) |
+| `gpt-5-nano` | input \$0.045 · output \$0.36 (per 1M tokens) |
+| `gpt-5-nano-2025-08-07` (retired) | input \$0.045 · output \$0.36 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-07-29" description="Model launch">
+**`gemini-2.5-flash-lite` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gemini-2.5-flash-lite` | input \$0.09 · output \$0.36 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-07-18" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `kimi-k2` (retired) | input \$0.45 · output \$1.89 (per 1M tokens) |
+| `kimi-k2-instruct` (retired 2026-09-03) | input \$0.45 · output \$1.89 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-06-25" description="Model launch">
+**`minimax-hailuo-02` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `minimax-hailuo-02` | Per second: 512p \$0.0117 · 768p \$0.045 · 1080p \$0.09/s |
+
+</Update>
+
+<Update label="2025-06-24" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gemini-2.5-flash` (retired) | input \$0.27 · output \$2.25 (per 1M tokens) |
+| `gemini-2.5-pro` | input \$1.125 · output \$9; above 200K input tokens: input \$2.25 / output \$13.5 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-06-18" description="Model launch">
+**`seedance-1.0-pro` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `seedance-1.0-pro` | Per second: 480p \$0.0216 · 720p \$0.0468 · 1080p \$0.1044/s |
+
+</Update>
+
+<Update label="2025-06-17" description="Model launch">
+**`o3-pro` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `o3-pro` | input \$18 · output \$72 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-06-05" description="Model launch">
+**2 models launched · pricing**
+
+**Image**
+
+| Model ID | Price (USD) |
+|---|---|
+| `flux-kontext-max` | Per image: \$0.072 |
+| `flux-kontext-pro` | Per image: \$0.036 |
+
+</Update>
+
+<Update label="2025-06-04" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `deepseek-r1-0528` | input \$0.495 · output \$1.971 (per 1M tokens) |
+| `deepseek-r1-250528` (retired 2026-09-03) | input \$0.504 · output \$2.016 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-04-30" description="Model launch">
+**`gpt-image-1` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-image-1` | By actual token usage: cached image input \$2.25 · cached text input \$1.125 · image input \$9 · image output \$36 · text input \$4.5 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-04-23" description="Model launch">
+**4 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `o3` | input \$1.8 · output \$7.2 (per 1M tokens) |
+| `o3-2025-04-16` (retired) | input \$1.8 · output \$7.2 (per 1M tokens) |
+| `o4-mini` | input \$0.99 · output \$3.96 (per 1M tokens) |
+| `o4-mini-2025-04-16` (retired) | input \$0.99 · output \$3.96 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-04-21" description="Model launch">
+**6 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-4.1` | input \$1.8 · output \$7.2 (per 1M tokens) |
+| `gpt-4.1-2025-04-14` (retired) | input \$1.8 · output \$7.2 (per 1M tokens) |
+| `gpt-4.1-mini` | input \$0.36 · output \$1.44 (per 1M tokens) |
+| `gpt-4.1-mini-2025-04-14` (retired) | input \$0.36 · output \$1.44 (per 1M tokens) |
+| `gpt-4.1-nano` | input \$0.09 · output \$0.36 (per 1M tokens) |
+| `gpt-4.1-nano-2025-04-14` (retired) | input \$0.09 · output \$0.36 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-03-31" description="Model launch">
+**`deepseek-v3-0324` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `deepseek-v3-0324` (retired 2026-09-03) | input \$0.243 · output \$0.99 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-03-27" description="Model launch">
+**3 models launched · pricing**
+
+**Audio**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-4o-mini-transcribe` | \$0.0027 per minute of audio |
+| `gpt-4o-mini-tts` | \$2.25 per 1M characters of input text |
+| `gpt-4o-transcribe` | \$0.0054 per minute of audio |
+
+</Update>
+
+<Update label="2025-03-26" description="Model launch">
+**`o1-pro` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `o1-pro` (retired) | input \$135 · output \$540 (per 1M tokens) |
+
+</Update>
+
+<Update label="2025-02-07" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `o3-mini` | input \$0.99 · output \$3.96 (per 1M tokens) |
+| `o3-mini-2025-01-31` (retired) | input \$0.99 · output \$3.96 (per 1M tokens) |
+
+</Update>
+
+<Update label="2024-12-24" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `o1` | input \$13.5 · output \$54 (per 1M tokens) |
+| `o1-2024-12-17` (retired) | input \$13.5 · output \$54 (per 1M tokens) |
+
+</Update>
+
+<Update label="2024-11-27" description="Model launch">
+**`gpt-4o-2024-11-20` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-4o-2024-11-20` (retired) | input \$2.25 · output \$9 (per 1M tokens) |
+
+</Update>
+
+<Update label="2024-10-03" description="Model launch">
+**`omni-moderation-latest` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `omni-moderation-latest` (retired) | input \$0.18 · output \$0.18 (per 1M tokens) |
+
+</Update>
+
+<Update label="2024-08-13" description="Model launch">
+**`gpt-4o-2024-08-06` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-4o-2024-08-06` (retired 2026-09-03) | input \$2.25 · output \$9 (per 1M tokens) |
+
+</Update>
+
+<Update label="2024-07-25" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-4o-mini` (retired) | input \$0.135 · output \$0.54 (per 1M tokens) |
+| `gpt-4o-mini-2024-07-18` (retired) | input \$0.135 · output \$0.54 (per 1M tokens) |
+
+</Update>
+
+<Update label="2024-05-20" description="Model launch">
+**2 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-4o` (retired) | input \$2.25 · output \$9 (per 1M tokens) |
+| `gpt-4o-2024-05-13` (retired) | input \$4.5 · output \$13.5 (per 1M tokens) |
+
+</Update>
+
+<Update label="2024-02-01" description="Model launch">
+**3 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-3.5-turbo-0125` (retired) | input \$0.45 · output \$1.35 (per 1M tokens) |
+| `text-embedding-3-large` (retired) | input \$0.117 · output \$0.117 (per 1M tokens) |
+| `text-embedding-3-small` (retired) | input \$0.018 · output \$0.018 (per 1M tokens) |
+
+</Update>
+
+<Update label="2023-11-13" description="Model launch">
+**3 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-3.5-turbo-1106` (retired) | input \$0.9 · output \$1.8 (per 1M tokens) |
+
+**Audio**
+
+| Model ID | Price (USD) |
+|---|---|
+| `tts-1` (retired 2026-09-03) | \$13.5 per 1M characters of input text |
+| `tts-1-hd` (retired 2026-09-03) | \$27 per 1M characters of input text |
+
+</Update>
+
+<Update label="2023-06-20" description="Model launch">
+**`gpt-3.5-turbo-16k` launched · pricing**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-3.5-turbo-16k` (retired) | input \$2.7 · output \$8.1 (per 1M tokens) |
+
+</Update>
+
+<Update label="2023-05-28" description="Model launch">
+**3 models launched · pricing**
+
+**Text**
+
+| Model ID | Price (USD) |
+|---|---|
+| `gpt-3.5-turbo` (retired) | input \$0.45 · output \$1.35 (per 1M tokens) |
+| `text-embedding-ada-002` (retired) | input \$0.09 · output \$0.09 (per 1M tokens) |
+
+**Audio**
+
+| Model ID | Price (USD) |
+|---|---|
+| `whisper-1` | \$0.0271 per minute of audio |
+
 </Update>

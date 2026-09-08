@@ -1,193 +1,226 @@
 ---
 title: "Hailuo 系列"
-description: "MiniMax 海螺视频 — Hailuo 2.3 / 2.3 Fast,15 种中括号运镜指令"
+description: "MiniMax 海螺视频：Hailuo 02、2.3 与 2.3 Fast，文生视频与首帧 / 首尾帧生视频"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-MiniMax 海螺(Hailuo)视频生成系列。
+MiniMax 海螺（Hailuo）视频系列。本页覆盖 `minimax-hailuo-02`、`minimax-hailuo-2.3` 和 `minimax-hailuo-2.3-fast`：三个模型走同一个任务接口，都只有 `generate` 一个动作，从文字或首帧图片生成一段固定时长的视频，换档只改 `model`。需要参考视频、参考音频或原生音轨时用 [MiniMax H3](/cn/api-reference/video/minimax-h3)。
 
-**两档可选** — `minimax-hailuo-2.3`(2.3 主版,新增 15 种运镜指令)、`minimax-hailuo-2.3-fast`(2.3 加速档,更快更便宜,适合预览/批量)。
-
-支持文生视频(T2V)与图生视频(I2V)。
-
-## 定价
-
-<Note>
-本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
-
-**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
-**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
-</Note>
-
-## 调用示例
+## 快速开始
 
 <CodeGroup>
 
-```bash 文生视频(最简)
+```bash 文生视频
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: hailuo-demo-001" \
   -d '{
     "model": "minimax-hailuo-2.3",
-    "prompt": "一只柴犬穿宇航服在月球上行走,电影感光影",
-    "duration": 6,
-    "resolution": "1080p",
-    "aspect_ratio": "16:9"
-  }'
-```
-
-```bash 图生视频(I2V 首帧)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "minimax-hailuo-2.3",
-    "prompt": "人物缓缓走向镜头",
-    "image_urls": ["https://cdn.example.com/portrait.jpg"],
+    "action": "generate",
+    "prompt": "山间雾气缓缓散开，晨光落在古寺屋檐上，镜头缓慢推近",
     "duration": 6,
     "resolution": "1080p"
   }'
 ```
 
-```bash 2.3 带运镜指令
+```bash 首帧生视频
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "minimax-hailuo-2.3",
-    "prompt": "[推进] 山间雾气缭绕的古寺,[变焦推近] 屋檐下的铜铃随风轻摆",
+    "model": "minimax-hailuo-02",
+    "action": "generate",
+    "prompt": "人物缓缓抬头，风吹动头发",
+    "first_frame_image": "https://cdn.example.com/portrait.jpg",
     "duration": 10,
-    "resolution": "1080p",
-    "aspect_ratio": "16:9"
+    "resolution": "768p"
   }'
 ```
 
-```bash 加速档(2.3-fast)
+```bash 首尾帧
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "minimax-hailuo-02",
+    "action": "generate",
+    "prompt": "从白天过渡到夜晚，灯光逐盏亮起",
+    "first_frame_image": "https://cdn.example.com/day.jpg",
+    "last_frame_image": "https://cdn.example.com/night.jpg",
+    "duration": 10,
+    "resolution": "768p"
+  }'
+```
+
+```bash 加速档
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "minimax-hailuo-2.3-fast",
-    "prompt": "城市夜景,霓虹灯沿街闪烁",
-    "image_urls": ["https://cdn.example.com/city-night.jpg"],
+    "action": "generate",
+    "prompt": "城市夜景，霓虹灯沿街闪烁，镜头向右平移",
+    "first_frame_image": "https://cdn.example.com/city-night.jpg",
     "duration": 6,
     "resolution": "768p",
-    "aspect_ratio": "16:9"
+    "prompt_optimizer": true
   }'
 ```
 
 </CodeGroup>
 
-<ResponseExample>
-```json 提交成功
-{
-  "task_id": "task-wave1775285160b950328499",
-  "model": "minimax-hailuo-2.3",
-  "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
-}
-```
-</ResponseExample>
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
 
-提交后用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 轮询状态,详见 [任务系统](/cn/docs/task-system)。
-
-## 可用模型
-
-| 模型 ID | 分辨率 | 时长(秒) | Actions | 备注 |
-|---|---|---|---|---|
-| `minimax-hailuo-2.3` | 768p / 1080p | 6 / 10 | generate | 2.3 主版,prompt ≤ 2000 字符 |
-| `minimax-hailuo-2.3-fast` | 768p / 1080p | 6 / 10 | generate | 加速档,单价更低 |
-
-## 通用参数
+## 请求参数
 
 <ParamField body="model" type="string" required>
-  模型 ID,可选值:
-  - `minimax-hailuo-2.3`
-  - `minimax-hailuo-2.3-fast`
+  三选一：`minimax-hailuo-02`、`minimax-hailuo-2.3` 或 `minimax-hailuo-2.3-fast`。
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  `generate` — 本模型唯一动作。
-
-  **模式不靠 action 区分,靠传什么:** 只给 `prompt` 是文生视频;带 `image_urls` 是图生视频;带 `first_frame_image` + `last_frame_image` 是首尾帧;带 `video_urls` / `audio_urls` 是参考生视频。
+  `generate` 是本页三个模型唯一的动作。生成模式不由 `action` 区分：只给 `prompt` 是文生视频，带 `first_frame_image` 是首帧生视频，首帧加 `last_frame_image` 是首尾帧。
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
-  视频描述文本,最多 **2000 字符**;在文中以 `[指令]` 中括号嵌入运镜标签可触发对应镜头运动(详见下方 [运镜指令](#运镜指令-2-3-2-3-fast))
+  视频描述：场景、主体、动作、风格。`minimax-hailuo-2.3` 与 `minimax-hailuo-2.3-fast` 还支持在提示词里嵌入运镜标签，见[使用示例](#使用示例)。
 </ParamField>
 
-<ParamField body="aspect_ratio" type="string" default="16:9">
-  画面宽高比,可选值:
-  - `16:9` — 横版宽屏
-  - `9:16` — 竖版长屏
-  - `1:1` — 正方形
+<ParamField body="duration" type="integer">
+  视频时长（秒）。
+
+  - `minimax-hailuo-02`：`5` 或 `10`，默认 `5`
+  - `minimax-hailuo-2.3` 与 `minimax-hailuo-2.3-fast`：`6` 或 `10`，默认 `6`
 </ParamField>
 
-<ParamField body="resolution" type="string" default="768p">
-  输出分辨率,模型支持范围见 [可用模型](#可用模型) 表。可选值:
-  - `768p`
-  - `1080p`
+<ParamField body="resolution" type="string">
+  输出分辨率。
+
+  - `minimax-hailuo-02`：`512p`、`768p` 或 `1080p`，默认 `768p`
+  - `minimax-hailuo-2.3` 与 `minimax-hailuo-2.3-fast`：`768p` 或 `1080p`，默认 `768p`
 </ParamField>
 
-<ParamField body="duration" type="integer" default="6">
-  视频时长(秒)。支持 `6` / `10`
+<ParamField body="first_frame_image" type="string">
+  首帧图片 URL，作为视频的起始画面。`minimax-hailuo-2.3-fast` 必填。
 </ParamField>
 
-<ParamField body="image_urls" type="string[]">
-  参考图片 URL 数组,触发 **I2V** 模式;支持公网 URL 或 Base64。`minimax-hailuo-2.3-fast` 走图生视频时**必填**,**缺少时提交即被拒,不预扣。**
+<ParamField body="last_frame_image" type="string">
+  尾帧图片 URL，与 `first_frame_image` 配合做「从 A 变到 B」。只有 `minimax-hailuo-02` 支持。
 </ParamField>
 
-<ParamField body="callback_url" type="string">
-  Webhook 回调地址,任务终态时调用。详见 [回调机制](/cn/docs/sync-async#异步任务-webhook)
+<ParamField body="seed" type="integer">
+  随机种子。同一组参数配同一个种子会得到接近的结果。只有 `minimax-hailuo-2.3` 和 `minimax-hailuo-2.3-fast` 支持。
 </ParamField>
 
-<ParamField body="callback_events" type="string[]">
-  订阅的回调事件类型,默认全部终态
+<ParamField body="prompt_optimizer" type="boolean" default="true">
+  自动优化提示词。
 </ParamField>
 
-## 模型特定参数
+<ParamField body="fast_pretreatment" type="boolean" default="false">
+  缩短提示词优化耗时，速度更快，优化效果可能略降。
+</ParamField>
 
-两档均无额外特定参数,所有可选项见 [通用参数](#通用参数)。
+<ParamField body="watermark" type="boolean" default="false">
+  输出添加水印。
+</ParamField>
 
-## 运镜指令(2.3 / 2.3-fast)
+通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
 
-Hailuo 2.3 系列独家亮点 — **在 `prompt` 中以 `[指令]` 中括号嵌入** 即可触发对应镜头运动;同一句可叠加多个标签,后端会按顺序解析。
+本页三个模型都不接受 `image_urls`、`video_urls`、`audio_urls`、`aspect_ratio`、`n` 和 `negative_prompt`；`minimax-hailuo-02` 另外不接受 `seed`，`minimax-hailuo-2.3` 与 `minimax-hailuo-2.3-fast` 不接受 `last_frame_image`。以上之外的参数会返回 `400`，不计费。
 
-| 类别 | 指令 | 效果 |
+## 限制
+
+| 模型 | 条件 | 限制 |
 |---|---|---|
-| **位移** | `[左移]` | 镜头水平向左平移 |
-|  | `[右移]` | 镜头水平向右平移 |
-|  | `[上升]` | 镜头垂直向上抬升 |
-|  | `[下降]` | 镜头垂直向下落下 |
-| **推拉** | `[推进]` | 镜头物理向前推进 |
-|  | `[拉远]` | 镜头物理向后拉远 |
-| **摇镜** | `[左摇]` | 机身固定向左摇头 |
-|  | `[右摇]` | 机身固定向右摇头 |
-|  | `[上摇]` | 机身固定向上仰 |
-|  | `[下摇]` | 机身固定向下俯 |
-| **变焦** | `[变焦推近]` | 焦距变化模拟推近(机身不动) |
-|  | `[变焦拉远]` | 焦距变化模拟拉远(机身不动) |
-| **特殊** | `[晃动]` | 手持感抖动 |
-|  | `[跟随]` | 跟随主体运动 |
-|  | `[固定]` | 完全静止机位 |
+| `minimax-hailuo-02` | 每次请求 | 每次任务只生成一个视频。 |
+| `minimax-hailuo-02` | `resolution: "512p"` | 512p 只支持图生视频，需要提供首帧图片。 |
+| `minimax-hailuo-02` | `resolution: "1080p"` | 1080p 仅支持 5 秒。 |
+| `minimax-hailuo-02` | 传 `last_frame_image` | 尾帧必须与首帧一起提供。 |
+| `minimax-hailuo-2.3` `minimax-hailuo-2.3-fast` | 每次请求 | 本模型一次任务只产出一个结果，不支持用 n 批量生成 |
+| `minimax-hailuo-2.3` `minimax-hailuo-2.3-fast` | `resolution: "1080p"` | 1080p 只支持 6 秒 |
+| `minimax-hailuo-2.3-fast` | 每次请求 | 必须提供 `first_frame_image` |
 
-<Tip>
-**写法示例** — `"[推进] 古镇青石板路,[变焦推近] 雨水从屋檐滴落"` —— 镜头先向前推,再聚焦屋檐细节。
-</Tip>
+`minimax-hailuo-02` 每次请求最多接受 2 张图片，即首帧与尾帧各一张。
 
-## 资源限制
+## 计费
 
-| 项目 | 限制 |
+按**分辨率档 × 秒数**计费：分辨率决定每秒单价，`duration` 决定秒数，两者相乘就是这一单的费用，提交前即可确定。三个模型的每秒单价各不相同，同一个模型内 `1080p` 比 `768p` 贵、`768p` 比 `512p` 贵。
+
+`prompt_optimizer`、`fast_pretreatment`、`watermark`、`seed` 和首帧 / 尾帧图片都不影响价格。
+
+<Note>
+**本页不列具体单价**——单价会随上游调整，这里只讲计费维度与口径。
+
+实时单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。单次调用的实际费用见任务响应里的 `cost`：整数 quota，**500,000 quota = 1 USD**。
+</Note>
+
+只有成功出片才计费。任务失败、取消，或没有返回可用视频时，全额退款。
+
+## 响应
+
+```json 任务完成
+{
+  "task_id": "taski-81ee42dac9f06e79b8e55a611052aeed-task-wave1788773955b950509106",
+  "model": "minimax-hailuo-02",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788773955,
+  "completed_at": 1788774046,
+  "result": {
+    "videos": [
+      {
+        "url": ["https://cdn.example.com/result.mp4"],
+        "expires_at": 1789089508
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 58500,
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski-81ee42dac9f06e79b8e55a611052aeed-task-wave1788773955b950509106",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski-81ee42dac9f06e79b8e55a611052aeed-task-wave1788773955b950509106/cancel"
+  }
+}
+```
+
+`result.videos` 返回生成的视频，`expires_at` 是链接过期时间（Unix 秒），过期前把文件转存到自己的存储。完整字段说明见[查询任务状态](/cn/api-reference/task/status)。
+
+## 可用模型
+
+| 模型 ID | 分辨率 | 时长（秒） | 模式 | 备注 |
+|---|---|---|---|---|
+| `minimax-hailuo-02` | `512p` `768p`（默认）`1080p` | 5（默认）/ 10 | 文生视频、首帧、首尾帧 | `512p` 需要首帧；`1080p` 仅 5 秒 |
+| `minimax-hailuo-2.3` | `768p`（默认）`1080p` | 6（默认）/ 10 | 文生视频、首帧 | 支持运镜标签与 `seed` |
+| `minimax-hailuo-2.3-fast` | `768p`（默认）`1080p` | 6（默认）/ 10 | 首帧（必填） | 2.3 的加速档，单价更低 |
+
+## 使用示例
+
+`minimax-hailuo-2.3` 与 `minimax-hailuo-2.3-fast` 支持在 `prompt` 里用 `[标签]` 的写法指定镜头运动，标签用中文原文，可以和描述文字混排、也可以在一句里叠加多个：
+
+| 类别 | 标签 |
 |---|---|
-| 参考图片(`image_urls`) | URL 或 Base64,JPG/PNG/WEBP |
-| Prompt 长度 | ≤ 2000 字符 |
-| 时长 | 6 / 10 秒 |
-| 输出 | MP4,链接 24 小时有效 |
+| 平移 | `[左移]` `[右移]` |
+| 升降 | `[上升]` `[下降]` |
+| 推拉 | `[推进]` `[拉远]` |
+| 摇镜 | `[左摇]` `[右摇]` `[上摇]` `[下摇]` |
+| 变焦 | `[变焦推近]` `[变焦拉远]` |
+| 其他 | `[晃动]` `[跟随]` `[固定]` |
+
+```json 带运镜标签的请求体
+{
+  "model": "minimax-hailuo-2.3",
+  "action": "generate",
+  "prompt": "[推进] 古镇的青石板路，[变焦推近] 雨水从屋檐滴落",
+  "duration": 6,
+  "resolution": "1080p"
+}
+```
 
 ## 相关文档
 
-- [任务系统详解](/cn/docs/task-system) — 任务状态机 / 轮询节奏 / 异步推送
-- [请求响应格式](/cn/docs/request-response) — 通用错误码 / Headers / 限流
-- [认证](/cn/docs/authentication) — API Key 申请与使用
+- [MiniMax H3](/cn/api-reference/video/minimax-h3)
+- [视频生成概述](/cn/api-reference/video/overview)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

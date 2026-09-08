@@ -1,265 +1,318 @@
 ---
 title: "Veo 系列"
-description: "Google Veo 3.1 — 官方直连 Fast / Quality 双档(按秒、原生有声),标准 Fast / Lite / Quality 三档(按次固定价)"
+description: "Google Veo 3.1：官方版按秒计费的 4 / 6 / 8 秒生成，经济版按整片固定价并支持续写"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-Google Veo 3.1 视频生成模型,提供 **官方直连** 与 **标准接入** 两种渠道,共 **5 个子档**。所有子档时长均**固定 8 秒**,支持 720P / 1080P / 4K 三种分辨率。
+Google Veo 3.1 的视频模型线，分两条线路。官方版 `veo3.1-fast` 与 `veo3.1-quality` 支持 4 / 6 / 8 秒、首尾帧、原生音频和 `seed`，按秒计费；经济版 `veo3.1-lite`、`veo3.1-fast-rev`、`veo3.1-quality-rev` 通过聚合供应商接入，固定输出 8 秒、按整片固定价计费，两个 `-rev` 档还能把自己生成的视频接着往下续写。两条线路参数集合与计费方式都不同，不会自动互相切换。
 
-- **官方档**(`-official`):**按秒计费**(单价/秒 × 时长),原生支持音频(`generate_audio=true` 触发 `_sound` 加价档)。
-- **标准档**(无 `-official`):**按次计费**(单次固定价,**与时长无关**),不支持音频。
-
-| 档位 | 渠道 | 计费方式 | 音频 | 定位 |
-|---|---|---|---|---|
-| `veo3.1-quality` | 官方线 | 按秒 | 支持 | 旗舰档,最终交付质量 |
-| `veo3.1-fast` | 官方线 | 按秒 | 支持 | 加速档,适合迭代试稿 |
-| `veo3.1-quality-rev` | 备用线 | 按秒 | 不支持 | 标准旗舰子型 |
-| `veo3.1-fast-rev` | 备用线 | 按秒 | 不支持 | 标准加速子型 |
-| `veo3.1-lite` | 标准接入 | 按秒 | 不支持 | 标准轻量子型,低成本批量 |
-
-## 定价
-
-<Note>
-本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
-
-**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
-**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
-</Note>
-
-## 调用示例
+## 快速开始
 
 <CodeGroup>
 
-```bash 文生视频(官方档·最简)
+```bash 文生视频（官方版）
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: veo-demo-001" \
   -d '{
     "model": "veo3.1-fast",
-    "prompt": "雨夜霓虹街道,一辆红色跑车驶过水洼,电影感慢镜头",
+    "action": "generate",
+    "prompt": "航拍雪山日出，云海翻涌，镜头缓缓推进",
     "duration": 8,
     "resolution": "1080p",
     "aspect_ratio": "16:9"
   }'
 ```
 
-```bash 图生视频(I2V 首帧)
+```bash 首尾帧（官方版）
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "veo3.1-quality",
-    "prompt": "人物缓缓抬头微笑,头发被风吹起",
-    "image_urls": ["https://cdn.example.com/portrait.jpg"],
+    "action": "generate",
+    "prompt": "人物从低头到抬头微笑，光线由暗转亮",
+    "first_frame_image": "https://cdn.example.com/first.jpg",
+    "last_frame_image": "https://cdn.example.com/last.jpg",
     "duration": 8,
-    "resolution": "1080p"
+    "resolution": "1080p",
+    "resize_mode": "crop"
   }'
 ```
 
-```bash 带原生音频(仅官方档)
+```bash 原生音频（官方版）
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "veo3.1-quality",
-    "prompt": "海浪拍打礁石,海鸥鸣叫,远处轮船汽笛声",
+    "action": "generate",
+    "prompt": "海浪拍打礁石，海鸥鸣叫，远处传来汽笛声",
     "duration": 8,
-    "resolution": "1080p",
+    "resolution": "720p",
     "aspect_ratio": "16:9",
-    "generate_audio": true
+    "generate_audio": true,
+    "seed": 42
   }'
 ```
 
-```bash 4K 输出
+```bash 文生视频（经济版）
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "veo3.1-fast",
-    "prompt": "航拍雪山日出,云海翻涌,镜头缓缓推进",
+    "model": "veo3.1-lite",
+    "action": "generate",
+    "prompt": "夕阳下的海滨小镇，鸽群飞过钟楼",
     "duration": 8,
-    "resolution": "4k",
+    "resolution": "720p",
     "aspect_ratio": "16:9"
   }'
 ```
 
-```bash 标准档(按次,固定 8 秒)
+```bash 首尾帧（经济版）
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "veo3.1-quality-rev",
-    "prompt": "夕阳下的海滨小镇,鸽群飞过钟楼",
+    "action": "generate",
+    "prompt": "镜头从街角推到店门口，霓虹逐渐亮起",
+    "generation_type": "frame",
+    "image_urls": [
+      "https://cdn.example.com/first.jpg",
+      "https://cdn.example.com/last.jpg"
+    ],
     "duration": 8,
-    "resolution": "1080p",
-    "aspect_ratio": "16:9"
+    "resolution": "1080p"
+  }'
+```
+
+```bash 参考图（经济版）
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "veo3.1-fast-rev",
+    "action": "generate",
+    "prompt": "让这三张图里的角色、服装和场景出现在同一个镜头里",
+    "generation_type": "reference",
+    "image_urls": [
+      "https://cdn.example.com/character.jpg",
+      "https://cdn.example.com/outfit.jpg",
+      "https://cdn.example.com/scene.jpg"
+    ],
+    "duration": 8,
+    "resolution": "720p"
+  }'
+```
+
+```bash 续写（经济版）
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "veo3.1-fast-rev",
+    "action": "extend",
+    "ref_task_id": "task-wave1775285160b950328499",
+    "prompt": "镜头继续向前，走进店内",
+    "raw": false
   }'
 ```
 
 </CodeGroup>
 
-<ResponseExample>
-```json 提交成功
-{
-  "task_id": "task-wave1775285160b950328499",
-  "model": "veo3.1-quality",
-  "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
-}
-```
-</ResponseExample>
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
 
-提交后用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 轮询状态,详见 [任务系统](/cn/docs/task-system)。
+**接着往下做**：续写分两步。先用 `veo3.1-fast-rev` 或 `veo3.1-quality-rev` 提交 `action: "generate"` 拿到 `task_id`；等这个任务 `completed` 之后，把它的 `task_id` 作为 `ref_task_id` 提交 `action: "extend"`。`ref_task_id` 用的是上一步任务返回的 `task_id`，不是上游 ID，且必须是同一个模型、同一个 API Key 下已完成的 `generate` 任务。
 
-## 可用模型
+## 请求参数
 
-| 模型 ID | 渠道 | 计费 | 时长 | 分辨率 | 音频 |
-|---|---|---|---|---|---|
-| `veo3.1-quality` | 官方线 | 按秒 | 8 秒(固定) | 720P / 1080P / 4K | 支持 |
-| `veo3.1-fast` | 官方线 | 按秒 | 8 秒(固定) | 720P / 1080P / 4K | 支持 |
-| `veo3.1-quality-rev` | 备用线 | 按秒 | 8 秒(固定) | 720P / 1080P / 4K | 不支持 |
-| `veo3.1-fast-rev` | 备用线 | 按秒 | 8 秒(固定) | 720P / 1080P / 4K | 不支持 |
-| `veo3.1-lite` | 标准接入 | 按秒 | 8 秒(固定) | 720P / 1080P / 4K | 不支持 |
-
-## 通用参数
+### 两条线路共用
 
 <ParamField body="model" type="string" required>
-  模型 ID,可选 `veo3.1-quality` / `veo3.1-fast` / `veo3.1-quality-rev` / `veo3.1-fast-rev` / `veo3.1-lite`
+  模型 ID，取值见「可用模型」。
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  - `generate`：生成视频，5 个模型都支持
+  - `extend`：把已完成的视频接着往下续写，只有 `veo3.1-fast-rev` 与 `veo3.1-quality-rev` 支持；必须提供 `ref_task_id`
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
-  视频描述文本,必填。建议英文 prompt,详细描述场景、动作、风格
+  视频描述；`action: "extend"` 时描述续写部分的内容。
 </ParamField>
 
-<ParamField body="aspect_ratio" type="string" default="16:9">
-  画面宽高比,可选值:
-  - `16:9` — 横版宽屏
-  - `9:16` — 竖版长屏
-  - `1:1` — 正方形
+<ParamField body="duration" type="integer">
+  输出时长（秒），`action: "generate"` 时必填。官方版取 `4`、`6` 或 `8`，其中 `resolution: "1080p"` 只支持 `8`；经济版固定为 `8`。`action: "extend"` 不接受这个参数，续写时长由上游决定。
 </ParamField>
 
 <ParamField body="resolution" type="string" default="720p">
-  输出分辨率,可选值:
-  - `720p`
-  - `1080p`
-  - `4k`
+  输出分辨率：`720p` 或 `1080p`。
 </ParamField>
 
-<ParamField body="duration" type="integer" default="8">
-  视频时长(秒)。Veo 3.1 全档**固定 `8`**
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  画面比例：`16:9` 或 `9:16`。
 </ParamField>
 
-<ParamField body="image_urls" type="string[]">
-  参考图片 URL 数组。传入即触发图生视频(I2V):首张为首帧,第二张为尾帧
-</ParamField>
+### 官方版（`veo3.1-fast` / `veo3.1-quality`）
 
 <ParamField body="first_frame_image" type="string">
-  视频首帧图 URL(图生视频)
+  首帧图 URL。
 </ParamField>
 
 <ParamField body="last_frame_image" type="string">
-  视频尾帧图 URL,与 `first_frame_image` 配合控制首尾帧
+  尾帧图 URL，必须与 `first_frame_image` 一起提供。
+</ParamField>
+
+<ParamField body="negative_prompt" type="string">
+  负面提示词，描述不希望出现的内容。
 </ParamField>
 
 <ParamField body="seed" type="integer">
-  随机种子,用于复现生成结果,范围 `0` - `4294967295`
+  随机种子，用于复现生成结果。
 </ParamField>
 
-<ParamField body="callback_url" type="string">
-  Webhook 回调地址,任务终态时调用。详见 [回调机制](/cn/docs/sync-async#异步任务-webhook)
+<ParamField body="generate_audio" type="boolean" default="false">
+  是否生成原生音频。开启后走带声档计费。
 </ParamField>
 
-<ParamField body="callback_events" type="string[]">
-  订阅的回调事件类型,默认订阅终态(`completed` / `failed`)
+<ParamField body="person_generation" type="string">
+  人物生成策略：`allow_adult` 允许生成成年人物 / `disallow` 不生成人物。
 </ParamField>
 
-## 模型特定参数
+<ParamField body="resize_mode" type="string">
+  首尾帧与输出比例不一致时的处理方式：`pad` 补边 / `crop` 裁切。
+</ParamField>
+
+### 经济版（`veo3.1-lite` / `veo3.1-fast-rev` / `veo3.1-quality-rev`）
+
+<ParamField body="image_urls" type="string[]">
+  参考图 URL 数组，`veo3.1-fast-rev` 与 `veo3.1-quality-rev` 支持，张数按 `generation_type` 而定。`veo3.1-lite` 是纯文生视频，不接受图片。
+</ParamField>
+
+<ParamField body="generation_type" type="string">
+  图片的用法，提供 `image_urls` 时必填：
+
+  - `frame`：把图片当首帧 / 尾帧用，接受 1–2 张
+  - `reference`：把图片当参考素材用，接受 1–3 张；只有 `veo3.1-fast-rev` 支持
+</ParamField>
+
+<ParamField body="enable_gif" type="boolean" default="false">
+  额外输出一份 GIF。不能与 `resolution: "1080p"` 同时使用。
+</ParamField>
+
+<ParamField body="ref_task_id" type="string" required>
+  被续写的父任务 ID，`action: "extend"` 时必填。取上一步 `generate` 任务返回的 `task_id`。
+</ParamField>
+
+<ParamField body="raw" type="boolean" default="false">
+  `action: "extend"` 时是否只返回续写出来的那一段。`false` 返回拼接后的完整视频。
+</ParamField>
+
+通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
+
+官方版不接受 `image_urls`、`generation_type`、`enable_gif`、`ref_task_id` 和 `raw`；经济版不接受 `first_frame_image`、`last_frame_image`、`negative_prompt`、`seed`、`generate_audio`、`person_generation` 和 `resize_mode`。以上之外的参数会返回 `400`，不计费。
+
+## 限制
+
+| 模型 | 条件 | 限制 |
+|---|---|---|
+| 全部 | `action: "generate"` | 视频生成必须提供提示词和时长。 |
+| `veo3.1-fast`、`veo3.1-quality` | 提供了 `last_frame_image` | 尾帧必须与首帧一起提供。 |
+| `veo3.1-fast`、`veo3.1-quality` | `resolution: "1080p"` | 1080p 仅支持 8 秒。 |
+| `veo3.1-fast-rev`、`veo3.1-quality-rev` | `action: "generate"` | 经济版生成固定为 8 秒。 |
+| `veo3.1-fast-rev`、`veo3.1-quality-rev` | `action: "extend"` | 续写只接受父任务、提示词和 raw。 |
+| `veo3.1-fast-rev`、`veo3.1-quality-rev` | 提供了 `image_urls` | 提供图片时必须声明 generation_type。 |
+| `veo3.1-fast-rev`、`veo3.1-quality-rev` | `generation_type: "frame"` | frame 模式接受一至两张图片。 |
+| `veo3.1-fast-rev` | `generation_type: "reference"` | reference 模式最多接受三张图片。 |
+
+| 项目 | 模型 | 上限 |
+|---|---|---|
+| 参考图张数 | `veo3.1-fast-rev` | 3 张 |
+| 参考图张数 | `veo3.1-quality-rev` | 2 张 |
+| 参考图张数 | `veo3.1-lite` | 不接受图片 |
+| 首尾帧 | `veo3.1-fast`、`veo3.1-quality` | 首帧、尾帧各 1 张 |
+| 时长 | `veo3.1-fast`、`veo3.1-quality` | 4 / 6 / 8 秒，最长 8 秒 |
+| 时长 | `veo3.1-lite`、`veo3.1-fast-rev`、`veo3.1-quality-rev` | 固定 8 秒 |
+
+`action: "extend"` 的 `ref_task_id` 必须指向同一个模型下、状态已经是完成的 `generate` 任务；指向别的模型、别的动作或尚未完成的任务会返回 `400`，不计费。
+
+## 计费
+
+两条线路的计费方式不同，选型时先看这一节。
+
+### 官方版
+
+`veo3.1-fast` 与 `veo3.1-quality` 按**分辨率档 × 秒数**计费：`resolution` 决定档位（`720p` / `1080p`），秒数取请求里的 `duration`（`4`、`6` 或 `8`）。
+
+`generate_audio: true` 时换成带声档的每秒单价，仍然只乘 `duration`。两个分辨率都有带声档。首尾帧、`negative_prompt`、`seed` 不影响价格。
+
+### 经济版
+
+`veo3.1-lite`、`veo3.1-fast-rev`、`veo3.1-quality-rev` 按**整片固定价**计费：一次生成一次收费，与时长无关（输出固定 8 秒），分辨率是唯一的分档维度，参考图张数与 `generation_type` 不影响价格。
+
+`action: "extend"` 同样按整片固定价计一次费用，与续写出来的长度无关；`raw` 取 `true` 或 `false` 不影响价格。
 
 <Note>
-官方档与标准档参数有差:**仅官方档**支持 `generate_audio` / `enhance_prompt` / `person_generation` / `sample_count` / `resize_mode`;标准档参数更精简,且**不支持音频**。
+各模型的单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。
+
+看这一单实际花了多少：任务响应里的 `cost`（整数 quota，500,000 quota = 1 USD）。
 </Note>
 
-<Tabs>
-  <Tab title="veo3.1-quality / veo3.1-fast(官方)">
-    <ParamField body="generate_audio" type="boolean" default="false">
-      是否生成音频轨道。开启后触发 `_sound` 加价档(见定价表)
-    </ParamField>
+只有成功出片才计费。任务失败、取消，或没有返回可用视频时，全额退款。最终费用以任务响应里的 `cost` 为准，它是整数 quota 不是美元。
 
-    <ParamField body="sample_count" type="integer" default="1">
-      生成样本数,范围 1-4,当前建议用 `1`
-    </ParamField>
+## 响应
 
-    <ParamField body="resize_mode" type="string" default="pad">
-      图生视频时图片缩放策略,可选值:
-      - `pad` — 边缘填充,保留完整画面
-      - `crop` — 居中裁剪,贴合输出比例
-    </ParamField>
+```json 任务完成
+{
+  "task_id": "task-wave1775285160b950328499",
+  "model": "veo3.1-fast",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1775285160,
+  "completed_at": 1775285412,
+  "result": {
+    "videos": [
+      {
+        "url": ["https://cdn.example.com/result.mp4"],
+        "expires_at": 1775621160
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499",
+    "cancel": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499/cancel"
+  },
+  "billing_status": "settled",
+  "cost": 288000
+}
+```
 
-    <ParamField body="enhance_prompt" type="boolean" default="true">
-      提示词增强,**只能为 `true`**(设 `false` 会报错;不需要时直接不传)
-    </ParamField>
+`result.videos` 返回生成的视频，`expires_at` 是链接失效时间，到期前请自行转存。完整字段说明见[查询任务状态](/cn/api-reference/task/status)。
 
-    <ParamField body="person_generation" type="string" default="allow_adult">
-      人物生成策略,可选值:
-      - `allow_adult` — 允许生成成年人物
-      - `disallow` — 禁止生成人物
-    </ParamField>
+## 可用模型
 
-    <ParamField body="negative_prompt" type="string">
-      负面提示词,排除不想要的内容,如 `"blurry, low quality, watermark"`
-    </ParamField>
-  </Tab>
+**官方版** —— 按秒计费，支持首尾帧与原生音频。
 
-  <Tab title="veo3.1-quality-rev / veo3.1-fast-rev(标准)">
-    <ParamField body="generation_type" type="string">
-      视频生成类型(图生视频时):
-      - `frame` — 首尾帧模式(2 张图:首张首帧、第二张尾帧)
-      - `reference` — 参考图模式(3 张图)
-      - 不传则按图片数量自动判断(2 张走 frame,3 张走 reference)
+| 模型 ID | 时长 | 分辨率 | 图片输入 | 原生音频 |
+|---|---|---|---|---|
+| `veo3.1-fast` | 4 / 6 / 8 秒 | `720p` `1080p`（1080p 仅 8 秒） | 首帧 + 尾帧 | 支持 |
+| `veo3.1-quality` | 4 / 6 / 8 秒 | `720p` `1080p`（1080p 仅 8 秒） | 首帧 + 尾帧 | 支持 |
 
-      <Note>`veo3.1-quality-rev` 不支持 `reference` 模式。</Note>
-    </ParamField>
+**经济版** —— 整片固定价，固定输出 8 秒，不支持原生音频。
 
-    <ParamField body="enable_gif" type="boolean" default="false">
-      输出 GIF 格式。注意:GIF 与 1080p / 4k 分辨率**不可同时使用**
-    </ParamField>
-
-    <ParamField body="official_fallback" type="boolean" default="false">
-      标准档失败时是否回退官方渠道。`true` 启用,`false` 不启用(默认)
-    </ParamField>
-
-    <Note>
-    标准档 **按次计费**(固定 8 秒,与时长无关),**不支持** `generate_audio`。`image_urls` 最多 3 张。
-    </Note>
-  </Tab>
-
-  <Tab title="veo3.1-lite(标准·轻量)">
-    <ParamField body="enable_gif" type="boolean" default="false">
-      输出 GIF 格式。注意:GIF 与 1080p / 4k 分辨率**不可同时使用**
-    </ParamField>
-
-    <Note>
-    `veo3.1-lite` 为纯文生视频轻量档,**不支持** `image_urls` / `generation_type` / `official_fallback`(传入会报错),也**不支持** `generate_audio`。按次计费,固定 8 秒。
-    </Note>
-  </Tab>
-</Tabs>
-
-## 资源限制
-
-| 项目 | 限制 |
-|---|---|
-| 参考图片 | JPG / PNG / WEBP,标准档单张 ≤ 10MB、最多 3 张 |
-| 输出视频 | MP4,链接 24 小时有效 |
-| 时长 | 全档固定 8 秒 |
-| 分辨率 | 720P / 1080P / 4K 全档支持 |
-| 音频 | 仅官方档(`-official`)支持 `generate_audio`,标准档不支持 |
-| GIF | 仅标准档 `enable_gif`,且不可与 1080p / 4k 同用 |
-| 人物 | 官方档受 `person_generation` 策略约束,违规内容会被拦截 |
+| 模型 ID | 动作 | 分辨率 | 图片输入 | GIF |
+|---|---|---|---|---|
+| `veo3.1-lite` | `generate` | `720p` `1080p` | 不接受 | `enable_gif` |
+| `veo3.1-fast-rev` | `generate` `extend` | `720p` `1080p` | `frame` 1–2 张 / `reference` 1–3 张 | `enable_gif` |
+| `veo3.1-quality-rev` | `generate` `extend` | `720p` `1080p` | `frame` 1–2 张 | `enable_gif` |
 
 ## 相关文档
 
-- [任务系统详解](/cn/docs/task-system) — 任务状态机 / 轮询节奏 / 异步推送
-- [请求响应格式](/cn/docs/request-response) — 通用错误码 / Headers / 限流
-- [认证](/cn/docs/authentication) — API Key 申请与使用
+- [视频生成概述](/cn/api-reference/video/overview)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

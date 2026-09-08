@@ -1,0 +1,186 @@
+---
+title: "Flow Music 音乐生成"
+description: "Lyria 引擎的文本生成音乐，支持歌词、标题、BPM、时长与随机种子"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+`flow-music` 用 Lyria 引擎把风格提示词和歌词变成一首完整歌曲或纯音乐，另外可以只写词。两个动作都通过统一任务接口 `POST /v1/tasks` 提交：`generate` 出曲，`lyrics` 出歌词文本。需要续写、翻唱、分轨这类后续加工时用 [Suno 音乐生成](/cn/api-reference/audio/suno)。
+
+## 快速开始
+
+<CodeGroup>
+
+```bash 歌词 + 风格成曲
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "flow-music",
+    "action": "generate",
+    "prompt": "calm acoustic folk, gentle guitar, sunrise by the sea",
+    "lyrics": "[Verse 1]\n海浪在晨光里翻涌\n[Chorus]\n带我随潮水回家",
+    "title": "海边的日出",
+    "length": 30
+  }'
+```
+
+```bash 纯风格提示词
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "flow-music",
+    "action": "generate",
+    "prompt": "轻快的电子流行，钢琴与合成器，120 BPM",
+    "bpm": "120",
+    "length": 60
+  }'
+```
+
+```bash 只写词
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "flow-music",
+    "action": "lyrics",
+    "prompt": "一首关于灯塔与耐心的歌"
+  }'
+```
+
+</CodeGroup>
+
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待。
+
+## 请求参数
+
+<ParamField body="model" type="string" required>
+  固定为 `flow-music`。
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  - `generate`：生成歌曲或纯音乐
+  - `lyrics`：只生成歌词文本
+</ParamField>
+
+<ParamField body="prompt" type="string">
+  `generate` 时是风格或声音描述；`lyrics` 时是歌词主题，必填。
+</ParamField>
+
+下面的参数只在 `generate` 下有效。
+
+<ParamField body="version" type="string">
+  引擎版本；省略即使用默认引擎（Lyria 3 Pro），可选 `lyria-3.5`。
+</ParamField>
+
+<ParamField body="lyrics" type="string">
+  歌词文本，支持 `[Verse 1]` / `[Chorus]` 等段落标记；省略则纯音乐或由模型作词。
+</ParamField>
+
+<ParamField body="title" type="string">
+  歌曲标题。
+</ParamField>
+
+<ParamField body="bpm" type="string">
+  节拍数，以字符串形式传数字（≥ 1）。
+</ParamField>
+
+<ParamField body="length" type="integer">
+  目标时长（秒），`1`–`240`。
+</ParamField>
+
+<ParamField body="seed" type="string">
+  随机种子（字符串）。
+</ParamField>
+
+以上之外的参数会返回 `400`，不计费。
+
+## 限制
+
+歌词生成必须提供提示词。
+
+| 条件 | 限制 |
+|---|---|
+| `generate` | `prompt` 与 `lyrics` 至少提供一个 |
+| `length` | `1`–`240` 秒 |
+| `bpm` | 字符串形式的数字，最小 `1` |
+| 每次请求 | 返回一首音乐 |
+
+## 计费
+
+**按次计费，两个动作价格不同**：`generate` 一次一价，`lyrics` 一次一价，`generate` 明显高于 `lyrics`。`length`、`bpm`、`version` 和歌词长度都不影响单价——动作是唯一的计费维度，提交前即可确定单次费用。
+
+单价见 `GET /v1/models` 返回的 `price_config.audio_prices`（按动作分键），或控制台「模型市场」。单次调用的实际花费见任务响应里的 `cost`——整数 quota，**500,000 quota = 1 USD**，不是美元。
+
+只有成功产出结果才计费。任务失败、取消，或没有返回可交付结果时，全额退款。
+
+## 响应
+
+<CodeGroup>
+
+```json generate
+{
+  "task_id": "taski_example",
+  "model": "flow-music",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788768730,
+  "completed_at": 1788768792,
+  "result": {
+    "audios": [
+      {
+        "expires_at": 1789089508,
+        "url": ["https://cdn.example.com/result.m4a"]
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski_example",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski_example/cancel"
+  },
+  "billing_status": "settled",
+  "cost": 33750
+}
+```
+
+```json lyrics
+{
+  "task_id": "taski_example",
+  "model": "flow-music",
+  "action": "lyrics",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788769450,
+  "completed_at": 1788769485,
+  "result": {
+    "audios": {
+      "lyrics": [
+        {
+          "lyrics": "[Verse 1]\nSalt on my shoulders\n...",
+          "title": "Wed to Ground"
+        }
+      ]
+    }
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski_example",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski_example/cancel"
+  },
+  "billing_status": "settled",
+  "cost": 11250
+}
+```
+
+</CodeGroup>
+
+`generate` 的产物在 `result.audios[]`：一次一首，`url` 是音频地址数组，`expires_at` 是链接过期时间。
+
+`lyrics` 不产出音频：歌词文本在 `result.audios.lyrics[]` 的 `lyrics` 字段里，同一元素还带 `title`，可以直接回填到 `generate` 的 `lyrics` 与 `title`。
+
+## 相关文档
+
+- [Suno 音乐生成](/cn/api-reference/audio/suno)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

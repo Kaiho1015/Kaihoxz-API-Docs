@@ -17,40 +17,46 @@ POST https://www.qingbo.dev/v1/tasks
 
 <CardGroup cols={2}>
   <Card title="Veo 系列" href="/cn/api-reference/video/veo">
-    Google Veo 3.1 — 官方直连(Fast / Quality)+ 标准(Lite / Quality)
+    Google Veo 3.1 — 官方版 Fast / Quality 按秒计费；经济版 Lite 与 Fast / Quality 逆向档整片价，逆向档支持续写
   </Card>
   <Card title="Seedance 系列" href="/cn/api-reference/video/seedance">
-    字节跳动 Seedance — 1.0 Pro / 1.5 Pro / 2.0(含 Face / Fast 子档)
+    字节跳动 Seedance 1.0 Pro / 1.0 Pro Fast / 1.5 Pro / 2.0 / 2.0 Fast / 2.0 Mini / 2.5，2.5 支持视频编辑与延长
   </Card>
   <Card title="Kling 系列" href="/cn/api-reference/video/kling">
-    快手可灵 — v2.6 / v3 / v3-Omni / Video O1
+    快手可灵 3.0 Turbo / v2.6 / v3 / v3 Omni / Video O1，另有两档运动控制
   </Card>
   <Card title="Hailuo 系列" href="/cn/api-reference/video/hailuo">
-    MiniMax 海螺 — 2.3 / 2.3 Fast,15 种运镜指令
+    MiniMax 海螺 02 / 2.3 / 2.3 Fast，文生、首帧与首尾帧
   </Card>
-  <Card title="Vidu 系列" href="/cn/api-reference/video/vidu">
-    生数科技 Vidu Q3 — Pro / Mix / Q3 / Turbo
+  <Card title="MiniMax H3" href="/cn/api-reference/video/minimax-h3">
+    MiniMax H3 文生 / 参考生视频，H3 Regeneration 把成片重渲染为原生 2K
   </Card>
-  <Card title="Wan 系列" href="/cn/api-reference/video/wan">
-    阿里通义万相 — 2.7 VideoEdit(视频编辑 / 风格迁移)
+  <Card title="Vidu Q3 系列" href="/cn/api-reference/video/vidu">
+    生数科技 Vidu Q3 / Q3 Mix / Q3 Pro / Q3 Turbo，起始帧、首尾帧与参考图
   </Card>
-  <Card title="Skyreels" href="/cn/api-reference/video/skyreels">
-    昆仑万维 SkyReels V4 — Fast / Standard,多模态参考
+  <Card title="万相 Wan 系列" href="/cn/api-reference/video/wan">
+    阿里通义万相 2.5 / 2.6 / 2.6 i2v / 2.7 / 2.7 R2V / 2.7 VideoEdit / 3.0，文生、图生、参考生与视频编辑
   </Card>
-  <Card title="HappyHorse" href="/cn/api-reference/video/happyhorse">
-    阿里云百炼欢马 — 单模型自动路由 T2V/I2V/R2V/EDIT
+  <Card title="HappyHorse 系列" href="/cn/api-reference/video/happyhorse">
+    阿里云百炼欢马 1.0（含视频编辑）/ 1.1，文生、图生与参考生视频
   </Card>
-  <Card title="Grok Imagine 视频" href="/cn/api-reference/video/grok-imagine-video">
-    xAI Grok Imagine 1.0 Video — 6-30 秒,5 种比例
+  <Card title="FLUX 3 Video" href="/cn/api-reference/video/flux/flux-3-video">
+    Black Forest Labs FLUX 3 Video 标准 / Draft 两档，关键帧与续写，自带同步音频
   </Card>
-  <Card title="Sora 系列" href="/cn/api-reference/video/sora">
-    OpenAI Sora 2 / Pro / Preview — 文生 / 图生视频,4-20 秒
+  <Card title="SkyReels V4 系列" href="/cn/api-reference/video/skyreels">
+    昆仑万维 SkyReels V4 Fast / Standard，多模态参考
   </Card>
-  <Card title="Pixverse" href="/cn/api-reference/video/pixverse">
-    Pixverse v6 — 360p–1080p,可选生成带声音视频
+  <Card title="Grok Imagine Video 系列" href="/cn/api-reference/video/grok-imagine-video">
+    xAI Grok Imagine Video 官方档、1.5 官方与逆向档、1.0 逆向档，文生与图生视频
   </Card>
-  <Card title="Omni Flash Ext" href="/cn/api-reference/video/omni">
-    Omni-Flash-Ext — 视频续写扩展,按次计费
+  <Card title="Sora 2 系列" href="/cn/api-reference/video/sora">
+    OpenAI Sora 2 / Sora 2 Pro，文生与图生视频
+  </Card>
+  <Card title="PixVerse V6" href="/cn/api-reference/video/pixverse">
+    PixVerse V6，可选生成带声音视频
+  </Card>
+  <Card title="Omni 视频系列" href="/cn/api-reference/video/omni/overview">
+    Omni-Flash-Ext 视频续写扩展，Gemini Omni 1.1 Flash / Flash Preview 由模型决定时长
   </Card>
 </CardGroup>
 
@@ -155,13 +161,13 @@ POST https://www.qingbo.dev/v1/tasks
 | 模式 | 触发字段 | 典型 vendor |
 |---|---|---|
 | **文生视频(T2V)** | 仅 `prompt` | 全部支持 generate action 的 vendor |
-| **图生视频(I2V)** | `+ first_frame_image` 或 `image_urls`(单图) | Seedance / Kling / Hailuo / Vidu Pro / Wan / Veo / Sky / Grok |
-| **首尾帧** | `first_frame_image + last_frame_image` | Seedance Pro Quality / 1.5 / 2.0 / Kling / Veo / Vidu Pro / Sky |
-| **参考生视频(R2V)** | `image_urls`(多图,1-9 张) | Seedance / Kling Omni / Vidu / Sky / HappyHorse |
-| **视频参考(R2V 视频)** | `+ video_urls`(参考视频) | Seedance 2.0 / Kling Omni / Sky / Wan |
-| **视频续写** | `video_urls`(单段) | Wan(其他档暂未上架)/ Sky |
-| **视频编辑(EDIT)** | `video_urls + prompt`(可加 `image_urls` 作风格参考) | Wan VideoEdit / HappyHorse / Sky |
-| **音频参考** | `+ audio_urls` | HappyHorse / Wan / Sky / Seedance 2.0 |
+| **图生视频(I2V)** | `+ first_frame_image` 或 `image_urls`(单图) | Seedance / Kling / Hailuo / Vidu / Wan / Veo / SkyReels / Grok / HappyHorse / FLUX 3 Video / Omni |
+| **首尾帧** | `first_frame_image + last_frame_image`(Kling 用 `image_urls` 传两张) | Seedance / Kling / Veo / Vidu / SkyReels / Hailuo 02 / Wan 3.0 / Gemini Omni 1.1 Flash |
+| **参考生视频(R2V)** | `image_urls`(多图) | Seedance / Kling Omni / Vidu / SkyReels / HappyHorse / Wan 2.7 R2V / Omni |
+| **视频参考(R2V 视频)** | `+ video_urls`(参考视频) | Seedance 2.x / Kling / SkyReels / Wan / MiniMax H3 / Omni |
+| **视频续写** | `video_urls`(单段)或 `ref_task_id` | Omni / FLUX 3 Video / Veo 逆向版(`extend`)/ Seedance 2.5(`extend`) |
+| **视频编辑(EDIT)** | `video_urls + prompt`(可加 `image_urls` 作风格参考) | Wan VideoEdit / HappyHorse 1.0 / Seedance 2.5 / Kling v3 Omni · Video O1 |
+| **音频参考** | `+ audio_urls` | HappyHorse / Wan / SkyReels / Seedance 2.x / MiniMax H3 |
 
 <Note>
 并非所有模型都支持全部模式 — 各 vendor 实际支持的 `action` 列表 + 字段范围请查看对应文档。后端会校验请求字段是否在 vendor 声明的能力范围内,不在范围会返回错误。
@@ -176,7 +182,7 @@ POST https://www.qingbo.dev/v1/tasks
 
 ## 相关文档
 
-- [任务系统详解](/cn/docs/task-system) — 任务状态机 / 轮询节奏 / Webhook
+- [任务系统](/cn/docs/task-system) — 任务状态机 / 轮询节奏 / Webhook
 - [请求响应格式](/cn/docs/request-response) — 通用错误码 / Headers / 限流
 - [认证](/cn/docs/authentication) — API Key 申请与使用
 - [模型列表](/cn/docs/models) — 全模型查询接口

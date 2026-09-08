@@ -1,11 +1,10 @@
 ---
 title: "Claude 消息接口"
+description: "为已有 Anthropic SDK 的应用保留的原生 Messages 接口"
 api: "POST https://www.qingbo.dev/v1/messages"
 ---
 
-- 完全兼容 Claude Messages API 格式
-- 支持多轮对话和单次查询
-- 支持文本、图像等多模态内容
+Anthropic 原生 Messages 接口，为已有 Anthropic SDK 的应用保留，只服务 `claude-sonnet-5` 与 `claude-opus-5`。本接口不提供 Chat 之外的额外能力，新接入建议直接用[通用对话接口](/cn/api-reference/text/general-chat)。
 
 <RequestExample>
 ```bash cURL
@@ -14,7 +13,7 @@ curl -X POST https://www.qingbo.dev/v1/messages \
   -H "Content-Type: application/json" \
   -H "anthropic-version: 2023-06-01" \
   -d '{
-    "model": "claude-sonnet-4.5-20250929",
+    "model": "claude-sonnet-5",
     "max_tokens": 1024,
     "system": "你是一个专业的AI助手。",
     "messages": [
@@ -35,7 +34,7 @@ client = anthropic.Anthropic(
 )
 
 message = client.messages.create(
-    model="claude-sonnet-4.5-20250929",
+    model="claude-sonnet-5",
     max_tokens=1024,
     system="你是一个专业的AI助手。",
     messages=[
@@ -55,7 +54,7 @@ const client = new Anthropic({
 });
 
 const message = await client.messages.create({
-  model: 'claude-sonnet-4.5-20250929',
+  model: 'claude-sonnet-5',
   max_tokens: 1024,
   system: '你是一个专业的AI助手。',
   messages: [
@@ -79,7 +78,7 @@ import (
 
 func main() {
     payload := map[string]interface{}{
-        "model":      "claude-sonnet-4.5-20250929",
+        "model":      "claude-sonnet-5",
         "max_tokens": 1024,
         "system":     "你是一个专业的AI助手。",
         "messages": []map[string]string{
@@ -112,7 +111,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String payload = """
         {
-          "model": "claude-sonnet-4.5-20250929",
+          "model": "claude-sonnet-5",
           "max_tokens": 1024,
           "system": "你是一个专业的AI助手。",
           "messages": [
@@ -150,7 +149,7 @@ public class Main {
         "text": "你好！我是Claude。很高兴见到你。"
     }
   ],
-    "model": "claude-sonnet-4.5-20250929",
+    "model": "claude-sonnet-5",
   "stop_reason": "end_turn",
     "stop_sequence": null,
   "usage": {
@@ -201,7 +200,7 @@ public class Main {
   ```
 </ResponseExample>
 
-## Authorizations
+## 鉴权
 
 <ParamField header="x-api-key" type="string" required>
   API 密钥用于身份验证
@@ -223,16 +222,18 @@ public class Main {
   示例：`2023-06-01`
 </ParamField>
 
-## Body
+Anthropic SDK 的 base URL 设为 `https://www.qingbo.dev`，SDK 会自行追加 `/v1/messages`，不需要再补 `/v1`。
+
+## 请求参数
 
 <ParamField body="model" type="string" required>
-  模型名称
+  模型 ID
 
-  * `claude-opus-4.6` - Claude 4.6 Opus 最新旗舰模型
-  * `claude-sonnet-4.6` - Claude 4.6 Sonnet 最新版
-  * `claude-opus-4.5-20251101` - Claude 4.5 Opus 旗舰模型
-  * `claude-sonnet-4.5-20250929` - Claude 4.5 Sonnet 平衡版
-  * `claude-haiku-4.5-20251001` - Claude 4.5 Haiku 快速响应版
+  本接口只服务 `claude-sonnet-5` 与 `claude-opus-5`。其余 Claude 模型（Fable 系列与 4.x 全部）只走 Chat，发到本接口会返回 `400`，请改用[通用对话接口](/cn/api-reference/text/general-chat)。
+
+  这两个模型的缓存档位与支持的能力见[文本模型总览 · Anthropic](/cn/api-reference/text/overview#anthropic)。
+
+  函数调用请走 Chat 接口；本接口不支持多轮工具流程与图像输入。
 </ParamField>
 
 <ParamField body="messages" type="array" required>
@@ -244,7 +245,7 @@ public class Main {
     </ParamField>
 
     <ParamField body="content" type="string" required>
-      消息内容，支持字符串或内容块数组（多模态）
+      消息内容：字符串，或文本内容块数组
     </ParamField>
   </Expandable>
 </ParamField>
@@ -335,7 +336,7 @@ public class Main {
   用于追踪或标识请求的对象。
 </ParamField>
 
-## Response
+## 响应
 
 <ResponseField name="id" type="string">
   消息的唯一标识符
@@ -405,7 +406,7 @@ public class Main {
 
 ```json theme={null}
 {
-  "model": "claude-sonnet-4.5-20250929",
+  "model": "claude-sonnet-5",
   "max_tokens": 1024,
   "messages": [
     {"role": "user", "content": "解释一下量子计算"}
@@ -417,7 +418,7 @@ public class Main {
 
 ```json theme={null}
 {
-  "model": "claude-sonnet-4.5-20250929",
+  "model": "claude-sonnet-5",
   "max_tokens": 1024,
   "messages": [
     {"role": "user", "content": "你好"},
@@ -431,7 +432,7 @@ public class Main {
 
 ```json theme={null}
 {
-  "model": "claude-sonnet-4.5-20250929",
+  "model": "claude-sonnet-5",
   "max_tokens": 1024,
   "system": "你是一位经验丰富的数据科学家，专长包括统计分析和机器学习。",
   "messages": [
@@ -444,7 +445,7 @@ public class Main {
 
 ```json theme={null}
 {
-  "model": "claude-sonnet-4.5-20250929",
+  "model": "claude-sonnet-5",
   "max_tokens": 1024,
   "messages": [
     {"role": "user", "content": "列出5个Python最佳实践"},
@@ -452,3 +453,25 @@ public class Main {
   ]
 }
 ```
+
+## 流式
+
+在同一个 URL 上设置 `stream: true`。依次读取 `message_start`、内容块事件、`message_delta`（携带实际 usage 与 `stop_reason`），最后是 `message_stop`。**`message_start` 里的初始用量不是最终账单**，不能据此计费。
+
+## 用量与计费
+
+原生 `input_tokens` 与 Chat 的 `prompt_tokens` 语义不同：原生的 `input_tokens` **不包含**缓存命中和缓存写入，总输入等于三者相加；`output_tokens` 已包含思考 token。原生响应不带 `usage.cost` 字段，实际扣费到控制台用量记录查询。计费口径见[文本模型总览 · 计费口径](/cn/api-reference/text/overview#计费口径)。
+
+## 当前不支持
+
+- **结构化输出**——这两个模型不接受 `response_format` 的 `json_schema` 与 `json_object`。
+- **函数调用与多轮工具流程**——走[通用对话接口](/cn/api-reference/text/general-chat)。
+- **图像输入**。
+
+以上请求返回 `400`，不计费。显式缓存在本接口可用：把要复用的长前缀放进 `system` 数组，写法与命中条件见[文本模型总览 · 缓存](/cn/api-reference/text/overview#缓存)。
+
+## 相关文档
+
+- [文本模型总览](/cn/api-reference/text/overview)
+- [通用对话接口](/cn/api-reference/text/general-chat)
+- [流式输出](/cn/docs/streaming)

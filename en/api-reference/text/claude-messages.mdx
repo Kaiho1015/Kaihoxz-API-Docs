@@ -1,11 +1,10 @@
 ---
 title: "Claude Messages API"
+description: "The native Messages endpoint, kept for apps already built on the Anthropic SDK"
 api: "POST https://www.qingbo.dev/v1/messages"
 ---
 
-- Fully compatible with the Claude Messages API format
-- Supports multi-turn conversations and one-shot queries
-- Supports multimodal content including text and images
+The native Anthropic Messages endpoint, kept for apps already built on the Anthropic SDK. It serves `claude-sonnet-5` and `claude-opus-5` only, and exposes nothing beyond what Chat offers, so new integrations should use the [General Chat API](/en/api-reference/text/general-chat).
 
 <RequestExample>
 ```bash cURL
@@ -14,7 +13,7 @@ curl -X POST https://www.qingbo.dev/v1/messages \
   -H "Content-Type: application/json" \
   -H "anthropic-version: 2023-06-01" \
   -d '{
-    "model": "claude-sonnet-4.5-20250929",
+    "model": "claude-sonnet-5",
     "max_tokens": 1024,
     "system": "你是一个专业的AI助手。",
     "messages": [
@@ -35,7 +34,7 @@ client = anthropic.Anthropic(
 )
 
 message = client.messages.create(
-    model="claude-sonnet-4.5-20250929",
+    model="claude-sonnet-5",
     max_tokens=1024,
     system="你是一个专业的AI助手。",
     messages=[
@@ -55,7 +54,7 @@ const client = new Anthropic({
 });
 
 const message = await client.messages.create({
-  model: 'claude-sonnet-4.5-20250929',
+  model: 'claude-sonnet-5',
   max_tokens: 1024,
   system: '你是一个专业的AI助手。',
   messages: [
@@ -79,7 +78,7 @@ import (
 
 func main() {
     payload := map[string]interface{}{
-        "model":      "claude-sonnet-4.5-20250929",
+        "model":      "claude-sonnet-5",
         "max_tokens": 1024,
         "system":     "你是一个专业的AI助手。",
         "messages": []map[string]string{
@@ -112,7 +111,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String payload = """
         {
-          "model": "claude-sonnet-4.5-20250929",
+          "model": "claude-sonnet-5",
           "max_tokens": 1024,
           "system": "你是一个专业的AI助手。",
           "messages": [
@@ -150,7 +149,7 @@ public class Main {
         "text": "你好！我是Claude。很高兴见到你。"
     }
   ],
-    "model": "claude-sonnet-4.5-20250929",
+    "model": "claude-sonnet-5",
   "stop_reason": "end_turn",
     "stop_sequence": null,
   "usage": {
@@ -223,16 +222,18 @@ public class Main {
   Example: `2023-06-01`
 </ParamField>
 
+Set the Anthropic SDK base URL to `https://www.qingbo.dev`; the SDK appends `/v1/messages` itself, so `/v1` does not need to be added again.
+
 ## Body
 
 <ParamField body="model" type="string" required>
-  Model name.
+  Model ID.
 
-  * `claude-opus-4.6` — Claude 4.6 Opus, latest flagship
-  * `claude-sonnet-4.6` — Claude 4.6 Sonnet, latest version
-  * `claude-opus-4.5-20251101` — Claude 4.5 Opus flagship
-  * `claude-sonnet-4.5-20250929` — Claude 4.5 Sonnet, balanced
-  * `claude-haiku-4.5-20251001` — Claude 4.5 Haiku, fast response
+  This endpoint serves `claude-sonnet-5` and `claude-opus-5` only. Every other Claude model (the Fable family and the whole 4.x line) is Chat-only and returns `400` here — use the [General Chat API](/en/api-reference/text/general-chat) instead.
+
+  Cache tiers and supported capabilities for these two are in the [Text Models Overview · Anthropic](/en/api-reference/text/overview#anthropic).
+
+  Function-call argument generation is verified on the Chat endpoint only; native multi-turn tool workflows and image input are outside the accepted scope.
 </ParamField>
 
 <ParamField body="messages" type="array" required>
@@ -244,7 +245,7 @@ public class Main {
     </ParamField>
 
     <ParamField body="content" type="string" required>
-      Message content. Accepts a string or an array of content blocks (multimodal).
+      Message content. Accepts a string or an array of text content blocks.
     </ParamField>
   </Expandable>
 </ParamField>
@@ -405,7 +406,7 @@ public class Main {
 
 ```json theme={null}
 {
-  "model": "claude-sonnet-4.5-20250929",
+  "model": "claude-sonnet-5",
   "max_tokens": 1024,
   "messages": [
     {"role": "user", "content": "解释一下量子计算"}
@@ -417,7 +418,7 @@ public class Main {
 
 ```json theme={null}
 {
-  "model": "claude-sonnet-4.5-20250929",
+  "model": "claude-sonnet-5",
   "max_tokens": 1024,
   "messages": [
     {"role": "user", "content": "你好"},
@@ -431,7 +432,7 @@ public class Main {
 
 ```json theme={null}
 {
-  "model": "claude-sonnet-4.5-20250929",
+  "model": "claude-sonnet-5",
   "max_tokens": 1024,
   "system": "你是一位经验丰富的数据科学家，专长包括统计分析和机器学习。",
   "messages": [
@@ -444,7 +445,7 @@ public class Main {
 
 ```json theme={null}
 {
-  "model": "claude-sonnet-4.5-20250929",
+  "model": "claude-sonnet-5",
   "max_tokens": 1024,
   "messages": [
     {"role": "user", "content": "列出5个Python最佳实践"},
@@ -452,3 +453,25 @@ public class Main {
   ]
 }
 ```
+
+## Streaming
+
+Set `stream: true` on the same URL. Read `message_start`, then the content block events, then `message_delta` (which carries the actual usage and `stop_reason`), and finally `message_stop`. **The initial usage in `message_start` is not the final bill** and must not be billed against.
+
+## Usage and billing
+
+Native `input_tokens` differs from Chat's `prompt_tokens`: the native field **excludes** cache reads and cache writes, so total input is the sum of all three. `output_tokens` already includes reasoning tokens. Native responses carry no `usage.cost` field; check the console usage record for the actual charge. Billing rules are in the [Text Models Overview · Billing rules](/en/api-reference/text/overview#billing-rules).
+
+## Not supported
+
+- **Structured output** — neither model accepts `response_format` with `json_schema` or `json_object`.
+- **Function calling and multi-turn tool workflows** — use the [General Chat API](/en/api-reference/text/general-chat).
+- **Image input**.
+
+These return `400` and are not billed. Explicit `cache_control` does work here: put the reusable long prefix in the `system` array — request shape and hit conditions are in the [Text Models Overview · Caching](/en/api-reference/text/overview#caching).
+
+## Related
+
+- [Text Models Overview](/en/api-reference/text/overview)
+- [General Chat API](/en/api-reference/text/general-chat)
+- [Streaming](/en/docs/streaming)

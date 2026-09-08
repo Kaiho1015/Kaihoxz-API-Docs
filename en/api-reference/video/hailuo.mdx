@@ -1,229 +1,226 @@
 ---
 title: "Hailuo Series"
-description: "MiniMax Hailuo video — Hailuo 2.3 / 2.3 Fast, with 15 bracketed camera-movement tags"
+description: "MiniMax Hailuo video: Hailuo 02, 2.3 and 2.3 Fast — text-to-video and first / last frame video"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-MiniMax Hailuo video generation series.
+MiniMax's Hailuo video line. This page covers `minimax-hailuo-02`, `minimax-hailuo-2.3` and `minimax-hailuo-2.3-fast`: all three go through the same task endpoint, all three have `generate` as their only action, and each turns text or a first-frame image into one clip of a fixed length — switching tiers means changing `model` and nothing else. For reference video, reference audio or a native soundtrack, use [MiniMax H3](/en/api-reference/video/minimax-h3).
 
-**Two tiers** — `minimax-hailuo-2.3` (the 2.3 main release, adds 15 camera-movement tags) and `minimax-hailuo-2.3-fast` (the 2.3 accelerated tier, faster and cheaper, ideal for previews / batch).
-
-Supports text-to-video (T2V) and image-to-video (I2V).
-
-## Pricing
-
-<Note>
-Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
-
-**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
-**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
-</Note>
-
-## Examples
+## Quick start
 
 <CodeGroup>
 
-```bash Text-to-video (minimal)
+```bash Text to video
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: hailuo-demo-001" \
   -d '{
     "model": "minimax-hailuo-2.3",
-    "prompt": "A Shiba Inu in a spacesuit walking on the moon, cinematic lighting",
-    "duration": 6,
-    "resolution": "1080p",
-    "aspect_ratio": "16:9"
-  }'
-```
-
-```bash Image-to-video (I2V first frame)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "minimax-hailuo-2.3",
-    "prompt": "The character walks slowly toward the camera",
-    "image_urls": ["https://cdn.example.com/portrait.jpg"],
+    "action": "generate",
+    "prompt": "Mist clears over a mountain temple at dawn, camera slowly pushing in",
     "duration": 6,
     "resolution": "1080p"
   }'
 ```
 
-```bash 2.3 with camera-movement tags
+```bash First frame
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "minimax-hailuo-2.3",
-    "prompt": "[推进] An ancient temple shrouded in mountain mist, [变焦推近] the bronze bell under the eaves swaying gently in the wind",
-    "camera_movement_tags": ["推进", "变焦推近"],
-    "duration": 6,
-    "resolution": "1080p",
-    "aspect_ratio": "16:9",
-    "prompt_optimizer": true
+    "model": "minimax-hailuo-02",
+    "action": "generate",
+    "prompt": "The subject slowly looks up, hair moving in the wind",
+    "first_frame_image": "https://cdn.example.com/portrait.jpg",
+    "duration": 10,
+    "resolution": "768p"
   }'
 ```
 
-```bash Accelerated tier (2.3-fast)
+```bash First and last frame
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "minimax-hailuo-02",
+    "action": "generate",
+    "prompt": "Day turns into night, street lights coming on one by one",
+    "first_frame_image": "https://cdn.example.com/day.jpg",
+    "last_frame_image": "https://cdn.example.com/night.jpg",
+    "duration": 10,
+    "resolution": "768p"
+  }'
+```
+
+```bash Fast tier
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "minimax-hailuo-2.3-fast",
-    "prompt": "City night scene, neon lights flickering along the street",
-    "image_urls": ["https://cdn.example.com/city-night.jpg"],
+    "action": "generate",
+    "prompt": "City at night, neon signs along the street, camera panning right",
+    "first_frame_image": "https://cdn.example.com/city-night.jpg",
     "duration": 6,
     "resolution": "768p",
-    "aspect_ratio": "16:9"
+    "prompt_optimizer": true
   }'
 ```
 
 </CodeGroup>
 
-<ResponseExample>
-```json Submission accepted
-{
-  "task_id": "task-wave1775285160b950328499",
-  "model": "minimax-hailuo-2.3",
-  "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
-}
-```
-</ResponseExample>
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
 
-After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status); see [Task System](/en/docs/task-system) for details.
-
-## Available Models
-
-| Model ID | Resolution | Duration (sec) | Actions | Notes |
-|---|---|---|---|---|
-| `minimax-hailuo-2.3` | 768p / 1080p | 6 / 10 | generate / image2video | 1080p only at 6 sec; 15 camera-movement tags; prompt ≤ 2000 chars |
-| `minimax-hailuo-2.3-fast` | 768p / 1080p | 6 / 10 | generate / image2video | Accelerated tier, lower unit price |
-
-## Common Parameters
+## Request parameters
 
 <ParamField body="model" type="string" required>
-  Model ID. Allowed values:
-  - `minimax-hailuo-2.3`
-  - `minimax-hailuo-2.3-fast`
+  One of `minimax-hailuo-02`, `minimax-hailuo-2.3` or `minimax-hailuo-2.3-fast`.
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  `generate` — the only action this model takes.
-
-  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-video; `image_urls` is image-to-video; `first_frame_image` + `last_frame_image` is a first/last-frame transition; `video_urls` / `audio_urls` is reference-to-video.
+  `generate` is the only action of all three models. The mode is not selected by `action`: prompt only is text-to-video, adding `first_frame_image` is first-frame video, and a first frame plus `last_frame_image` is first-and-last-frame video.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
-  Video description text, up to **2000 characters**. Embed `[tag]` brackets in the text to trigger the corresponding camera movement (see [Camera-movement tags](#camera-movement-tags-2-3-2-3-fast) below)
-</ParamField>
-
-<ParamField body="aspect_ratio" type="string" default="16:9">
-  Frame aspect ratio. Allowed values:
-  - `16:9` — landscape widescreen
-  - `9:16` — portrait
-  - `1:1` — square
-</ParamField>
-
-<ParamField body="resolution" type="string" default="768p">
-  Output resolution; see [Available Models](#available-models) for per-model support. Allowed values:
-  - `768p`
-  - `1080p`
+  Description of the video: scene, subject, motion, style. `minimax-hailuo-2.3` and `minimax-hailuo-2.3-fast` also accept camera-movement tags inside the prompt, see [Examples](#examples).
 </ParamField>
 
 <ParamField body="duration" type="integer">
-  Video duration in seconds. Allowed: `6` / `10` (1080p only at 6)
+  Clip length in seconds.
+
+  - `minimax-hailuo-02`: `5` or `10`, default `5`
+  - `minimax-hailuo-2.3` and `minimax-hailuo-2.3-fast`: `6` or `10`, default `6`
 </ParamField>
 
-<ParamField body="image_urls" type="string[]">
-  Reference image URL array; triggers **I2V** mode. Public URL or Base64. **Required** for `minimax-hailuo-2.3-fast` when doing image-to-video — If it is missing, the request is rejected at submission and nothing is held.
+<ParamField body="resolution" type="string">
+  Output resolution.
+
+  - `minimax-hailuo-02`: `512p`, `768p` or `1080p`, default `768p`
+  - `minimax-hailuo-2.3` and `minimax-hailuo-2.3-fast`: `768p` or `1080p`, default `768p`
 </ParamField>
 
-<ParamField body="callback_url" type="string">
-  Webhook callback URL, invoked when the task reaches a terminal state. See [Callback Mechanism](/en/docs/sync-async#async-task-webhook)
+<ParamField body="first_frame_image" type="string">
+  URL of the first frame, used as the opening image of the clip. Required by `minimax-hailuo-2.3-fast`.
 </ParamField>
 
-<ParamField body="callback_events" type="string[]">
-  Subscribed callback event types; defaults to all terminal events
+<ParamField body="last_frame_image" type="string">
+  URL of the last frame; combine with `first_frame_image` for an A-to-B transition. Supported by `minimax-hailuo-02` only.
 </ParamField>
 
-## Model-specific Parameters
-
-<Tabs>
-
-<Tab title="minimax-hailuo-2.3">
-
-<ParamField body="watermark" type="boolean" default="false">
-  Whether to overlay a MiniMax watermark on the output video
-</ParamField>
-
-<ParamField body="prompt_optimizer" type="boolean" default="true">
-  Auto-optimize the prompt; when disabled, generation runs against the original `prompt`
-</ParamField>
-
-<ParamField body="fast_pretreatment" type="boolean" default="false">
-  Shortens prompt-optimization latency
-</ParamField>
-
-</Tab>
-
-<Tab title="minimax-hailuo-2.3-fast">
-
-<ParamField body="watermark" type="boolean" default="false">
-  Whether to overlay a MiniMax watermark on the output video
+<ParamField body="seed" type="integer">
+  Random seed. The same parameters with the same seed produce similar results. Supported by `minimax-hailuo-2.3` and `minimax-hailuo-2.3-fast` only.
 </ParamField>
 
 <ParamField body="prompt_optimizer" type="boolean" default="true">
-  Auto-optimize the prompt
+  Auto-optimize the prompt.
 </ParamField>
 
 <ParamField body="fast_pretreatment" type="boolean" default="false">
-  Shortens prompt-optimization latency
+  Shorten prompt-optimization time; faster, with slightly weaker optimization.
 </ParamField>
 
-</Tab>
+<ParamField body="watermark" type="boolean" default="false">
+  Add a watermark to the output.
+</ParamField>
 
-</Tabs>
+The shared `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key` and cost-cap headers are documented in [Submit Task](/en/api-reference/task/submit).
 
-## Camera-movement Tags (2.3 / 2.3-fast)
+None of the three models accepts `image_urls`, `video_urls`, `audio_urls`, `aspect_ratio`, `n` or `negative_prompt`. `minimax-hailuo-02` additionally does not accept `seed`, and `minimax-hailuo-2.3` / `minimax-hailuo-2.3-fast` do not accept `last_frame_image`. Anything beyond the parameters above returns `400` and is not billed.
 
-The signature feature of the Hailuo 2.3 series — **embed `[tag]` brackets in the `prompt`** to trigger the corresponding camera movement; multiple tags can stack in a single sentence and the backend parses them in order. You can also pass them explicitly via the `camera_movement_tags` field for higher recognition reliability.
+## Limits
 
-| Category | Tag | Effect |
+| Model | Condition | Limit |
 |---|---|---|
-| **Translation** | `[左移]` (pan-left) | Camera pans horizontally to the left |
-|  | `[右移]` (pan-right) | Camera pans horizontally to the right |
-|  | `[上升]` (boom-up) | Camera moves vertically upward |
-|  | `[下降]` (boom-down) | Camera moves vertically downward |
-| **Dolly** | `[推进]` (dolly-in) | Camera physically moves forward |
-|  | `[拉远]` (dolly-out) | Camera physically moves backward |
-| **Pan/Tilt** | `[左摇]` (pan left) | Body fixed, head pans left |
-|  | `[右摇]` (pan right) | Body fixed, head pans right |
-|  | `[上摇]` (tilt up) | Body fixed, head tilts up |
-|  | `[下摇]` (tilt down) | Body fixed, head tilts down |
-| **Zoom** | `[变焦推近]` (zoom-in) | Focal-length zoom-in (body still) |
-|  | `[变焦拉远]` (zoom-out) | Focal-length zoom-out (body still) |
-| **Special** | `[晃动]` (shake) | Handheld shake |
-|  | `[跟随]` (follow) | Follow the subject's motion |
-|  | `[固定]` (static) | Completely static camera |
+| `minimax-hailuo-02` | Per request | Each task returns one video. |
+| `minimax-hailuo-02` | `resolution: "512p"` | 512p is only available with a first frame image (image-to-video). |
+| `minimax-hailuo-02` | `resolution: "1080p"` | 1080p supports 5 seconds only. |
+| `minimax-hailuo-02` | `last_frame_image` sent | A last frame requires a first frame. |
+| `minimax-hailuo-2.3` `minimax-hailuo-2.3-fast` | Per request | This model produces one result per task; n is not supported |
+| `minimax-hailuo-2.3` `minimax-hailuo-2.3-fast` | `resolution: "1080p"` | 1080p only supports 6-second duration |
+| `minimax-hailuo-2.3-fast` | Per request | `first_frame_image` is required |
 
-<Tip>
-**Example** — `"[推进] cobblestone street of an old town, [变焦推近] raindrops falling from the eaves"` — camera pushes forward first, then focuses on the eaves detail.
-</Tip>
+`minimax-hailuo-02` takes at most 2 images per request: one first frame and one last frame.
 
-## Resource Limits
+## Pricing
 
-| Item | Limit |
+Billed by **resolution tier times seconds**: the resolution sets the per-second rate, `duration` sets the number of seconds, and their product is the cost of the call — known before you submit. The three models have different per-second rates; within a model, `1080p` costs more than `768p`, which costs more than `512p`.
+
+`prompt_optimizer`, `fast_pretreatment`, `watermark`, `seed` and the first / last frame images do not affect the price.
+
+<Note>
+**This page does not list unit prices** — rates change upstream, so this section covers billing dimensions and how they are applied.
+
+Current rates are in `price_config` on `GET /v1/models` and in the console's Model Market. What a single call actually cost is the `cost` field on the task response: an integer quota, **500,000 quota = 1 USD**.
+</Note>
+
+You are only billed for a video that is produced. Failed and cancelled tasks, and tasks that return no usable video, are refunded in full.
+
+## Response
+
+```json Task completed
+{
+  "task_id": "taski-81ee42dac9f06e79b8e55a611052aeed-task-wave1788773955b950509106",
+  "model": "minimax-hailuo-02",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788773955,
+  "completed_at": 1788774046,
+  "result": {
+    "videos": [
+      {
+        "url": ["https://cdn.example.com/result.mp4"],
+        "expires_at": 1789089508
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 58500,
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski-81ee42dac9f06e79b8e55a611052aeed-task-wave1788773955b950509106",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski-81ee42dac9f06e79b8e55a611052aeed-task-wave1788773955b950509106/cancel"
+  }
+}
+```
+
+`result.videos` holds the generated video and `expires_at` is when the link stops working (Unix seconds) — copy the file to your own storage before then. Full field reference in [Query Task Status](/en/api-reference/task/status).
+
+## Available models
+
+| Model ID | Resolutions | Duration (s) | Modes | Notes |
+|---|---|---|---|---|
+| `minimax-hailuo-02` | `512p` `768p` (default) `1080p` | 5 (default) / 10 | Text, first frame, first and last frame | `512p` needs a first frame; `1080p` is 5 s only |
+| `minimax-hailuo-2.3` | `768p` (default) `1080p` | 6 (default) / 10 | Text, first frame | Camera-movement tags and `seed` |
+| `minimax-hailuo-2.3-fast` | `768p` (default) `1080p` | 6 (default) / 10 | First frame (required) | Faster tier of 2.3, lower rate |
+
+## Examples
+
+`minimax-hailuo-2.3` and `minimax-hailuo-2.3-fast` take camera-movement tags written as `[tag]` inside `prompt`. The tag labels are Chinese and must be written exactly as below; they can be mixed into the description and several can be used in one prompt:
+
+| Category | Tags |
 |---|---|
-| Reference image (`image_urls`) | URL or Base64, JPG/PNG/WEBP |
-| Prompt length | ≤ 2000 characters |
-| Duration | 6 / 10 sec; 1080p only at 6 sec |
-| Output | MP4, link valid for 24 hours |
+| Pan | `[左移]` (left) `[右移]` (right) |
+| Rise / descend | `[上升]` (rise) `[下降]` (descend) |
+| Push / pull | `[推进]` (push in) `[拉远]` (pull out) |
+| Rotate | `[左摇]` `[右摇]` `[上摇]` `[下摇]` (left, right, up, down) |
+| Zoom | `[变焦推近]` (zoom in) `[变焦拉远]` (zoom out) |
+| Other | `[晃动]` (shake) `[跟随]` (follow) `[固定]` (static) |
 
-## Related Docs
+```json Request body with camera tags
+{
+  "model": "minimax-hailuo-2.3",
+  "action": "generate",
+  "prompt": "[推进] A cobbled street in an old town, [变焦推近] rain dripping from the eaves",
+  "duration": 6,
+  "resolution": "1080p"
+}
+```
 
-- [Task System Reference](/en/docs/task-system) — task state machine / polling cadence / async push
-- [Request & Response Format](/en/docs/request-response) — common error codes / headers / rate limits
-- [Authentication](/en/docs/authentication) — API key signup and usage
+## Related
+
+- [MiniMax H3](/en/api-reference/video/minimax-h3)
+- [Video Generation Overview](/en/api-reference/video/overview)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

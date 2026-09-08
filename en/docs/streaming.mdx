@@ -15,6 +15,8 @@ Text generation endpoints support Server-Sent Events (SSE) streaming. Set `strea
 
 ## Example
 
+The examples, `choices`, `[DONE]`, and final-frame `usage.cost` below apply to `/v1/chat/completions`. Claude Messages and OpenAI Responses use different event structures; follow their endpoint documentation. Replace `YOUR_MODEL` with a text model available to your account.
+
 <CodeGroup>
 
 ```python Python
@@ -26,14 +28,20 @@ client = OpenAI(
 )
 
 stream = client.chat.completions.create(
-    model="gpt-4o",
+    model="YOUR_MODEL",
     messages=[{"role": "user", "content": "写一首短诗"}],
     stream=True
 )
 
 for chunk in stream:
-    if chunk.choices[0].delta.content:
-        print(chunk.choices[0].delta.content, end="")
+    if chunk.usage is not None:
+        quota_cost = getattr(chunk.usage, "cost", None)
+        if quota_cost is not None:
+            print(f"\nQuota cost: {quota_cost} quota")
+    if chunk.choices:
+        content = chunk.choices[0].delta.content
+        if content:
+            print(content, end="")
 ```
 
 ```javascript JavaScript
@@ -45,13 +53,17 @@ const client = new OpenAI({
 });
 
 const stream = await client.chat.completions.create({
-  model: 'gpt-4o',
+  model: 'YOUR_MODEL',
   messages: [{ role: 'user', content: '写一首短诗' }],
   stream: true
 });
 
 for await (const chunk of stream) {
-  process.stdout.write(chunk.choices[0]?.delta?.content || '');
+  if (chunk.usage?.cost != null) {
+    process.stdout.write(`\nQuota cost: ${chunk.usage.cost} quota\n`);
+  }
+  const content = chunk.choices?.[0]?.delta?.content;
+  if (content) process.stdout.write(content);
 }
 ```
 
@@ -59,7 +71,7 @@ for await (const chunk of stream) {
 
 ## SSE Data Format
 
-Each chunk is a single `data: {json}` SSE event:
+Each Chat Completions chunk is a `data: {json}` SSE event:
 
 ```
 data: {"id":"chatcmpl-xxx","choices":[{"delta":{"content":"你"},"index":0}]}
@@ -73,7 +85,7 @@ When the stream ends, you'll receive `data: [DONE]`.
 
 ## Final Frame Usage & Billing (cost)
 
-The last data frame before `[DONE]` carries the usage and the charge of the call:
+When usage output is enabled for Chat Completions, the final usage frame before `[DONE]` carries the call's usage and billed quota. Its `choices` array may be empty, so check the array before accessing `choices[0]`:
 
 ```
 data: {"id":"chatcmpl-xxx","choices":[],"usage":{"prompt_tokens":12,"completion_tokens":8,"total_tokens":20,"cost":150}}
@@ -81,6 +93,7 @@ data: {"id":"chatcmpl-xxx","choices":[],"usage":{"prompt_tokens":12,"completion_
 data: [DONE]
 ```
 
-- `usage.cost` is the actual quota charged for this call (integer); use it for per-call reconciliation
+- `usage.cost` is the call's billed quota (an integer), not US dollars (USD); `150` means 150 quota
 - It is sent by default; explicitly passing `stream_options: {"include_usage": false}` disables it
 - With the OpenAI SDK, the final chunk's `chunk.usage` contains this data
+- If the connection drops or no usage frame arrives, do not treat the missing `cost` as zero; check the console usage records

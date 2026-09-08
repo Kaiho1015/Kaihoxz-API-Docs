@@ -16,7 +16,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="gpt-5.6-luna",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 
@@ -32,7 +32,7 @@ const client = new OpenAI({
 });
 
 const response = await client.chat.completions.create({
-  model: 'gpt-4o',
+  model: 'gpt-5.6-luna',
   messages: [{ role: 'user', content: 'Hello!' }]
 });
 
@@ -44,7 +44,7 @@ curl https://www.qingbo.dev/v1/chat/completions \
   -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4o",
+    "model": "gpt-5.6-luna",
     "messages": [{"role": "user", "content": "Hello!"}]
   }'
 ```
@@ -61,21 +61,21 @@ curl https://www.qingbo.dev/v1/chat/completions \
     img="/images/cards/text-generation.svg"
     href="/cn/api-reference/text/general-chat"
   >
-    GPT-4o、Claude Sonnet、Gemini 等主流大语言模型，支持流式输出
+    GPT、Claude、Gemini、DeepSeek 等主流大语言模型，支持流式输出
   </Card>
   <Card
     title="图像生成"
     img="/images/cards/image-generation.svg"
-    href="/cn/api-reference/image/gpt4o-image"
+    href="/cn/api-reference/image/overview"
   >
-    GPT-4o Image、FLUX Kontext、Seedream 等图像生成模型
+    GPT Image、Nano Banana、Seedream、FLUX 等图像生成模型
   </Card>
   <Card
     title="视频生成"
     img="/images/cards/video-generation.svg"
-    href="/cn/api-reference/video/veo3"
+    href="/cn/api-reference/video/overview"
   >
-    VEO3、Sora2、Kling、海螺等视频生成模型
+    Veo、Sora、Kling、海螺、Seedance 等视频生成模型
   </Card>
 </CardGroup>
 
@@ -85,12 +85,12 @@ curl https://www.qingbo.dev/v1/chat/completions \
     img="/images/cards/audio.svg"
     href="/cn/api-reference/audio/tts"
   >
-    Whisper 语音识别和 TTS 文字转语音
+    Whisper 语音识别、TTS 文字转语音，Suno 与 Flow Music 音乐生成
   </Card>
   <Card
     title="任务管理"
     img="/images/cards/task-management.svg"
-    href="/cn/api-reference/task/get-status"
+    href="/cn/api-reference/task/status"
   >
     异步任务状态查询，跟踪图像和视频生成进度
   </Card>

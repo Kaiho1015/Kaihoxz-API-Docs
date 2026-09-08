@@ -1,273 +1,317 @@
 ---
 title: "Seedance 系列"
-description: "字节跳动豆包 Seedance — 1.5 Pro 有声视频 + 2.0 家族(标准 / Fast / Face),文生 / 图生,按秒计费"
+description: "字节跳动 Seedance 视频生成：文生 / 图生 / 首尾帧 / 多模态参考，2.5 另有视频编辑与延长，按分辨率档 × 秒数计费"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-字节跳动豆包(Doubao)Seedance 视频生成系列,覆盖 **文生视频 / 图生视频** 场景,统一走异步任务入口,**按秒计费**。
+字节跳动 Seedance 视频生成系列：1.0 两档做文生视频与首尾帧控制，1.5 Pro 加上多图参考与原生音频，2.0 三档把参考素材扩展到图片、视频和音频，2.5 在此之上多出视频编辑与视频延长两个动作。本页覆盖已上架的七个模型，它们共用同一个任务接口和同一套通用参数，差异集中在可选分辨率、时长范围、可接收的参考素材种类与数量上，换档只改 `model`。
 
 <Note>
-这是 **视频** 模型 Seedance(动态视频),请勿与豆包的图像模型 **Seedream**(静态图像)混淆,两者是不同产品线。
+Seedance 是视频模型；同名的图像模型是 [Seedream 系列](/cn/api-reference/image/seedream)，两者的参数与计费方式都不同。
 </Note>
 
-六个档位:
-
-- **`seedance-1.5-pro`** — 1.5 代有声档,音视频联合生成,支持多语言对白 + 口型同步,可用首帧 / 尾帧约束镜头,480p / 720p / 1080p,5 / 10 秒
-- **`seedance-2.5`** — 2.5 代,480p–1080p,4–30 秒,支持参考图 / 参考视频 / 参考音频多模态输入
-- **`seedance-2.0`** — 2.0 标准档,文生 / 图生,480p / 720p / 1080p,4-15 秒任意整数
-- **`seedance-2.0-fast`** — 2.0 加速档,更快更便宜,480p / 720p(无 1080p),4-15 秒,支持参考视频
-- **`seedance-2.0-face`** — 2.0 人脸档,面向人脸 / 数字人场景,480p / 720p / 1080p,4-15 秒
-- **`seedance-2.0-fast-face`** — 2.0 人脸加速档,人脸场景的快速 / 低价版,480p / 720p,4-15 秒
-
-## 计费档位:按输出分辨率,参考视频另算
-
-Seedance 全家族按**输出分辨率 × 输出秒数**计费。**文生与图生同价** —— 传不传 `image_urls` 不影响单价(上游对输入图片不计费)。
-
-传**参考视频**(`video_urls`)时换一套档位:按 **(参考视频秒数 + 输出秒数) × 参考视频档单价** 计费。参考视频档单价**低于**文生视频档,带参考视频并不等于更贵。不传 `video_urls` 就是 **输出秒数 × 基础档单价**。
-
-参考视频最长 **15 秒**(`seedance-2.5` 为 30 秒)。
-
-各档实时单价见控制台「模型市场」;单次实际花费以响应里的 `cost` 为准。
-
-## 定价
-
-<Note>
-本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
-
-**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
-**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
-</Note>
-
-## 调用示例
+## 快速开始
 
 <CodeGroup>
 
-```bash 文生视频(有声,1.5 Pro)
+```bash 文生视频
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-    "model": "seedance-1.5-pro",
-    "prompt": "海边日落,金色阳光洒在海面上,海浪轻轻拍打沙滩,电影感光影",
-    "duration": 5,
-    "resolution": "720p",
-    "aspect_ratio": "16:9",
-    "audio": true
-  }'
-```
-
-```bash 文生视频(2.0 标准档)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: seedance-demo-001" \
   -d '{
     "model": "seedance-2.0",
-    "prompt": "一只小猫对着镜头打哈欠,慢镜头特写",
+    "action": "generate",
+    "prompt": "一只小猫对着镜头打哈欠，慢镜头特写",
     "duration": 5,
     "resolution": "720p",
     "aspect_ratio": "16:9"
   }'
 ```
 
-```bash 图生视频(2.0 标准档,走图生档计费)
+```bash 首尾帧
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "seedance-2.0",
-    "prompt": "人物缓缓走向镜头,镜头微微推进",
-    "image_urls": ["https://cdn.example.com/portrait.jpg"],
+    "model": "seedance-1.0-pro",
+    "action": "generate",
+    "prompt": "人物从窗前转身走向门口，光线由冷转暖",
+    "first_frame_image": "https://cdn.example.com/first.jpg",
+    "last_frame_image": "https://cdn.example.com/last.jpg",
     "duration": 6,
     "resolution": "1080p"
   }'
 ```
 
-```bash 人脸 / 数字人(2.0-face)
+```bash 多图参考
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "seedance-2.0-face",
-    "prompt": "数字人正面讲解,自然眨眼与口型变化",
-    "image_urls": ["https://cdn.example.com/avatar.jpg"],
+    "model": "seedance-2.0",
+    "action": "generate",
+    "prompt": "把人物放进第二张的场景里，镜头缓慢环绕",
+    "image_urls": [
+      "https://cdn.example.com/person.jpg",
+      "https://cdn.example.com/scene.jpg"
+    ],
     "duration": 8,
-    "resolution": "720p"
+    "resolution": "720p",
+    "aspect_ratio": "adaptive"
   }'
 ```
 
-```bash 快速预览(2.0-fast)
+```bash 参考视频
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "seedance-2.0-fast",
-    "prompt": "城市夜景延时,车流光轨",
-    "duration": 5,
+    "model": "seedance-2.5",
+    "action": "generate",
+    "prompt": "沿用参考视频的运镜，把场景换成雨夜的城市街道",
+    "video_urls": ["https://cdn.example.com/reference.mp4"],
+    "duration": 8,
     "resolution": "720p",
-    "aspect_ratio": "16:9"
+    "aspect_ratio": "adaptive"
+  }'
+```
+
+```bash 视频编辑
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "seedance-2.5",
+    "action": "edit",
+    "prompt": "去掉画面里的路人，只保留主角，其余保持不变",
+    "video_urls": ["https://cdn.example.com/source.mp4"],
+    "duration": 0,
+    "resolution": "720p",
+    "aspect_ratio": "adaptive"
+  }'
+```
+
+```bash 视频延长
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "seedance-2.5",
+    "action": "extend",
+    "prompt": "接着往后拍：人物走出画面，镜头留在空荡的街道上",
+    "video_urls": ["https://cdn.example.com/source.mp4"],
+    "duration": 8,
+    "resolution": "720p",
+    "aspect_ratio": "adaptive"
   }'
 ```
 
 </CodeGroup>
 
-<ResponseExample>
-```json 提交成功
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
+
+`edit` 与 `extend` 接的是**视频链接**，不是上一步的 `task_id`：先用 `generate` 出片，从任务结果的 `result.videos[].url` 取到视频地址，再把它放进 `video_urls` 提交下一步。想接着做同一条片子的续集，也可以在上一步带 `return_last_frame`，用返回的尾帧图当下一次的 `first_frame_image`。
+
+## 请求参数
+
+<ParamField body="model" type="string" required>
+  模型 ID，取值见「可用模型」。
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  - `generate`：生成视频，所有模型都支持
+  - `edit`：编辑源视频，仅 `seedance-2.5`
+  - `extend`：延长源视频，仅 `seedance-2.5`
+
+  `edit` 与 `extend` 都必须提供 `video_urls`，并使用 `adaptive` 画幅。
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  视频描述或编辑指令。`seedance-2.0`、`seedance-2.0-fast`、`seedance-2.0-mini` 在带参考素材时提示词可选，其余情况必填。
+</ParamField>
+
+<ParamField body="duration" type="integer">
+  输出时长（秒），整数。取值范围按模型不同：`seedance-1.0-pro` 与 `seedance-1.0-pro-fast` 为 `2`–`12`，`seedance-1.5-pro` 为 `4`–`12`，2.0 三档为 `4`–`15`，`seedance-2.5` 为 `4`–`30`。
+
+  `seedance-2.5` 的 `edit` 传 `0`，表示输出沿用源视频时长。
+</ParamField>
+
+<ParamField body="resolution" type="string">
+  输出分辨率，各模型可选档位见「可用模型」。默认值：`seedance-1.0-pro` 与 `seedance-1.0-pro-fast` 为 `1080p`，其余模型为 `720p`。
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string">
+  画面比例：`16:9`、`9:16`、`1:1`、`4:3`、`3:4`、`21:9`。2.x 四个模型另支持 `adaptive`（跟随输入素材）。
+
+  默认值：`seedance-2.5` 为 `adaptive`，其余模型为 `16:9`。2.x 的首帧、首尾帧任务以及 `edit`、`extend` 都只能用 `adaptive`。
+</ParamField>
+
+<ParamField body="n" type="integer" default="1">
+  生成数量，取值 `1`。每次任务返回一个视频。
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  随机种子。相同请求与相同种子生成相近结果。
+</ParamField>
+
+<ParamField body="first_frame_image" type="string">
+  首帧图片 URL。所有模型都支持。
+</ParamField>
+
+<ParamField body="last_frame_image" type="string">
+  尾帧图片 URL，必须与 `first_frame_image` 一起提供。`seedance-1.0-pro-fast` 不支持。
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  参考图 URL 数组。`seedance-1.5-pro` 最多 2 张，2.0 三档最多 9 张，`seedance-2.5` 最多 30 张；`seedance-1.0-pro` 与 `seedance-1.0-pro-fast` 不接受该字段。传首帧或尾帧时不能同时传参考图。
+</ParamField>
+
+<ParamField body="video_urls" type="string[]">
+  参考视频 URL 数组。2.0 三档最多 3 段、总时长 2–15 秒，`seedance-2.5` 最多 10 段、总时长 2–30 秒；1.0 与 1.5 不接受该字段。`seedance-2.5` 的 `edit` 与 `extend` 用它传源视频。
+</ParamField>
+
+<ParamField body="audio_urls" type="string[]">
+  参考音频 URL 数组。2.0 三档最多 3 段、总时长不超过 15 秒，`seedance-2.5` 最多 10 段、总时长不超过 30 秒、单段 2–30 秒；1.0 与 1.5 不接受该字段。
+</ParamField>
+
+<ParamField body="generate_audio" type="boolean" default="true">
+  是否生成带声音的视频。`seedance-1.5-pro` 与 2.x 四个模型支持；`seedance-1.0-pro` 与 `seedance-1.0-pro-fast` 不支持。
+</ParamField>
+
+<ParamField body="watermark" type="boolean">
+  是否给输出视频加水印。仅 `seedance-2.5` 支持。
+</ParamField>
+
+<ParamField body="image_with_roles" type="object[]">
+  带角色的图片数组，与 `first_frame_image`、`last_frame_image` 合并发送。每项包含 `url` 和 `role`，`role` 取 `first_frame` 或 `last_frame`。所有模型都支持。
+</ParamField>
+
+<ParamField body="camerafixed" type="boolean" default="false">
+  固定镜头，减少相机运动。仅 `seedance-1.5-pro` 的 `generate` 支持。
+</ParamField>
+
+<ParamField body="return_last_frame" type="boolean" default="false">
+  额外返回尾帧图，便于连续生成。2.x 四个模型支持。
+</ParamField>
+
+<ParamField body="tools" type="object[]">
+  增强工具列表，目前仅支持 `[{"type": "web_search"}]`，生成时参考联网信息。2.x 四个模型支持。
+</ParamField>
+
+<ParamField body="output_format" type="string" default="mp4">
+  输出视频封装格式，`mp4` 或 `mov`。仅 `seedance-2.5` 支持。
+</ParamField>
+
+<ParamField body="omni_reference_task_type" type="string" default="auto">
+  `generate` 时的参考模式提示，`auto` 或 `reference`。传 `reference` 会在提交时按参考生视频的约束校验，不合法直接返回 `400`，不建任务也不计费。`edit` 与 `extend` 由 `action` 决定，不需要这个字段。仅 `seedance-2.5` 支持。
+</ParamField>
+
+通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
+
+以上之外的参数会返回 `400`，不计费。
+
+## 限制
+
+- 每次任务只生成一个视频。
+- 该模型必须提供提示词。（`seedance-1.0-pro`、`seedance-1.0-pro-fast`、`seedance-1.5-pro`、`seedance-2.5`）
+- 纯文生视频必须提供提示词；有参考素材时提示词可选。（`seedance-2.0`、`seedance-2.0-fast`、`seedance-2.0-mini`）
+- generate/extend 必须明确传入 2–12 秒时长。（`seedance-1.0-pro`、`seedance-1.0-pro-fast`）
+- generate/extend 必须明确传入 4–12 秒时长。（`seedance-1.5-pro`）
+- generate/extend 必须明确传入 4–15 秒时长。（`seedance-2.0`、`seedance-2.0-fast`、`seedance-2.0-mini`）
+- generate/extend 必须明确传入 4–30 秒时长。（`seedance-2.5`）
+- 尾帧必须与首帧一起提供。（`seedance-1.0-pro-fast` 之外的模型）
+- 首尾帧不能与一般图片引用混用。
+- 2.x 首帧任务必须使用 adaptive 画幅。
+- 2.x 首尾帧任务必须使用 adaptive 画幅。
+- 最多提供两张参考图。（`seedance-1.5-pro`）
+- 参考视频必须是可读取时长的 HTTP(S) MP4/MOV/WebM，首发不支持 asset://；总时长须为 2–15 秒。（`seedance-2.0`、`seedance-2.0-fast`、`seedance-2.0-mini`）
+- 参考视频必须是可读取时长的 HTTP(S) MP4/MOV/WebM，首发不支持 asset://；总时长须为 2–30 秒。（`seedance-2.5`）
+- Seedance 2.0 系列不接受纯音频参考。
+- 视频编辑需要源视频、adaptive 画幅，输出时长沿用源视频。（`seedance-2.5` · `edit`）
+- 待编辑源视频必须为 4–30 秒。（`seedance-2.5` · `edit`）
+- 视频延长需要源视频并使用 adaptive 画幅。（`seedance-2.5` · `extend`）
+
+| 项目 | 1.0 Pro / Pro Fast | 1.5 Pro | 2.0 / Fast / Mini | 2.5 |
+|---|---|---|---|---|
+| 参考图 `image_urls` | 不支持 | 2 张 | 9 张 | 30 张 |
+| 参考视频 `video_urls` | 不支持 | 不支持 | 3 段，总时长 2–15 秒 | 10 段，总时长 2–30 秒 |
+| 参考音频 `audio_urls` | 不支持 | 不支持 | 3 段，总时长 ≤ 15 秒 | 10 段，总时长 ≤ 30 秒 |
+| 时长 `duration` | 2–12 秒 | 4–12 秒 | 4–15 秒 | 4–30 秒 |
+| 传首帧 / 尾帧时不能同时传 | 该档不接受参考素材 | `image_urls` | `image_urls` / `video_urls` / `audio_urls` | `image_urls` |
+
+2.5 的子任务类型上游还会从提示词判断一次：`edit` 的提示词写成删除、替换、修改一类的编辑指令，`extend` 的提示词写成继续、往后接一类的续拍指令，与 `action` 保持一致。
+
+## 计费
+
+按**输出分辨率档 × 输出秒数**计费，秒数取请求里的 `duration`。同一模型下分辨率越高越贵；同一分辨率下，`seedance-2.0-mini` 最便宜、`seedance-2.0-fast` 居中、`seedance-2.0` 最贵。
+
+带参考视频（`video_urls`）时换一套档位，费用由两项相加：
+
+- **输出秒数**改按该分辨率的**参考视频档**单价结算
+- **参考视频自身的时长**按**输入秒**单价再计一笔
+
+参考视频时长在提交时探测，探测不到时按该模型声明的参考视频时长上限计入。参考图与参考音频不单独计费。
+
+`seedance-1.5-pro` 有独立的带声档，开启 `generate_audio` 时按对应分辨率的带声档结算；其余模型没有独立带声档，音频不改变计费档位。
+
+`seedance-2.5` 的 `edit` 传 `duration: 0`，输出时长由源视频决定：提交时按该模型的时长上限冻结额度，任务完成后按源视频的实际时长结算，差额退回。
+
+<Note>
+单价会随上游调整，本节只讲计费维度与口径，不列具体金额。
+
+看实时单价：`GET /v1/models` 的 `price_config`，或控制台「模型市场」。
+看单次实际费用：任务响应里的 `cost`（整数 quota，500,000 quota = 1 USD）。
+</Note>
+
+只有成功出片才计费。任务失败、取消，或上游返回成功但没有可交付视频时，全额退款。最终费用以任务响应里的 `cost` 为准，`cost` 是整数 quota 不是美元（500,000 quota = 1 USD）。
+
+## 响应
+
+```json 任务完成
 {
   "task_id": "task-wave1775285160b950328499",
   "model": "seedance-2.0",
   "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1775285160,
+  "completed_at": 1775285300,
+  "result": {
+    "videos": [
+      {
+        "expires_at": 1775371560,
+        "url": ["https://cdn.example.com/result.mp4"]
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 75000,
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499",
+    "cancel": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499/cancel"
+  }
 }
 ```
-</ResponseExample>
 
-提交后用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 轮询状态,详见 [任务系统](/cn/docs/task-system)。
-
-## 媒体字段路由
-
-Seedance 全系仅支持 `generate` 一种 action,后端按传入的媒体字段自动决定生成模式,**无需显式传 `action`**。
-
-<Warning>
-**`image_urls` 语义变更(2026-07-09 起,上游生效)**
-
-`seedance-2.0`、`seedance-2.0-fast`、`seedance-2.0-mini` 三个模型:
-
-- **变更前** — `image_urls` 的第 1 张作首帧、第 2 张作尾帧,其余作参考图。
-- **变更后** — `image_urls` 中的**所有图片一律作为参考图**,不再有首帧 / 尾帧含义。
-
-如果你依赖首尾帧约束,请改用 **`image_with_roles`** 字段显式指定(该字段不受此次变更影响)。`seedance-1.5-pro` 与 `face` 系列不受影响。
-</Warning>
-
-| 传入字段 | 用途 | 计费档 |
-|---|---|---|
-| 不传媒体字段 | 文生视频,画面比例由 `aspect_ratio` 控制 | 文生档 |
-| `image_urls` | 图生视频。**2.0 / fast / mini**:全部作参考图(2026-07-09 起);**1.5 Pro / face 系列**:1 张作首帧、2 张作首尾帧 | 与文生同价 |
-| `image_with_roles` | 显式指定首帧 / 尾帧,不受上述语义变更影响。**推荐用于首尾帧约束** | 图生档 |
-| `video_urls` | 参考视频(`2.5` / `2.0` / `2.0-fast` / `2.0-mini`) | 参考视频档 |
-| `audio_urls` | 参考音频(`2.5`) | 参考视频档 |
-
-<Note>
-`video_urls`(参考视频)支持 `seedance-2.5` / `2.0` / `2.0-fast` / `2.0-mini`(`2.0-fast` 自 2026-09-04 起开放);`face` / `fast-face` 仅支持图像输入。`audio_urls`(参考音频)仅 `seedance-2.5` 支持。
-</Note>
+`result.videos` 返回生成的视频，`url` 是数组，`expires_at` 是链接过期时间（Unix 秒），过期前请自行转存。提交时带了 `return_last_frame` 的任务，结果里还会附带尾帧图。完整字段说明见[查询任务状态](/cn/api-reference/task/status)。
 
 ## 可用模型
 
-| 模型 ID | 分辨率 | 时长(秒) | 备注 |
-|---|---|---|---|
-| `seedance-1.5-pro` | 480p / 720p / 1080p | 4-12 任意整数 | 音视频联合生成,口型同步,多语言对白 |
-| `seedance-1.0-pro` | 480p / 720p / 1080p | 5 / 10 | 1.0 高质量模式,多镜头叙事,1.x 稳定旗舰,价格低于 1.5 / 2.x |
-| `seedance-1.0-pro-fast` | 480p / 720p / 1080p | 5 / 10 | 1.0 极速模式,约快 3 倍,最便宜的 Seedance 视频档 |
-| `seedance-2.5` | 480p / 720p / 1080p | 4-30 任意整数 | 2.5 代,多模态输入(参考图 / 参考视频 / 参考音频) |
-| `seedance-2.0` | 480p / 720p / 1080p / 4K | 4-15 任意整数 | 2.0 标准档,文生 / 图生,支持参考视频 |
-| `seedance-2.0-fast` | 480p / 720p | 4-15 任意整数 | 加速档,更快更便宜,支持参考视频 |
-| `seedance-2.0-mini` | 480p / 720p | 4-15 任意整数 | 迷你档,成本最低,能力与标准版一致,支持参考视频 |
-| `seedance-2.0-face` | 480p / 720p / 1080p | 4-15 任意整数 | 人脸 / 数字人场景 |
-| `seedance-2.0-fast-face` | 480p / 720p | 4-15 任意整数 | 人脸场景的快速 / 低价版 |
-
-## 通用参数
-
-<ParamField body="model" type="string" required>
-  模型 ID,见 [可用模型](#可用模型) 表
-</ParamField>
-
-<ParamField body="prompt" type="string" required>
-  视频描述文本。建议详细描述场景 / 动作 / 风格 / 对白,以获得更好的生成效果
-</ParamField>
-
-<ParamField body="duration" type="integer" default="5">
-  视频时长(秒):
-  - `seedance-1.5-pro`:`5` / `10`
-  - 2.0 家族:`4`-`15` 任意整数
-  - `seedance-2.5`:`4`-`30` 任意整数
-</ParamField>
-
-<ParamField body="resolution" type="string" default="720p">
-  输出分辨率,各模型档位见 [可用模型](#可用模型) 表:
-  - `1.5-pro` / `2.0` / `2.0-face` / `2.5`:`480p` / `720p` / `1080p`
-  - `2.0-fast` / `2.0-fast-face`:`480p` / `720p`
-</ParamField>
-
-<ParamField body="aspect_ratio" type="string" default="16:9">
-  画面宽高比,**仅文生视频生效**;带 `image_urls` 时跟随首帧比例。可选值:
-  - `16:9` — 横版宽屏
-  - `9:16` — 竖版长屏
-  - `1:1` — 正方形
-
-  `seedance-2.5` 另支持 `adaptive`(跟随参考素材)/ `4:3` / `3:4`
-</ParamField>
-
-<ParamField body="image_urls" type="string[]">
-  参考图片 URL 数组(传入即走 **图生档** 计费):
-  - 1 张 = 首帧驱动(图生视频)
-  - 2 张 = 首帧 + 尾帧约束插值(`1.5-pro` / `2.0` 标准档)
-</ParamField>
-
-<ParamField body="video_urls" type="string[]">
-  参考视频 URL 数组,支持 `seedance-2.5` / `2.0` / `2.0-fast` / `2.0-mini`。最长 **15 秒**(`seedance-2.5` 为 **30 秒**)。需公网可下载链接
-</ParamField>
-
-<ParamField body="seed" type="integer">
-  随机种子。相同请求 + 相同 seed 会生成类似结果(不保证完全一致);省略或传 `-1` 则随机
-</ParamField>
-
-<ParamField body="callback_url" type="string">
-  Webhook 回调地址,任务终态时调用。详见 [回调机制](/cn/docs/sync-async#异步任务-webhook)
-</ParamField>
-
-<ParamField body="callback_events" type="string[]">
-  订阅的回调事件,默认订阅终态(`succeeded` / `failed` / `cancelled`)
-</ParamField>
-
-## 模型特定参数
-
-<Tabs>
-  <Tab title="seedance-1.5-pro">
-    <ParamField body="audio" type="boolean" default="false">
-      是否生成音频(有声视频)。设为 `true` 时视频包含 AI 生成的配套音频,支持多语言对白 + 口型同步
-    </ParamField>
-
-    <ParamField body="camerafixed" type="boolean" default="false">
-      是否固定摄像头。设为 `true` 时摄像头位置保持固定
-    </ParamField>
-  </Tab>
-
-  <Tab title="seedance-2.5">
-    <ParamField body="watermark" type="boolean" default="false">
-      是否给输出视频加水印。2.5 的唯一特定参数,其余可选项见 [通用参数](#通用参数);支持 `image_urls` / `video_urls` / `audio_urls` 三种参考素材
-    </ParamField>
-  </Tab>
-
-  <Tab title="seedance-2.0">
-    2.0 标准档无额外特定参数,所有可选项见 [通用参数](#通用参数)。文生 / 图生由是否传 `image_urls` 自动判定,另支持 `video_urls` 参考视频。
-  </Tab>
-
-  <Tab title="seedance-2.0-fast">
-    加速档无额外特定参数,所有可选项见 [通用参数](#通用参数)。相比标准档更快更便宜,分辨率上限 720p。
-  </Tab>
-
-  <Tab title="seedance-2.0-face">
-    人脸档无额外特定参数,所有可选项见 [通用参数](#通用参数)。面向人脸 / 数字人场景,建议配合 `image_urls` 传入人物图。
-  </Tab>
-
-  <Tab title="seedance-2.0-fast-face">
-    人脸加速档无额外特定参数,所有可选项见 [通用参数](#通用参数)。人脸场景的快速 / 低价版,分辨率上限 720p。
-  </Tab>
-</Tabs>
-
-## 资源限制
-
-| 项目 | 限制 |
-|---|---|
-| 参考图(`image_urls`) | 最多 2 张(首帧 + 尾帧),JPG / PNG / WEBP,需公网可下载 |
-| 参考视频(`video_urls`) | `2.0` / `2.0-fast` / `2.0-mini`,最长 15 秒(`2.5` 为 30 秒),MP4 / MOV,需公网可下载 |
-| Prompt 长度 | 建议详细描述场景 / 动作 / 对白 |
-| 视频时长 | `1.5-pro`:5 / 10 秒;2.0 家族:4-15 秒;`2.5`:4-30 秒 |
-| 输出 | MP4,链接 24 小时有效 |
+| 模型 ID | 分辨率 | 时长（秒） | 可接收的参考素材 | 动作 |
+|---|---|---|---|---|
+| `seedance-1.0-pro` | `480p` / `720p` / `1080p` | 2–12 | 首帧、尾帧 | `generate` |
+| `seedance-1.0-pro-fast` | `480p` / `720p` / `1080p` | 2–12 | 首帧 | `generate` |
+| `seedance-1.5-pro` | `480p` / `720p` / `1080p` | 4–12 | 首尾帧、参考图 ×2 | `generate` |
+| `seedance-2.0` | `480p` / `720p` / `1080p` / `4k` | 4–15 | 首尾帧、图 ×9、视频 ×3、音频 ×3 | `generate` |
+| `seedance-2.0-fast` | `480p` / `720p` | 4–15 | 首尾帧、图 ×9、视频 ×3、音频 ×3 | `generate` |
+| `seedance-2.0-mini` | `480p` / `720p` | 4–15 | 首尾帧、图 ×9、视频 ×3、音频 ×3 | `generate` |
+| `seedance-2.5` | `480p` / `720p` / `1080p` | 4–30 | 首尾帧、图 ×30、视频 ×10、音频 ×10 | `generate` / `edit` / `extend` |
 
 ## 相关文档
 
-- [任务系统详解](/cn/docs/task-system) — 任务状态机 / 轮询节奏 / 异步推送
-- [请求响应格式](/cn/docs/request-response) — 通用错误码 / Headers / 限流
-- [认证](/cn/docs/authentication) — API Key 申请与使用
+- [视频生成概述](/cn/api-reference/video/overview)
+- [Seedream 系列](/cn/api-reference/image/seedream)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

@@ -11,15 +11,13 @@ WaveAPI is a unified AI model API gateway that provides a single endpoint to acc
 - **OpenAI Compatible** — Drop-in replacement for OpenAI SDK, just change the `base_url`
 - **Multi-Model Access** — One API key for text, image, video, and audio generation models
 - **Unified Task System** — Async task management for image and video generation via `/v1/tasks`
-- **Multi-Language Docs** — Available in English, Simplified Chinese, Traditional Chinese, and Japanese
+- **Multi-Language Docs** — Available in Simplified Chinese and English
 
 ## Documentation Structure
 
 ```
 cn/          # Simplified Chinese (primary)
 en/          # English
-jp/          # Japanese
-zh-Hant/     # Traditional Chinese
 ```
 
 Each language contains:

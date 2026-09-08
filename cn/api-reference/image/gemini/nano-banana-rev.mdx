@@ -1,0 +1,215 @@
+---
+title: "Nano Banana 经济版"
+description: "Nano Banana（Gemini Image）经济线路：按张固定价的文生图与多图参考编辑"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+Nano Banana 是 Google Gemini 的图像模型线。本页覆盖**四个经济版模型**，它们共用同一套请求参数、同一种计费方式（按成功出图的固定张价），只在画幅、分辨率和专有参数上有区别——换档只改 `model`。需要按实际 token 用量结算时，用[Nano Banana 官方版](/cn/api-reference/image/gemini/nano-banana)。
+
+<Note>
+经济版不是 Google 官方 API 线路，两条线路也不会自动互相切换：模型 ID 决定走哪条线路。
+</Note>
+
+## 快速开始
+
+<CodeGroup>
+
+```bash 文生图
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: nb-demo-001" \
+  -d '{
+    "model": "gemini-3.1-flash-image-rev",
+    "action": "generate",
+    "prompt": "青瓷茶杯放在原木桌面上，窗边自然光，产品摄影",
+    "aspect_ratio": "1:1",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+```bash 参考图编辑
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: nb-edit-001" \
+  -d '{
+    "model": "gemini-3.1-flash-image-rev",
+    "action": "edit",
+    "prompt": "保留主体，把背景换成清晨的竹林",
+    "image_urls": ["https://cdn.example.com/source.png"],
+    "aspect_ratio": "1:1",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+```bash 多图参考
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-3-pro-image-rev",
+    "action": "edit",
+    "prompt": "把第一张的人物放进第二张的场景，光线统一",
+    "image_urls": [
+      "https://cdn.example.com/person.png",
+      "https://cdn.example.com/scene.png"
+    ],
+    "aspect_ratio": "16:9",
+    "resolution": "2k"
+  }'
+```
+
+```bash 联网检索
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-3.1-flash-image-rev",
+    "action": "generate",
+    "prompt": "把杭州西湖十景做成一张中文信息图，标注要准确",
+    "aspect_ratio": "4:5",
+    "resolution": "2k",
+    "google_search": true,
+    "google_image_search": true
+  }'
+```
+
+</CodeGroup>
+
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
+
+## 请求参数
+
+<ParamField body="model" type="string" required>
+  四选一：`gemini-3-pro-image-rev`、`gemini-3.1-flash-image-rev`、`gemini-3.1-flash-lite-image-rev` 或 `gemini-2.5-flash-image-preview-rev`。
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  - `generate`：根据文字生成图片
+  - `edit`：基于参考图改写；必须提供 `image_urls`
+
+  图生图、多图参考融合都走 `edit`，区别只在 `image_urls` 传几张。
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  图片描述或编辑指令，中英文均可。
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  参考图片 URL 数组。`edit` 时必填，四档都最多 14 张。参考图不额外收费。
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="1:1">
+  画面比例。四档共通 11 种：`auto`、`1:1`、`2:3`、`3:2`、`3:4`、`4:3`、`4:5`、`5:4`、`9:16`、`16:9`、`21:9`。
+
+  `gemini-3.1-flash-image-rev` 额外支持 `1:4`、`4:1`、`1:8`、`8:1`。
+
+  `auto` 表示由模型决定：文生图按提示词内容选，图生图跟随输入图的比例。`gemini-2.5-flash-image-preview-rev` 不传这个参数时，比例同样由模型决定。
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1k">
+  输出分辨率，接受这个参数的三档默认值都是 `1k`。各模型可用的档位见「可用模型」：旗舰档 `1k`、`2k`、`4k`，快速档 `0.5k`、`1k`、`2k`、`4k`，上一代档只有 `1k`。
+
+  `gemini-3.1-flash-lite-image-rev` 不支持这个参数，输出固定为 1K；传了会返回 `400`。
+</ParamField>
+
+<ParamField body="n" type="integer" default="1">
+  生成数量，取值 `1`。每次请求返回一张图。
+</ParamField>
+
+<ParamField body="google_search" type="boolean" default="false">
+  生成前联网检索文本资料辅助出图。只有 `gemini-3.1-flash-image-rev` 接受这个参数。
+</ParamField>
+
+<ParamField body="google_image_search" type="boolean" default="false">
+  联网检索参考图片辅助出图，须同时 `google_search: true`。只有 `gemini-3.1-flash-image-rev` 接受这个参数。
+</ParamField>
+
+通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
+
+<Warning>
+经济版不支持 `mask_url`、`quality`、`seed`。`google_search` 与 `google_image_search` 只有 `gemini-3.1-flash-image-rev` 接受，另外三档传了会返回 `400`。以上之外的参数会返回 `400`，不计费。需要掩码局部重绘时用 [`gpt-image-2`](/cn/api-reference/image/gpt-image/gpt-image-2)。
+</Warning>
+
+## 限制
+
+| 条件 | 限制 |
+|---|---|
+| 每次请求 | 每次请求返回 1 张图。 |
+| `action: "edit"` | 编辑图片需要至少一张参考图 |
+| 参考图张数 | 最多 14 张 |
+| 分辨率 | 可用档位见「可用模型」；`gemini-3.1-flash-lite-image-rev` 不接受 `resolution` |
+
+## 计费
+
+按成功出图的**固定张价**结算。`generate` 与 `edit` 同价，参考图不加价，画幅、提示词长度和联网检索都不影响价格——**分辨率是唯一的计费维度，提交前即可确定单次费用**。
+
+各模型的计价档不同：
+
+| 模型 ID | 计价档 |
+|---|---|
+| `gemini-3-pro-image-rev` | `1k` 与 `2k` 同价，`4k` 单独一档 |
+| `gemini-3.1-flash-image-rev` | `0.5k` 与 `1k` 同价，`2k`、`4k` 各一档 |
+| `gemini-3.1-flash-lite-image-rev` | 只有 1K 一档 |
+| `gemini-2.5-flash-image-preview-rev` | 单一价 |
+
+单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。`price_config.image_prices` 里没有单独列出的分辨率，按同级的 `default` 兜底价结算。单次调用的实际花费见任务响应里的 `cost`——整数 quota，**500,000 quota = 1 USD**，不是美元。
+
+只有成功出图才计费。任务失败、取消，或没有返回可用图片时，全额退款。
+
+## 响应
+
+```json 任务完成
+{
+  "task_id": "taski_example",
+  "model": "gemini-3-pro-image-rev",
+  "action": "edit",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788686741,
+  "completed_at": 1788686763,
+  "billing_status": "settled",
+  "cost": 16875,
+  "result": {
+    "images": [
+      {
+        "expires_at": 1788992341,
+        "url": ["https://cdn.example.com/result.png"]
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski_example",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski_example/cancel"
+  }
+}
+```
+
+`result.images` 返回生成的图片，`url` 是数组，`expires_at` 是图片链接的过期时间戳。完整字段说明见[查询任务状态](/cn/api-reference/task/status)。
+
+## 可用模型
+
+| 模型 ID | 档位 | 画幅 | 分辨率 | 专有参数 |
+|---|---|---|---|---|
+| `gemini-3-pro-image-rev` | 旗舰 | 11 种 | `1k` `2k` `4k` | — |
+| `gemini-3.1-flash-image-rev` | 快速 | **15 种** | `0.5k` `1k` `2k` `4k` | `google_search` `google_image_search` |
+| `gemini-3.1-flash-lite-image-rev` | 最轻 | 11 种 | 固定 1K | — |
+| `gemini-2.5-flash-image-preview-rev` | 上一代 | 11 种 | `1k` | — |
+
+四档都支持文生图与参考图编辑，每次请求出 1 张。
+
+- **11 种画幅**（四档共通）：`auto` `1:1` `2:3` `3:2` `3:4` `4:3` `4:5` `5:4` `9:16` `16:9` `21:9`
+- **快速档额外 4 种极端画幅**：`1:4` `4:1` `1:8` `8:1`，适合长条横幅与竖幅
+- **最轻档不接受 `resolution` 参数**，输出固定 1K
+- **参考图最多 14 张**，四档相同
+
+## 相关文档
+
+- [Gemini 图像系列](/cn/api-reference/image/gemini/overview)
+- [Nano Banana 官方版](/cn/api-reference/image/gemini/nano-banana)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

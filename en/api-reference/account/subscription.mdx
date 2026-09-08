@@ -1,0 +1,77 @@
+---
+title: "Get subscription"
+description: "OpenAI-compatible credit limit lookup"
+api: "GET https://www.qingbo.dev/v1/dashboard/billing/subscription"
+---
+
+Returns the account's **total credit** in the same shape as OpenAI's `/dashboard/billing/subscription`, for existing credit-checking tools.
+
+<Warning>
+`hard_limit_usd` is the **total credit** (available balance + usage to date), **not the remaining balance**. For the remaining balance use [Get balance](/en/api-reference/account/balance), or subtract as shown below.
+</Warning>
+
+<RequestExample>
+```bash cURL
+curl https://www.qingbo.dev/v1/dashboard/billing/subscription \
+  -H "Authorization: Bearer $WAVE_API_KEY"
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "object": "billing_subscription",
+  "has_payment_method": true,
+  "hard_limit_usd": 20,
+  "soft_limit_usd": 20,
+  "system_hard_limit_usd": 20,
+  "access_until": 0
+}
+```
+</ResponseExample>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  `Bearer YOUR_API_KEY`.
+</ParamField>
+
+## Response
+
+<ResponseField name="object" type="string">
+  Always `billing_subscription`.
+</ResponseField>
+
+<ResponseField name="hard_limit_usd" type="number">
+  Total credit in dollars = available balance + usage to date.
+</ResponseField>
+
+<ResponseField name="soft_limit_usd" type="number">
+  Same as `hard_limit_usd`. A wallet has no separate soft limit; the field is kept for compatibility.
+</ResponseField>
+
+<ResponseField name="system_hard_limit_usd" type="number">
+  Same as `hard_limit_usd`, kept for compatibility.
+</ResponseField>
+
+<ResponseField name="has_payment_method" type="boolean">
+  Always `true`, kept for compatibility.
+</ResponseField>
+
+<ResponseField name="access_until" type="integer">
+  Always `0` — a wallet has no expiry date. Credit lasts until it is spent; it does not lapse with time.
+</ResponseField>
+
+## Deriving the remaining balance
+
+```text
+remaining USD = hard_limit_usd - usage.total_usage / 100
+```
+
+`usage.total_usage` comes from [Get usage](/en/api-reference/account/usage) and is in cents.
+[Get balance](/en/api-reference/account/balance) returns the remaining balance in a single request.
+
+## Related
+
+- [Get balance](/en/api-reference/account/balance)
+- [Get usage](/en/api-reference/account/usage)

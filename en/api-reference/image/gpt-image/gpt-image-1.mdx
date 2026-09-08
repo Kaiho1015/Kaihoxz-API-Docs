@@ -1,0 +1,194 @@
+---
+title: "GPT Image 1 and 1.5 Official"
+description: "Text-to-image, reference editing and masked inpainting, billed from token usage"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+`gpt-image-1` and `gpt-image-1.5` are two generations of image model on the official OpenAI API line, covering text-to-image, editing with up to 15 reference images, and masked inpainting. Their actions, parameters, value sets and limits are identical — switching between them only changes the `model` field. Every operation uses the unified `POST /v1/tasks` endpoint.
+
+<Note>
+Neither model accepts `resolution`, and the aspect ratios are limited to `1:1`, `2:3` and `3:2`. Use [GPT Image 2 Official](/en/api-reference/image/gpt-image/gpt-image-2) for resolution tiers, more aspect ratios, or WebP output, and [GPT Image 2 Reverse](/en/api-reference/image/gpt-image/gpt-image-2-rev) for fixed per-image pricing. The model ID selects the model; QWave never switches automatically.
+</Note>
+
+## Quick start
+
+<CodeGroup>
+
+```bash Generate an image
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: image-gi15-001" \
+  -d '{
+    "model": "gpt-image-1.5",
+    "action": "generate",
+    "prompt": "A blue ceramic cup on a white table, soft natural light, product photography",
+    "aspect_ratio": "1:1",
+    "quality": "low",
+    "n": 1
+  }'
+```
+
+```bash Edit a reference image
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: image-gi1-edit-001" \
+  -d '{
+    "model": "gpt-image-1",
+    "action": "edit",
+    "prompt": "Keep the subject and replace the background with a beach at sunset",
+    "image_urls": ["https://cdn.example.com/source.png"],
+    "aspect_ratio": "3:2",
+    "quality": "low",
+    "n": 1
+  }'
+```
+
+```bash Inpaint with a mask
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-image-1.5",
+    "action": "edit",
+    "prompt": "Change only the cup to dark green; preserve everything else",
+    "image_urls": ["https://cdn.example.com/source.png"],
+    "mask_url": "https://cdn.example.com/mask.png",
+    "quality": "medium"
+  }'
+```
+
+</CodeGroup>
+
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
+
+## Request parameters
+
+<ParamField body="model" type="string" required>
+  Either `gpt-image-1` or `gpt-image-1.5`.
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  - `generate`: create an image from text
+  - `edit`: edit reference images; requires `image_urls`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  The image description or editing instruction.
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Reference image URLs. Required for `edit`; up to 15 images.
+</ParamField>
+
+<ParamField body="mask_url" type="string">
+  URL of an inpainting mask, available on `edit` only. Requires `image_urls`, and must match the first reference image's dimensions and include an alpha channel.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="1:1">
+  One of `1:1`, `2:3`, or `3:2`.
+</ParamField>
+
+<ParamField body="quality" type="string" default="auto">
+  `auto`, `low`, `medium`, or `high`. `auto` lets the model pick a tier. Higher quality usually consumes more output tokens.
+</ParamField>
+
+<ParamField body="n" type="integer" default="1">
+  Number of images to generate. Value: `1`. Each request returns one image.
+</ParamField>
+
+<ParamField body="background" type="string" default="auto">
+  `auto`, `opaque`, or `transparent`. Transparent output requires `png`.
+</ParamField>
+
+<ParamField body="output_format" type="string" default="png">
+  `png` or `jpeg`.
+</ParamField>
+
+<ParamField body="output_compression" type="integer">
+  JPEG compression quality from `0` to `100`. Set `output_format` to `jpeg` when using it.
+</ParamField>
+
+<ParamField body="moderation" type="string" default="auto">
+  Moderation level: `auto` or `low`.
+</ParamField>
+
+See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key`, and the maximum-cost header.
+
+Neither model supports `resolution` or `seed`. Any other parameter returns `400` and is not billed.
+
+## Limits
+
+| Condition | Limit |
+|---|---|
+| Per request | One image returned |
+| `action: "edit"` | At least one reference image is required |
+| Using `mask_url` | `image_urls` is required, and the mask must match the first reference image's dimensions |
+| `background: "transparent"` | `output_format` must be `png` |
+| Using `output_compression` | `output_format` must be explicitly set to `jpeg` |
+| Reference images | Up to 15 |
+
+## Pricing
+
+Both models are **billed from actual token usage**. `gpt-image-1` has five dimensions: text input, cached text input, image input, cached image input and image output. `gpt-image-1.5` bills text output on top of those five.
+
+Rates are in `price_config` on `GET /v1/models` and in the console's Model Market. What a single call actually cost is the `cost` field on the task response — an integer quota at **500,000 quota = 1 USD**, not dollars.
+
+Image input includes reference images and masks. Cached rates apply only when the upstream response reports cache usage that can be settled. Otherwise, billing uses ordinary input and image-output usage.
+
+### Holds and settlement
+
+Submitting a task places a hold for the estimated usage; the task then settles from actual usage and the difference is released. The estimate is built from:
+
+- **Output** — expected output tokens, looked up by aspect ratio and quality
+- **Text input** — a floor of 64 tokens
+- **Reference images** — 4,096 tokens each; masks count as image input too
+- **Text output** — 1,024 tokens, on `gpt-image-1.5` only
+
+At a given aspect ratio, `high` is estimated at roughly **15×** the tokens of `low`. `quality` is the parameter with the largest effect on cost, and it defaults to `auto`: a request without `quality` is treated as `auto`, and `auto` uses the same estimate as `high`. Aspect ratio matters too: at the same quality, `2:3` and `3:2` use more output tokens than `1:1`.
+
+The estimated output tokens for every aspect-ratio / quality combination are in `price_config.image_usage_reservation` on `GET /v1/models`.
+
+You are only billed for a successfully generated image. Failed and cancelled tasks, and tasks that return no usable image, are refunded in full. See [Task status](/en/api-reference/task/status) for the billing fields.
+
+## Response
+
+```json Completed task
+{
+  "task_id": "taski_example",
+  "model": "gpt-image-1.5",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "result": {
+    "images": [
+      {
+        "url": ["https://cdn.example.com/result.png"]
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 61859
+}
+```
+
+Generated images are returned in `result.images`. Failed and cancelled tasks release the hold in full. If an upstream success response contains no deliverable image, QWave marks the task as failed and refunds it.
+
+## Available models
+
+| Model ID | Position | Billing dimensions |
+|---|---|---|
+| `gpt-image-1` | OpenAI's image generation and editing model, with multi-image reference, in-image text and inpainting | Text input / cached text input / image input / cached image input / image output |
+| `gpt-image-1.5` | OpenAI's previous-generation high-quality image model, stronger on complex prompts and in-image text | The five above, plus text output |
+
+Both models share the same actions, parameters, value sets and limits, so every section on this page applies to both.
+
+## Related
+
+- [GPT Image Series](/en/api-reference/image/gpt-image/overview)
+- [GPT Image 2 Official](/en/api-reference/image/gpt-image/gpt-image-2)
+- [GPT Image 2 Reverse](/en/api-reference/image/gpt-image/gpt-image-2-rev)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

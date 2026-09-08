@@ -1,12 +1,10 @@
 ---
 title: "General Chat API"
+description: "Call every text model through one OpenAI-compatible endpoint — switching models means changing `model`"
 api: "POST https://www.qingbo.dev/v1/chat/completions"
 ---
 
-- Unified chat API supporting all major text generation models
-- Fully compatible with the OpenAI Chat Completions API format
-- Switch between AI models seamlessly via the `model` parameter
-- Supports streaming, function calling, and other advanced features
+An OpenAI Chat Completions-compatible endpoint and the default entry for every text model. Switching models means changing `model` — the URL and key stay the same. What each model supports is in the [Text Models Overview](/en/api-reference/text/overview).
 
 <RequestExample>
 ```bash cURL
@@ -14,7 +12,7 @@ curl -X POST https://www.qingbo.dev/v1/chat/completions \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-5",
+    "model": "gpt-5.6-luna",
     "messages": [
       {
         "role": "system",
@@ -39,7 +37,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-5",
+    model="gpt-5.6-luna",
     messages=[
         {"role": "system", "content": "你是一个专业的AI助手。"},
         {"role": "user", "content": "解释一下冒泡排序算法。"}
@@ -60,7 +58,7 @@ const client = new OpenAI({
 });
 
 const response = await client.chat.completions.create({
-  model: 'gpt-5',
+  model: 'gpt-5.6-luna',
   messages: [
     { role: 'system', content: '你是一个专业的AI助手。' },
     { role: 'user', content: '解释一下冒泡排序算法。' }
@@ -85,7 +83,7 @@ import (
 
 func main() {
     payload := map[string]interface{}{
-        "model": "gpt-5",
+        "model": "gpt-5.6-luna",
         "messages": []map[string]string{
             {"role": "system", "content": "你是一个专业的AI助手。"},
             {"role": "user", "content": "解释一下冒泡排序算法。"},
@@ -118,7 +116,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String payload = """
         {
-          "model": "gpt-5",
+          "model": "gpt-5.6-luna",
           "messages": [
             {"role": "system", "content": "你是一个专业的AI助手。"},
             {"role": "user", "content": "解释一下冒泡排序算法。"}
@@ -150,7 +148,7 @@ public class Main {
     "id": "chatcmpl-CdA8u0qPqzeN2gu8QLuQfjaP9CHU4",
     "object": "chat.completion",
     "created": 1763449816,
-    "model": "gpt-5-2025-08-07",
+    "model": "gpt-5.6-luna",
     "choices": [
       {
         "index": 0,
@@ -271,20 +269,11 @@ public class Main {
 ## Body
 
 <ParamField body="model" type="string" required>
-  Model name.
+  Model ID.
 
-  Supported models include:
+  For the full list of models and what each supports, see the [Text Models Overview](/en/api-reference/text/overview); live availability comes from `GET /v1/models`.
 
-  * **OpenAI**: `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.5`, `gpt-5.4`, `gpt-5.4-mini`, `gpt-5.4-nano`, `gpt-5.4-pro`, `gpt-5.3-codex`, `gpt-5.2`, `gpt-5.2-pro`, `gpt-5.2-codex`, `gpt-5.1`, `gpt-5.1-codex-max`, `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-4.1`, `gpt-4.1-mini`, `gpt-4.1-nano`, `gpt-4o`, `gpt-4o-mini`, `o3`, `o4-mini`, `o3-mini`, `o1`
-  * **Anthropic**: `claude-fable-5`, `claude-opus-5`, `claude-sonnet-5`, `claude-opus-4.8`, `claude-opus-4.7`, `claude-opus-4.6`, `claude-sonnet-4.6`, `claude-opus-4.5-20251101`, `claude-sonnet-4.5-20250929`, `claude-haiku-4.5-20251001`
-  * **Google**: `gemini-3.7-flash`, `gemini-3.6-flash`, `gemini-3.5-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-pro-preview`, `gemini-3.1-flash-lite-preview`, `gemini-3-flash-preview`, `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.5-flash-lite`
-  * **DeepSeek**: `deepseek-v4-pro`, `deepseek-v4-flash`, `deepseek-r1-0528`, `deepseek-v3.2`, `deepseek-v3.2-exp`
-  * **Qwen**: `qwen3.8-max`, `qwen3.7-max`, `qwen3.7-plus`, `qwen3.6-plus`, `qwen3.6-flash`
-  * **MiniMax**: `minimax-m3`, `minimax-m2.7`, `minimax-m2.5`, `minimax-m2.1`
-  * **MoonshotAI**: `kimi-k3`, `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`, `kimi-k2.6`, `kimi-k2.5`
-  * **xAI**: `grok-4.6`, `grok-4.5`, `grok-4.3`, `grok-build-0.1`
-  * **Z.ai**: `glm-5.2`, `glm-5.1`, `glm-5`, `glm-4.7`, `glm-4.6`
-  * More models added regularly...
+  Switching models means changing this field only. Which parameters work depends on the model — not every OpenAI option is available everywhere: GPT-5 and later use `max_completion_tokens` and `reasoning_effort`, Claude uses `max_tokens`, and `gpt-5-pro`, `gpt-5.2-pro`, `gpt-5.4-pro`, `gpt-5.3-codex` and `o3-pro` accept only the [Responses API](/en/api-reference/text/openai-multimodal).
 </ParamField>
 
 <ParamField body="messages" type="array" required>
@@ -296,7 +285,7 @@ public class Main {
     </ParamField>
 
     <ParamField body="content" type="string" required>
-      Message content. Accepts a string or an array of multimodal content parts.
+      Message content. Accepts a string or an array of content parts.
     </ParamField>
   </Expandable>
 </ParamField>
@@ -359,6 +348,42 @@ public class Main {
   Number of completions to generate.
 
   Default: 1
+</ParamField>
+
+<ParamField body="max_completion_tokens" type="integer">
+  Output token budget (OpenAI GPT-5 and later).
+
+  These models reject `max_tokens`; use this field instead. Reasoning tokens come out of the same budget: `finish_reason: "length"` means the answer may be unfinished and must not be accepted as complete.
+</ParamField>
+
+<ParamField body="reasoning_effort" type="string">
+  Reasoning tier (OpenAI reasoning models).
+
+  One of `none` / `low` / `medium` / `high`. GPT-5.6 and GPT-5.4 / 5.5 were accepted with `none`; GPT-6 Astra was accepted with `low` only and rejects `none`. Do not send this field to non-OpenAI models.
+</ParamField>
+
+<ParamField body="stream_options" type="object">
+  Streaming options.
+
+  With `{"include_usage": true}` the SSE stream emits one extra usage-only event before `[DONE]`. **That frame's `choices` can be an empty array** — read usage first, then check for a text delta, or an index error will drop the cost information. See [Streaming](/en/docs/streaming).
+</ParamField>
+
+<ParamField body="response_format" type="object">
+  Structured output.
+
+  `{"type": "json_schema", "json_schema": {...}}` constrains the reply to a JSON Schema; `{"type": "json_object"}` only guarantees valid JSON. Available only on models marked `✓` on the left of the JSON / Tools column. The whole Claude line returns `400`; `deepseek-v3.2-exp` and `deepseek-v3.1-terminus` do not guarantee strict schema adherence.
+</ParamField>
+
+<ParamField body="tools" type="array">
+  Function declarations available to the model.
+
+  `[{"type": "function", "function": {"name": ..., "description": ..., "parameters": {JSON Schema}}}]`. The model only generates a function name and arguments in the response's `tool_calls`; **the platform executes nothing** — running the tool and feeding the result back is your application's job. Available only on models marked `✓` on the right of the JSON / Tools column.
+</ParamField>
+
+<ParamField body="tool_choice" type="string or object">
+  How tools are selected.
+
+  `"auto"` (default), `"none"`, or `{"type": "function", "function": {"name": "..."}}` to force a specific function. The Claude Fable family accepts only `"auto"`; `"required"` or a named function returns `400`.
 </ParamField>
 
 ## Response
@@ -480,116 +505,14 @@ public class Main {
   System fingerprint (used to track backend configuration).
 </ResponseField>
 
-## Supported Models
+## Available models
 
-<Note>
-**Long-context tiers**: for some models, once a single request's input exceeds a threshold, the input beyond it and the whole output are billed at a higher tier, matching the vendor's official pricing: GPT-5.4 / 5.5 / 5.6 series **272K**, Grok **200K**, Gemini Pro **200K**, Qwen Plus / Flash **256K**, MiniMax M3 **512K**. Per-tier prices are shown on each model's [Explore](https://qingbo.dev/explore) page. Anthropic 4.6+ models charge the same rate across the full context window.
-</Note>
+Every model ID, what it supports, its long-context tier and how it is billed are in the [Text Models Overview](/en/api-reference/text/overview). Live availability and rates come from the catalog API:
 
-### OpenAI series
-
-* `gpt-5.6-sol` — GPT-5.6 Sol flagship (long-context tier above 272K input)
-* `gpt-5.6-terra` — GPT-5.6 Terra, balanced tier
-* `gpt-5.6-luna` — GPT-5.6 Luna, lightweight tier
-* `gpt-5.5` — GPT-5.5
-* `gpt-5.4-pro` — GPT-5.4 Pro
-* `gpt-5.4-mini` — GPT-5.4 lightweight
-* `gpt-5.4-nano` — GPT-5.4 ultra-lightweight
-* `gpt-5.3-codex` — GPT-5.3 Codex coding model
-* `gpt-5.2-pro` — GPT-5.2 Pro
-* `gpt-5.2-codex` — GPT-5.2 Codex
-* `gpt-5.1-codex-max` — GPT-5.1 Codex Max
-* `gpt-5` — GPT-5 base model
-* `gpt-5-mini` — GPT-5 lightweight
-* `gpt-5-nano` — GPT-5 ultra-lightweight
-* `gpt-5.1` — GPT-5.1
-* `gpt-5.2` — GPT-5.2
-* `gpt-5.4` — GPT-5.4
-* `gpt-4.1` — GPT-4.1
-* `gpt-4.1-mini` — GPT-4.1 lightweight
-* `gpt-4.1-nano` — GPT-4.1 ultra-lightweight
-* `gpt-4o` — GPT-4o multimodal model
-* `gpt-4o-mini` — GPT-4o lightweight
-* `o3` — OpenAI o3 reasoning model
-* `o4-mini` — OpenAI o4 Mini
-* `o3-mini` — OpenAI o3 Mini
-* `o1` — OpenAI o1 reasoning model
-
-### Anthropic series
-
-* `claude-fable-5` — Claude Fable 5, Mythos-class flagship (1M context)
-* `claude-opus-5` — Claude Opus 5
-* `claude-sonnet-5` — Claude Sonnet 5
-* `claude-opus-4.8` — Claude Opus 4.8
-* `claude-opus-4.7` — Claude Opus 4.7
-* `claude-opus-4.6` — Claude Opus 4.6
-* `claude-sonnet-4.6` — Claude Sonnet 4.6
-* `claude-opus-4.5-20251101` — Claude 4.5 Opus flagship
-* `claude-sonnet-4.5-20250929` — Claude 4.5 Sonnet, balanced
-* `claude-haiku-4.5-20251001` — Claude 4.5 Haiku, fast response
-
-### Google series
-
-* `gemini-3.7-flash` — Gemini 3.7 Flash (fast agentic workflows, multi-step reasoning)
-* `gemini-3.6-flash` — Gemini 3.6 Flash (coding, web / app development)
-* `gemini-3.5-flash` — Gemini 3.5 Flash
-* `gemini-3.5-flash-lite` — Gemini 3.5 Flash-Lite
-* `gemini-3.1-pro-preview` — Gemini 3.1 Pro preview (long-context tier above 200K input)
-* `gemini-3.1-flash-lite-preview` — Gemini 3.1 Flash-Lite preview
-* `gemini-3-flash-preview` — Gemini 3 Flash preview
-* `gemini-2.5-pro` — Gemini 2.5 Pro (long-context tier above 200K input)
-* `gemini-2.5-flash` — Gemini 2.5 Flash
-* `gemini-2.5-flash-lite` — Gemini 2.5 Flash Lite
-
-### DeepSeek series
-
-* `deepseek-v4-pro` — DeepSeek V4 Pro (1M context)
-* `deepseek-v4-flash` — DeepSeek V4 Flash
-* `deepseek-r1-0528` — DeepSeek R1 reasoning model
-* `deepseek-v3.2` — DeepSeek V3.2
-* `deepseek-v3.2-exp` — DeepSeek V3.2 experimental
-
-### Qwen series
-
-* `qwen3.8-max` — Qwen3.8-Max flagship (1M context)
-* `qwen3.7-max` — Qwen3.7-Max
-* `qwen3.7-plus` — Qwen3.7-Plus, balanced tier (long-context tier above 256K input)
-* `qwen3.6-plus` — Qwen3.6-Plus (long-context tier above 256K input)
-* `qwen3.6-flash` — Qwen3.6-Flash, fast low-cost tier (long-context tier above 256K input)
-
-### MiniMax series
-
-* `minimax-m3` — MiniMax M3 multimodal flagship (1M context, 2× above 512K input)
-* `minimax-m2.7` — MiniMax M2.7
-* `minimax-m2.5` — MiniMax M2.5
-* `minimax-m2.1` — MiniMax M2.1
-
-### MoonshotAI series
-
-* `kimi-k3` — Kimi K3 flagship (1M context)
-* `kimi-k2.7-code` — Kimi K2.7 Code, dedicated coding model
-* `kimi-k2.7-code-highspeed` — Kimi K2.7 Code HighSpeed (~180 tokens/s, 2× price)
-* `kimi-k2.6` — Kimi K2.6 multimodal
-* `kimi-k2.5` — Kimi K2.5
-
-### xAI series
-
-* `grok-4.6` — Grok 4.6 flagship (code and everything else, 500K context)
-* `grok-4.5` — Grok 4.5 reasoning model (500K context)
-* `grok-4.3` — Grok 4.3 fast general-purpose model (1M context)
-* `grok-build-0.1` — Grok Build 0.1 coding-agent model (256K context)
-
-<Note>
-For Grok models, when a single request has more than **200K input tokens**, the input beyond the threshold and the whole output are billed at **2× the standard rate** (matching xAI's long-context tier). All four models support image input, function calling and structured outputs.
-</Note>
-
-### Z.ai series
-
-* `glm-5.2` — GLM-5.2 large-scale reasoning model (1M context)
-* `glm-5.1` — GLM-5.1
-* `glm-5` — GLM-5
-* `glm-4.7` — GLM-4.7
-* `glm-4.6` — GLM-4.6
+```bash
+curl https://www.qingbo.dev/v1/models \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
 
 ## Examples
 
@@ -597,7 +520,7 @@ For Grok models, when a single request has more than **200K input tokens**, the 
 
 ```json  theme={null}
 {
-  "model": "gpt-5",
+  "model": "gpt-5.6-luna",
   "messages": [
     {"role": "user", "content": "你好"}
   ]
@@ -608,7 +531,7 @@ For Grok models, when a single request has more than **200K input tokens**, the 
 
 ```json  theme={null}
 {
-  "model": "claude-sonnet-4.5-20250929",
+  "model": "claude-sonnet-5",
   "messages": [
     {"role": "system", "content": "你是一位专业的Python编程导师"},
     {"role": "user", "content": "如何使用列表推导式？"}
@@ -620,7 +543,7 @@ For Grok models, when a single request has more than **200K input tokens**, the 
 
 ```json  theme={null}
 {
-  "model": "gemini-2.5-flash",
+  "model": "gemini-3.5-flash",
   "messages": [
     {"role": "user", "content": "什么是机器学习？"},
     {"role": "assistant", "content": "机器学习是人工智能的一个分支..."},
@@ -633,7 +556,7 @@ For Grok models, when a single request has more than **200K input tokens**, the 
 
 ```json  theme={null}
 {
-  "model": "gpt-5",
+  "model": "gpt-5.6-luna",
   "messages": [
     {"role": "user", "content": "写一首关于春天的诗"}
   ],
@@ -641,13 +564,31 @@ For Grok models, when a single request has more than **200K input tokens**, the 
 }
 ```
 
-## Advanced features
+## Usage and billing
 
-<Note>
-  This endpoint covers basic text chat. For advanced features, see:
+`usage.prompt_tokens` is total input and already includes `prompt_tokens_details.cached_tokens`; `usage.completion_tokens` already includes `completion_tokens_details.reasoning_tokens`. Cached tokens are billed at the cache rate instead of the ordinary input rate, and reasoning is billed once at the output rate — neither is added twice.
 
-  - **Image / video analysis** — [Multimodal Responses API](/en/api-reference/text/openai-multimodal)
-  - **Function calling** — [Multimodal Responses API](/en/api-reference/text/openai-multimodal)
-  - **Web search, file search** — [Multimodal Responses API](/en/api-reference/text/openai-multimodal)
-  - **Streaming output** — [Streaming guide](/en/docs/streaming)
-</Note>
+`usage.cost` in the response is an integer **quota**, not dollars (500,000 quota = 1 USD). The final charge is the text ledger entry in the console billing records; `pricing_pending` means reconciliation is outstanding, not a zero charge. Full rules, ledger states and the cost formula are in the [Text Models Overview · Billing rules](/en/api-reference/text/overview#billing-rules).
+
+<Warning>
+A missing final `usage`, a dropped connection or a response without a cost field does not make the call free. Check the existing usage record in the console before resubmitting.
+</Warning>
+
+## Not supported
+
+The following return `400` and are not billed:
+
+- **Vendor built-in tools** — any entry in `tools` whose type is not `function` or `custom`. Client-executed function tools work normally.
+- **`web_search_options`**.
+- **`service_tier`** set to anything other than `standard` / `default`.
+- **Explicit `cache_control`** — allowed only on the four Claude 5 / Fable models, see [Text Models Overview · Caching](/en/api-reference/text/overview#caching).
+
+Sending `tools`, `tool_choice` or `response_format` to a model that does not support tool calling or structured output also returns `400`. What each model supports is in the [Text Models Overview](/en/api-reference/text/overview).
+
+## Related
+
+- [Text Models Overview](/en/api-reference/text/overview)
+- [Streaming](/en/docs/streaming)
+- [Responses API](/en/api-reference/text/openai-multimodal)
+- [Claude Messages API](/en/api-reference/text/claude-messages)
+- [Gemini Native API](/en/api-reference/text/gemini-native)

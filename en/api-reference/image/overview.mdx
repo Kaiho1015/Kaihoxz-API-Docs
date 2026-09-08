@@ -16,25 +16,51 @@ For the async flow, see [Task System](/en/docs/task-system) — Submit → Statu
 ## Supported Models
 
 <CardGroup cols={2}>
-  <Card title="Gemini Image" href="/en/api-reference/image/gemini">
-    Google Gemini Image — Nano Banana series (2.5 Flash / 3 Pro / 3.1 Flash) + official direct
+  <Card title="Gemini Image Series" href="/en/api-reference/image/gemini/overview">
+    Three Nano Banana official tiers billed from actual token usage, four economy tiers at a fixed price per image, up to 14 reference images
   </Card>
-  <Card title="GPT Image" href="/en/api-reference/image/gpt-image">
-    OpenAI GPT-Image — 1 / 1.5 / 2, multimodal generation + edit + inpainting
+  <Card title="GPT Image Series" href="/en/api-reference/image/gpt-image/overview">
+    GPT Image 1 / 1.5 / 2 official lines billed from actual token usage, GPT Image 2 reverse line at a fixed price per image
   </Card>
-  <Card title="Seedream" href="/en/api-reference/image/seedream">
-    ByteDance Doubao Seedream — 4.0 / 4.5 / 5.0-lite, up to 14 reference images, sequential image groups
+  <Card title="Seedream Series" href="/en/api-reference/image/seedream">
+    ByteDance Seedream 4.0 / 4.5 / 5.0 Lite / 5.0 Pro, text-to-image and reference-image editing
   </Card>
-  <Card title="Qwen Image" href="/en/api-reference/image/qwen-image">
-    Alibaba Tongyi Qwen Image 2.0 / Pro, 1K/2K, strong text rendering
+  <Card title="Qwen Image Series" href="/en/api-reference/image/qwen-image">
+    Alibaba Qwen Image 2.0 / 2.0 Pro / 3.0 / 3.0 Pro, strong text rendering
   </Card>
-  <Card title="Wan Image" href="/en/api-reference/image/wan-image">
-    Alibaba Tongyi Wan 2.7 — 6 actions, image groups / bbox selection / color themes
+  <Card title="Wan Image Series" href="/en/api-reference/image/wan-image">
+    Alibaba Wan 2.7 Image / Image Pro: text-to-image, reference editing, bbox selection and color palettes
   </Card>
   <Card title="Z-Image" href="/en/api-reference/image/z-image">
-    Zhipu Z.ai Z-Image-Turbo — lightweight and fast, bilingual CN/EN
+    Z-Image-Turbo, lightweight and fast, bilingual CN/EN
+  </Card>
+  <Card title="FLUX Series" href="/en/api-reference/image/flux">
+    Black Forest Labs FLUX.2 Pro / Max / Flex and Kontext Pro / Max, text-to-image and reference-image editing
+  </Card>
+  <Card title="Grok Imagine Series" href="/en/api-reference/image/grok-imagine">
+    xAI Grok Imagine 1.5 reverse tiers, 2.0 official and reverse tiers, and the quality tier: text-to-image and editing
+  </Card>
+  <Card title="Midjourney" href="/en/api-reference/image/midjourney">
+    imagine returns four images per call, plus 12 chained actions: upscale, variation, zoom, pan, inpaint and more
   </Card>
 </CardGroup>
+
+## Two request paths
+
+Images have two entries. Billing is identical on both; they differ in parameter validation and how results come back:
+
+| | `POST /v1/tasks` | `POST /v1/images/generations` · `/v1/images/edits` |
+|---|---|---|
+| Result | Async — you get a `task_id` and poll (or wait inline with `Prefer: wait`) | Sync — the image comes back in the response |
+| Request shape | This platform's unified fields: `action` / `aspect_ratio` / `resolution` / `image_urls` | OpenAI's native shape: `size` / `quality` / `n` / `response_format` |
+| Validation | **Full** — action, aspect ratio, resolution, quality and reference-image count are all checked; a non-conforming request returns `400` and is not billed | The compatibility layer does not run these checks, so invalid parameters are not caught up front |
+| Use it for | New integrations, and anything needing masked inpainting, quality tiers, resolution tiers or multi-image references | Existing OpenAI SDK projects — point `base_url` at us and go |
+
+<Note>
+To migrate with the OpenAI SDK, set `base_url` to `https://www.qingbo.dev/v1` and change `model` to one of our model IDs.
+Model-specific capabilities (the `mask_url` mask, the `1k` / `2k` / `4k` resolution tiers, reference-image limits and so on)
+follow the task API documentation — the parameters on our model pages describe the task API.
+</Note>
 
 ## Common Parameters (shared across models)
 
@@ -99,12 +125,11 @@ After receiving the `task_id`, call [`GET /v1/tasks/{task_id}`](/en/api-referenc
 | Mode | Trigger Fields | Typical Vendors |
 |---|---|---|
 | **Text-to-image (T2I)** | `prompt` only | All |
-| **Image-to-image / multi-image reference** | `+ image_urls` (single or multiple) | Seedream / Gemini / GPT-Image / Wan / Qwen |
-| **Image editing (inpainting / lighting changes)** | `+ image_urls + action: edit` | Seedream 4.0/4.5 / Gemini / GPT-Image / Wan |
-| **Inpainting (with mask)** | `+ image_urls + mask_url + action: inpaint` | GPT-Image series |
-| **Sequential image group (thematic set)** | `sequential_image_generation: auto` or `enable_sequential: true` | Seedream / Wan |
+| **Image-to-image / multi-image reference** | `+ image_urls` (single or multiple) | Seedream / Gemini / GPT Image / Wan / Qwen / FLUX / Grok |
+| **Image editing (inpainting / lighting changes)** | `+ image_urls + action: edit` | Seedream / Gemini / GPT Image / Wan / Qwen / FLUX / Grok |
+| **Inpainting (with mask)** | `+ image_urls + mask_url + action: edit` | The three [GPT Image official](/en/api-reference/image/gpt-image/overview) models; **not supported** on the Nano Banana economy routes |
+| **Sequential image group (thematic set)** | `enable_sequential: true` | Wan Image |
 | **Interactive editing (bbox selection)** | `+ image_urls + bbox_list` | Wan Image |
-| **Search-augmented generation** | `google_search: true` or `google_image_search: true` | Gemini 3.1 Flash |
 
 <Note>
 Not every model supports every mode — check each vendor doc for the actual `action` list and field range. The backend validates request fields against the vendor's declared capabilities and rejects out-of-range requests.
@@ -115,11 +140,11 @@ Not every model supports every mode — check each vendor doc for the actual `ac
 - **Media references are always plural** — always `image_urls`, even for a single image use a one-element array `["one.jpg"]`
 - **Aspect ratio is unified as** `aspect_ratio` — vendor internals using `size` / `ratio` are implementation details you don't need to track
 - **Resolution is unified as** `resolution` — vendor internals using `quality` are implementation details
-- **Mask field** `mask_url` (used for GPT-Image series inpainting)
+- **Mask field** `mask_url` (used for GPT Image official inpainting)
 
 ## Related
 
-- [Task System Reference](/en/docs/task-system) — task state machine / polling cadence / webhook
+- [Task System](/en/docs/task-system) — task state machine / polling cadence / webhook
 - [Request & Response](/en/docs/request-response) — common error codes / headers / rate limits
 - [Authentication](/en/docs/authentication) — API key application and usage
 - [Models](/en/docs/models) — full model lookup endpoint

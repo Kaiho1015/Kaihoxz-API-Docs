@@ -1,266 +1,382 @@
 ---
 title: "万相 Wan 系列"
-description: "阿里巴巴通义万相 — 文生 / 图生 / 参考生 / 视频编辑,统一任务入口,按秒计费"
+description: "阿里通义万相视频模型：文生、图生、参考生与视频编辑，统一任务入口，按分辨率档 × 秒数计费"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-阿里巴巴通义万相(Wan)视频生成系列,覆盖 **文生视频 / 图生视频 / 参考生视频 / 视频编辑** 四类场景,统一走异步任务入口。
+万相（Wan）是阿里通义的视频模型线。本页覆盖八个视频模型：`wan2.5-preview`、`wan2.6`、`wan2.6-i2v`、`wan2.6-i2v-flash` 做文生与图生，`wan2.7` 与 `wan3.0-video` 是多模态统一入口（文本、首尾帧、参考素材、视频续写走同一个模型 ID），`wan2.7-r2v` 做参考生视频，`wan2.7-videoedit` 做视频编辑。八个模型共用 `POST /v1/tasks`，换模型只改 `model`，但参数集合、可传的媒体输入和计费维度各不相同。万相的图像模型见 [Wan Image 系列](/cn/api-reference/image/wan-image)。
 
-七个档位:
-
-- **`wan2.7`** — 最新主力档,文生 / 图生统一入口(传 `image_urls` 自动进图生模式,首帧 / 首尾帧),720P / 1080P,2-15 秒任意整数,支持负面提示词与智能扩写
-- **`wan2.6`** — 经典稳定档,文生 / 图生,720p / 1080p,5 / 10 / 15 秒
-- **`wan2.6-i2v`** — 2.6 图生视频标准档,以参考图驱动、音视频同步,720p / 1080p,5 / 10 / 15 秒,需传 `image_urls`
-- **`wan2.6-i2v-flash`** — 2.6 图生视频极速档,价格约为标准图生档的一半,720p / 1080p,5 / 10 / 15 秒,需传 `image_urls`
-- **`wan2.5-preview`** — 2.5 预览档,文生 / 图生(传 `image_urls` 自动进图生模式),480p / 720p / 1080p,5 / 10 秒,价位更亲民
-- **`wan2.7-r2v`** — 参考生视频(R2V),以一张或多张参考图作主体 / 风格参考生成新视频,角色一致性 / 风格延续,需传 `image_urls`
-- **`wan2.7-videoedit`** — 视频编辑,输入源视频 + 文本指令实现风格迁移 / 内容替换 / 整段改写,需传 `video_urls`
-
-全系 **按秒计费**:实际费用 = 对应分辨率单价 × 输出时长(秒)。
-
-**`wan2.7-r2v` / `wan2.7-videoedit` 把输入视频也计入秒数**:按 **(源视频秒数 + 输出秒数) × 参考视频档单价** 计费,参考视频档单价低于文生视频档。源视频最长 **15 秒**(`wan2.7-r2v`)/ **10 秒**(`wan2.7-videoedit`)。
-
-## 定价
-
-<Note>
-本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
-
-**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
-**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
-</Note>
-
-## 调用示例
+## 快速开始
 
 <CodeGroup>
 
-```bash 文生视频(wan2.7)
+```bash 文生视频
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-    "model": "wan2.7",
-    "prompt": "夕阳下的海边公路,慢镜头推进,电影感画面",
-    "duration": 8,
-    "resolution": "1080P",
-    "aspect_ratio": "16:9"
-  }'
-```
-
-```bash 图生视频(wan2.7 首帧)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "wan2.7",
-    "prompt": "人物缓缓站起身,向镜头走来",
-    "image_urls": ["https://cdn.example.com/person.jpg"],
-    "duration": 8,
-    "resolution": "1080P"
-  }'
-```
-
-```bash 文生视频(wan2.6)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: wan-t2v-001" \
   -d '{
     "model": "wan2.6",
-    "prompt": "一只可爱的猫咪在草地上奔跑",
-    "duration": 5,
-    "resolution": "720p",
-    "aspect_ratio": "16:9"
+    "action": "generate",
+    "prompt": "夕阳下的海边公路，镜头缓慢推进，电影感画面",
+    "resolution": "1080p",
+    "aspect_ratio": "16:9",
+    "duration": 5
   }'
 ```
 
-```bash 图生视频(wan2.5-preview)
+```bash 图生视频（首帧）
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "wan2.5-preview",
-    "prompt": "画面中的人物缓缓抬头望向天空",
-    "image_urls": ["https://cdn.example.com/portrait.jpg"],
-    "duration": 5,
-    "resolution": "720p"
+    "model": "wan2.6-i2v",
+    "action": "generate",
+    "prompt": "人物缓缓站起身，向镜头走来",
+    "image_urls": ["https://cdn.example.com/first.jpg"],
+    "resolution": "720p",
+    "duration": 5
   }'
 ```
 
-```bash 参考生视频(wan2.7-r2v)
+```bash 首尾帧
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "wan2.7",
+    "action": "generate",
+    "prompt": "笑容逐渐展开，背景光由冷转暖",
+    "first_frame_image": "https://cdn.example.com/first.jpg",
+    "last_frame_image": "https://cdn.example.com/last.jpg",
+    "resolution": "720p",
+    "duration": 5
+  }'
+```
+
+```bash 视频续写
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "wan2.7",
+    "action": "generate",
+    "prompt": "镜头继续跟随主角走向远处的灯塔",
+    "video_urls": ["https://cdn.example.com/clip.mp4"],
+    "resolution": "720p",
+    "duration": 5
+  }'
+```
+
+```bash 参考生视频
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "wan2.7-r2v",
-    "prompt": "保持角色形象,在森林中奔跑,镜头跟随",
+    "action": "generate",
+    "prompt": "保持角色形象，在森林中奔跑，镜头跟随",
     "image_urls": [
       "https://cdn.example.com/char-1.jpg",
       "https://cdn.example.com/char-2.jpg"
     ],
-    "duration": 8,
-    "resolution": "1080P",
-    "aspect_ratio": "16:9"
+    "resolution": "1080p",
+    "aspect_ratio": "16:9",
+    "duration": 8
   }'
 ```
 
-```bash 视频编辑(wan2.7-videoedit)
+```bash 多模态参考
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "wan3.0-video",
+    "action": "generate",
+    "prompt": "视频1里的人抱着图1，坐在椅子上弹一支舒缓的民谣",
+    "generation_type": "reference",
+    "image_urls": ["https://cdn.example.com/object.jpg"],
+    "video_urls": ["https://cdn.example.com/role.mp4"],
+    "resolution": "480p",
+    "duration": 5
+  }'
+```
+
+```bash 视频编辑
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "wan2.7-videoedit",
-    "prompt": "把场景改为雪天,保留人物动作",
+    "action": "edit",
+    "prompt": "把场景改成雪天，保留人物动作",
     "video_urls": ["https://cdn.example.com/source.mp4"],
-    "duration": 8,
-    "resolution": "1080P"
+    "image_urls": ["https://cdn.example.com/style.jpg"],
+    "resolution": "720p",
+    "duration": 0,
+    "metadata": { "audio_setting": "origin" }
   }'
 ```
 
 </CodeGroup>
 
-<ResponseExample>
-```json 提交成功
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
+
+## 请求参数
+
+<ParamField body="model" type="string" required>
+  八选一：`wan2.5-preview`、`wan2.6`、`wan2.6-i2v`、`wan2.6-i2v-flash`、`wan2.7`、`wan2.7-r2v`、`wan2.7-videoedit`、`wan3.0-video`。
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  - `generate`：生成视频。`wan2.7-videoedit` 之外的七个模型只支持这个动作
+  - `edit`：编辑输入视频。只有 `wan2.7-videoedit` 支持，且它只支持这一个动作
+</ParamField>
+
+<ParamField body="prompt" type="string">
+  视频内容描述或编辑指令。
+
+  `wan2.7-r2v` 必填。`wan2.7` 与 `wan3.0-video` 在没有任何媒体输入时必填。其余模型可选，但用于指导运镜与动作。
+</ParamField>
+
+<ParamField body="negative_prompt" type="string">
+  负面提示词，排除不想要的内容。`wan3.0-video` 不接受这个参数，其余七个模型都接受。
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  图片输入。语义与张数上限按模型不同：
+
+  - `wan2.5-preview` / `wan2.6`：传入即进入图生视频模式
+  - `wan2.6-i2v` / `wan2.6-i2v-flash`：**必传**，恰好 1 张，作首帧，画幅跟随图片
+  - `wan2.7`：1–2 张（1 张为首帧，2 张为首尾帧）；与 `first_frame_image`、`video_urls`、`aspect_ratio` 互斥
+  - `wan2.7-r2v`：1–5 张主体 / 风格参考；与 `video_urls` 互斥；与 `first_frame_image` 同传时最多 4 张
+  - `wan2.7-videoedit`：最多 4 张风格 / 内容参考
+  - `wan3.0-video`：最多 10 张；`generation_type: "frame"` 时只接受 1–2 张帧图
+</ParamField>
+
+<ParamField body="first_frame_image" type="string">
+  首帧图片 URL。`wan2.7`、`wan2.7-r2v` 与 `wan3.0-video` 接受。
+
+  - `wan2.7`：不能与 `image_urls`、`video_urls` 或 `aspect_ratio` 混用
+  - `wan2.7-r2v`：最多搭配 4 张参考图，不能与 `video_urls` 或 `aspect_ratio` 混用，比例跟随首帧
+  - `wan3.0-video`：不能与 `image_urls`、`video_urls`、`audio_urls`、`file_url`、`link_url` 混用
+</ParamField>
+
+<ParamField body="last_frame_image" type="string">
+  尾帧图片 URL。`wan2.7` 与 `wan3.0-video` 接受，必须与 `first_frame_image` 一起提供。
+</ParamField>
+
+<ParamField body="video_urls" type="string[]">
+  视频输入。段数与时长上限按模型不同：
+
+  - `wan2.7`：最多 1 段，2–10 秒，用于视频续写
+  - `wan2.7-r2v`：最多 5 段，单段最长 5 秒、合计最长 25 秒
+  - `wan2.7-videoedit`：**必传**，恰好 1 段，2–10 秒
+  - `wan3.0-video`：最多 5 段，单段最长 15 秒、合计最长 15 秒
+</ParamField>
+
+<ParamField body="audio_urls" type="string[]">
+  自定义音频。`wan2.6-i2v-flash` 最多 1 段（3–30 秒），`wan2.7` 最多 1 段（2–30 秒），`wan3.0-video` 最多 5 段（单段 1–15 秒、合计最长 15 秒）。其余模型不接受。
+</ParamField>
+
+<ParamField body="generate_audio" type="boolean">
+  是否生成有声视频。`wan2.5-preview` 与 `wan2.6` 默认 `false`，`wan2.6-i2v-flash` 与 `wan3.0-video` 默认 `true`。其余模型不接受这个参数。
+</ParamField>
+
+<ParamField body="resolution" type="string">
+  输出分辨率：
+
+  - `wan2.5-preview`：`480p`、`720p`、`1080p`
+  - `wan2.6`、`wan2.6-i2v`、`wan2.6-i2v-flash`、`wan2.7`、`wan2.7-r2v`、`wan2.7-videoedit`：`720p`、`1080p`
+  - `wan3.0-video`：`480p`、`720p`、`1080p`
+
+  默认值：`wan2.6-i2v`、`wan2.6-i2v-flash`、`wan2.7`、`wan2.7-r2v`、`wan2.7-videoedit` 为 `720p`，`wan3.0-video` 为 `480p`。
+</ParamField>
+
+<ParamField body="duration" type="integer">
+  输出时长（秒）：
+
+  - `wan2.5-preview`：`5` 或 `10`
+  - `wan2.6`：`5`、`10` 或 `15`
+  - `wan2.6-i2v`、`wan2.6-i2v-flash`、`wan2.7`、`wan2.7-r2v`：`2`–`15` 任意整数
+  - `wan2.7-videoedit`：`2`–`10` 任意整数，另接受 `0`（沿用源视频时长）
+  - `wan3.0-video`：`2`–`30` 任意整数
+
+  `wan2.6-i2v` 默认 `5`。带 `video_urls` 时输出时长另有上限：`wan2.7` 与 `wan2.7-r2v` 最长 10 秒，`wan3.0-video` 最长 15 秒。
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string">
+  画面比例。`wan2.5-preview`、`wan2.6`、`wan2.7`、`wan2.7-r2v`、`wan2.7-videoedit` 支持 `16:9`、`9:16`、`1:1`、`4:3`、`3:4`；`wan3.0-video` 在这五种之外还支持 `adaptive`，默认 `adaptive`。
+
+  `wan2.6-i2v` 与 `wan2.6-i2v-flash` 不接受这个参数，画幅跟随输入图。另外几种情况下这个参数也不能传：`wan2.6` 带 `image_urls` 时、`wan2.7` 带 `first_frame_image` / `image_urls` / `video_urls` 时、`wan2.7-r2v` 带 `first_frame_image` 时——这些场景的画幅跟随输入素材。
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  随机种子。相同请求配相同种子会生成相似结果。八个模型都接受。
+</ParamField>
+
+<ParamField body="watermark" type="boolean">
+  是否给输出视频加水印。八个模型都接受。
+</ParamField>
+
+<ParamField body="prompt_extend" type="boolean" default="true">
+  提示词智能扩写，对短提示词效果提升明显。`wan3.0-video` 不接受这个参数，其余七个模型都接受。
+
+  `wan2.6-i2v` 与 `wan2.6-i2v-flash` 在设置 `shot_type` 时要求 `prompt_extend` 为 `true`。
+</ParamField>
+
+<ParamField body="shot_type" type="string">
+  镜头类型：`single`（单镜头连续）或 `multi`（多镜头叙事）。只有 `wan2.6`、`wan2.6-i2v`、`wan2.6-i2v-flash` 接受。
+</ParamField>
+
+<ParamField body="template" type="string">
+  特效模板。使用时只需一张图片，`prompt` 被忽略。
+
+  `wan2.6-i2v` 与 `wan2.6-i2v-flash` 的取值：`squish`、`rotation`、`poke`、`inflate`、`dissolve`、`carousel`、`singleheart`、`flying`、`rose`、`hug`、`frenchkiss`、`coupleheart`。`wan2.6` 接受特效模板名字符串。
+</ParamField>
+
+<ParamField body="audio_url" type="string">
+  指定音频地址，优先级高于 `generate_audio`。只有 `wan2.5-preview` 与 `wan2.6` 接受。
+</ParamField>
+
+<ParamField body="image_with_roles" type="array">
+  带角色的图片数组，每项 `{url, role}`，`role` 取 `first_frame`、`last_frame` 或 `reference`；与 `first_frame_image` / `last_frame_image` 合并发送。只有 `wan2.7`、`wan2.7-r2v`、`wan3.0-video` 接受。
+</ParamField>
+
+<ParamField body="generation_type" type="string">
+  图片数组的归属：`frame`（首尾帧）或 `reference`（参考图）。只有 `wan3.0-video` 接受；不传时由输入素材自动判定。
+</ParamField>
+
+<ParamField body="file_url" type="string">
+  参考文档地址。只有 `wan3.0-video` 接受，与 `link_url` 互斥。
+</ParamField>
+
+<ParamField body="link_url" type="string">
+  参考网页地址。只有 `wan3.0-video` 接受，与 `file_url` 互斥。
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  附加参数对象，目前只有 `audio_setting`：`auto`（自动生成音频）或 `origin`（保留源视频音频）。只有 `wan2.7-videoedit` 接受。
+</ParamField>
+
+通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
+
+八个模型都不接受 `n` 与 `quality`。以上之外的参数会返回 `400`，不计费。
+
+## 限制
+
+| 模型 ID | 条件 | 限制 |
+|---|---|---|
+| 八个模型 | 每次任务 | 一次任务只产出一个结果，不支持用 `n` 批量生成 |
+| `wan2.5-preview` | `resolution: "480p"` | 480p 只支持 16:9 / 9:16 / 1:1 |
+| `wan2.6` | 传了 `image_urls` | 图生视频模式不支持 `aspect_ratio`，比例跟随输入图 |
+| `wan2.6-i2v` | 每次任务 | 需要恰好 1 张首帧图片，画幅随图片 |
+| `wan2.6-i2v` | 传了 `shot_type` | 设置 `shot_type` 时 `prompt_extend` 必须为 `true` |
+| `wan2.6-i2v-flash` | 每次任务 | 必须且只能提供一张首帧图，自定义音频最多一段 |
+| `wan2.6-i2v-flash` | 传了 `shot_type` | `shot_type` 需要启用 `prompt_extend` |
+| `wan2.7` | 每次任务 | 参考视频和自定义音频各最多一段 |
+| `wan2.7` | 没有任何媒体输入 | 纯文生和纯音频请求必须提供提示词 |
+| `wan2.7` | 传了 `last_frame_image` | 尾帧必须与首帧一起提供 |
+| `wan2.7` | 传了 `first_frame_image` | 显式帧控制不能混用图片数组、视频或比例 |
+| `wan2.7` | 传了 `image_urls` | 图生视频接受一至两张图且比例跟随输入 |
+| `wan2.7` | 传了 `video_urls` | 视频续写不接受自定义音频或比例 |
+| `wan2.7-r2v` | 每次任务 | 参考视频最多五段；必须提供提示词 |
+| `wan2.7-r2v` | 既没有图片也没有视频 | 必须提供参考图片或参考视频 |
+| `wan2.7-r2v` | 传了 `image_urls` | 一次只接受图片或视频一种参考，不能混用 |
+| `wan2.7-r2v` | 传了 `video_urls` | 带参考视频时不混用图片，输出最长 10 秒 |
+| `wan2.7-r2v` | 传了 `first_frame_image` | 首帧最多搭配四张参考图，比例跟随首帧 |
+| `wan2.7-videoedit` | 每次任务 | 视频编辑必须且只能提供一段输入视频 |
+| `wan3.0-video` | 每次任务 | 参考视频和参考音频各最多五段 |
+| `wan3.0-video` | 没有任何输入 | 必须提供提示词或参考素材 |
+| `wan3.0-video` | 传了 `last_frame_image` | 尾帧必须与首帧一起提供 |
+| `wan3.0-video` | 传了 `first_frame_image` | 首尾帧不能与参考素材混用 |
+| `wan3.0-video` | `generation_type: "frame"` | frame 模式只接受一至两张帧图 |
+| `wan3.0-video` | `generation_type: "reference"` | reference 模式不能混入首尾帧 |
+| `wan3.0-video` | 传了 `video_urls` | 带参考视频时输出最长 15 秒 |
+| `wan3.0-video` | 传了 `file_url` | `file_url` 与 `link_url` 不能同时提供 |
+
+## 计费
+
+全系按**分辨率档 × 输出秒数**计费。`price_config.video_prices` 按分辨率分键，未单独列出的分辨率按同级的 `default` 兜底档结算。
+
+| 模型 ID | 计费维度 |
+|---|---|
+| `wan2.5-preview` `wan2.6` `wan2.6-i2v` `wan3.0-video` | 分辨率档 × 输出秒数 |
+| `wan2.6-i2v-flash` | 分辨率档 × 输出秒数；有声输出走带声档 |
+| `wan2.7` `wan2.7-r2v` | 分辨率档 × 输出秒数；带参考视频时另按参考视频秒数加收一笔 |
+| `wan2.7-videoedit` | 分辨率档 × 输出秒数，最低按 6 秒计 |
+
+**带声档**（`wan2.6-i2v-flash`）——价表里除 `720p` / `1080p` 外另有 `720p_sound` / `1080p_sound`。开启音频生成（`generate_audio: true`，该模型默认即为 `true`）或传了 `audio_urls` 时按带声档结算。
+
+**参考视频**（`wan2.7` / `wan2.7-r2v`）——价表里另有 `<分辨率>_video_ref` 与 `<分辨率>_video_input_second` 两组键。传了 `video_urls` 时，输出秒数按 `_video_ref` 档结算，参考视频的秒数再按 `_video_input_second` 单独计一笔。参考视频总时长上限：`wan2.7` 10 秒，`wan2.7-r2v` 25 秒。输入视频的秒数怎么读取、读不出来会怎样，见[视频生成概述](/cn/api-reference/video/overview#输入视频的时长与计费)。
+
+**最低计费时长**（`wan2.7-videoedit`）——`price_config.min_billing_duration` 为 `6`，计费秒数取请求时长与 6 秒中的较大值。`duration: 0` 按源视频时长结算，同样不低于 6 秒。
+
+**默认档位**（`wan3.0-video`）——不传 `resolution` 时按 `480p` 档结算。
+
+只有成功出片才计费。任务失败、取消，或没有返回可用视频时，全额退款。最终费用以任务响应里的 `cost` 为准——整数 quota，**500,000 quota = 1 USD**，不是美元。
+
+<Note>
+**本页不列具体单价**。单价随上游调整，本节只讲计费维度与口径。
+
+实时单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。
+单次调用的实际费用见任务响应里的 `cost`（整数 quota，500,000 quota = 1 USD）。
+</Note>
+
+## 响应
+
+```json 任务完成
 {
   "task_id": "task-wave1775285160b950328499",
   "model": "wan2.7",
   "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1775285160,
+  "completed_at": 1775285281,
+  "billing_status": "settled",
+  "cost": 225000,
+  "result": {
+    "videos": [
+      {
+        "expires_at": 1775544360,
+        "url": ["https://cdn.example.com/result.mp4"]
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499",
+    "cancel": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499/cancel"
+  }
 }
 ```
-</ResponseExample>
 
-提交后用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 轮询状态,详见 [任务系统](/cn/docs/task-system)。
+`result.videos` 返回生成的视频，`url` 是数组，`expires_at` 是视频链接的过期时间戳。完整字段说明见[查询任务状态](/cn/api-reference/task/status)。
 
 ## 可用模型
 
-| 模型 ID | 分辨率 | 时长 | 宽高比 | 必传 | 备注 |
-|---|---|---|---|---|---|
-| `wan2.7` | 720P / 1080P | 2-15 秒任意整数 | 16:9 / 9:16 / 1:1 / 4:3 / 3:4 | `prompt` | 文生 / 图生统一入口,传 `image_urls` 进图生 |
-| `wan2.6` | 720p / 1080p | 5 / 10 / 15 秒 | 16:9 / 9:16 / 1:1 | `prompt` | 经典稳定档,文生 / 图生 |
-| `wan2.6-i2v` | 720p / 1080p | 5 / 10 / 15 秒 | 16:9 / 9:16 / 1:1 | `prompt` + `image_urls` | 2.6 图生标准档,音视频同步 |
-| `wan2.6-i2v-flash` | 720p / 1080p | 5 / 10 / 15 秒 | 16:9 / 9:16 / 1:1 | `prompt` + `image_urls` | 2.6 图生极速档,约半价;不传 `audio` 按有声计费 |
-| `wan2.5-preview` | 480p / 720p / 1080p | 5 / 10 秒 | 16:9 / 9:16 / 1:1 | `prompt` | 2.5 预览档,文生 / 图生,传 `image_urls` 进图生 |
-| `wan2.7-r2v` | 720P / 1080P | 2-15 秒任意整数 | 16:9 / 9:16 / 1:1 | `prompt` + `image_urls` | 参考生视频,角色 / 风格一致性 |
-| `wan2.7-videoedit` | 720P / 1080P | 2-15 秒任意整数 | 16:9 / 9:16 / 1:1 | `prompt` + `video_urls` | 视频编辑,风格迁移 / 内容替换 |
+**生成类**（`action: "generate"`）
 
-<Note>
-分辨率大小写按模型区分:`wan2.7` / `wan2.7-r2v` / `wan2.7-videoedit` 用大写 `720P` / `1080P`,`wan2.6` / `wan2.6-i2v` / `wan2.6-i2v-flash` / `wan2.5-preview` 用小写 `720p` / `1080p`(`wan2.5-preview` 另有 `480p`)。
-</Note>
+| 模型 ID | 分辨率 | 时长（秒） | 可传的媒体输入 |
+|---|---|---|---|
+| `wan2.5-preview` | `480p` `720p` `1080p` | `5` `10` | `image_urls` · `audio_url` |
+| `wan2.6` | `720p` `1080p` | `5` `10` `15` | `image_urls` · `audio_url` |
+| `wan2.6-i2v` | `720p` `1080p` | `2`–`15` | `image_urls`（必传 1 张） |
+| `wan2.6-i2v-flash` | `720p` `1080p` | `2`–`15` | `image_urls`（必传 1 张）· `audio_urls` ≤1 |
+| `wan2.7` | `720p` `1080p` | `2`–`15` | `image_urls` ≤2 · `first_frame_image` / `last_frame_image` · `video_urls` ≤1 · `audio_urls` ≤1 |
+| `wan2.7-r2v` | `720p` `1080p` | `2`–`15` | `image_urls` ≤5 · `first_frame_image` · `video_urls` ≤5 |
+| `wan3.0-video` | `480p` `720p` `1080p` | `2`–`30` | `image_urls` ≤10 · `first_frame_image` / `last_frame_image` · `video_urls` ≤5 · `audio_urls` ≤5 · `file_url` / `link_url` |
 
-## 通用参数
+**视频编辑**（`action: "edit"`）
 
-<ParamField body="model" type="string" required>
-  模型 ID,见 [可用模型](#可用模型) 表
-</ParamField>
-
-<ParamField body="prompt" type="string" required>
-  视频内容描述。文生模式必填;图生 / 参考生 / 编辑模式可选,但建议填写以指导运镜与动作。最多 5000 字符
-</ParamField>
-
-<ParamField body="image_urls" type="string[]">
-  参考 / 输入图片 URL 数组:
-  - `wan2.7`:传入后进入图生模式 —— 1 张为首帧,2 张为首尾帧
-  - `wan2.6`:仅支持 1 张,传入后进入图生模式
-  - `wan2.6-i2v` / `wan2.6-i2v-flash`:**必传** 1 张,作为首帧驱动
-  - `wan2.5-preview`:传入后进入图生模式(图生视频)
-  - `wan2.7-r2v`:**必传**,作为主体 / 风格参考(R2V)
-  - `wan2.7-videoedit`:可选,叠加风格 / 内容参考图,**最多 4 张**
-
-  标 **必传** 的档位(`wan2.6-i2v` / `wan2.6-i2v-flash` / `wan2.7-r2v`),**缺少时提交即被拒,不预扣。**
-</ParamField>
-
-<ParamField body="video_urls" type="string[]">
-  源视频 URL 数组(单元素)。`wan2.7-videoedit` **必传**,**缺少时提交即被拒,不预扣。**最长 10 秒;暂不支持 base64,需公网可下载链接
-</ParamField>
-
-<ParamField body="resolution" type="string">
-  输出分辨率,各模型档位见 [可用模型](#可用模型) 表:
-  - `wan2.7` / `wan2.7-r2v` / `wan2.7-videoedit`:`720P` / `1080P`(默认 `1080P`)
-  - `wan2.6` / `wan2.6-i2v` / `wan2.6-i2v-flash`:`720p` / `1080p`(默认 `720p`)
-  - `wan2.5-preview`:`480p` / `720p` / `1080p`(默认 `720p`)
-</ParamField>
-
-<ParamField body="duration" type="integer">
-  视频时长(秒):
-  - `wan2.7` / `wan2.7-r2v` / `wan2.7-videoedit`:`2`-`15` 任意整数(默认 `5`)
-  - `wan2.6` / `wan2.6-i2v` / `wan2.6-i2v-flash`:仅 `5` / `10` / `15`(默认 `5`)
-  - `wan2.5-preview`:仅 `5` / `10`(默认 `5`)
-
-  `wan2.7-videoedit` 按用户指定的输出时长结算;传 `0` 表示保留源视频时长,按探测到的源视频时长结算(探测规则见 [输入视频的时长与计费](/cn/api-reference/video/overview#输入视频的时长与计费))。
-</ParamField>
-
-<ParamField body="aspect_ratio" type="string" default="16:9">
-  画面宽高比(图生模式下由输入图片自动决定,此参数会被忽略):
-  - `wan2.7`:`16:9` / `9:16` / `1:1` / `4:3` / `3:4`
-  - `wan2.6` / `wan2.6-i2v` / `wan2.6-i2v-flash` / `wan2.5-preview` / `wan2.7-r2v` / `wan2.7-videoedit`:`16:9` / `9:16` / `1:1`
-</ParamField>
-
-<ParamField body="seed" type="integer">
-  随机种子(≥0)。相同请求 + 相同 seed 会生成相似结果,不指定则每次不同
-</ParamField>
-
-<ParamField body="callback_url" type="string">
-  Webhook 回调地址,任务终态时调用。详见 [回调机制](/cn/docs/sync-async#异步任务-webhook)
-</ParamField>
-
-<ParamField body="callback_events" type="string[]">
-  订阅的回调事件,默认订阅终态(`succeeded` / `failed` / `cancelled`)
-</ParamField>
-
-## 模型特定参数
-
-<Tabs>
-  <Tab title="wan2.7">
-    <ParamField body="prompt_extend" type="boolean" default="true">
-      提示词智能扩写,对较短提示词效果提升明显,但会增加耗时
-    </ParamField>
-
-    <ParamField body="negative_prompt" type="string">
-      负面提示词,描述不希望出现的内容。示例:`"模糊、变形、低质量"`
-    </ParamField>
-  </Tab>
-
-  <Tab title="wan2.6">
-    Wan2.6 无额外特定参数,所有可选项在 [通用参数](#通用参数) 中。文生 / 图生由是否传 `image_urls` 自动判定。
-  </Tab>
-
-  <Tab title="wan2.6-i2v / wan2.6-i2v-flash">
-    两档均需传 `image_urls`(1 张,作首帧)。可选:
-
-    <ParamField body="audio" type="boolean" default="true">
-      生成有声视频。`wan2.6-i2v` 固定有声;`wan2.6-i2v-flash` 上游对无声视频价格减半,但**我们当前不传或传 `false` 都按有声计费**,后续计费链补齐后再区分
-    </ParamField>
-
-    <ParamField body="negative_prompt" type="string">
-      负面提示词
-    </ParamField>
-  </Tab>
-
-  <Tab title="wan2.5-preview">
-    Wan2.5 预览档无额外特定参数,所有可选项在 [通用参数](#通用参数) 中。文生 / 图生由是否传 `image_urls` 自动判定。
-  </Tab>
-
-  <Tab title="wan2.7-r2v">
-    R2V 档无额外特定参数。`image_urls` 必传,作为角色 / 风格参考,prompt 负责描述动作与镜头。
-  </Tab>
-
-  <Tab title="wan2.7-videoedit">
-    VideoEdit 档无额外特定参数。`video_urls` 必传(源视频),`image_urls` 可叠加风格 / 内容参考图(≤4 张),`duration` 由用户指定输出时长。
-  </Tab>
-</Tabs>
-
-## 资源限制
-
-| 项目 | 限制 |
-|---|---|
-| 源视频(videoedit) | MP4 / MOV,≤ 100MB,需公网可下载 |
-| 参考图片 | JPG / PNG / WEBP,需公网可下载链接(videoedit 最多 4 张) |
-| Prompt | ≤ 5000 字符 |
-| 输出 | MP4,链接 24 小时有效,请及时下载 |
+| 模型 ID | 分辨率 | 时长（秒） | 可传的媒体输入 |
+|---|---|---|---|
+| `wan2.7-videoedit` | `720p` `1080p` | `2`–`10`，`0` = 沿用源视频时长 | `video_urls`（必传 1 段）· `image_urls` ≤4 |
 
 ## 相关文档
 
-- [任务系统详解](/cn/docs/task-system) — 任务状态机 / 轮询节奏 / 异步推送
-- [请求响应格式](/cn/docs/request-response) — 通用错误码 / Headers / 限流
-- [认证](/cn/docs/authentication) — API Key 申请与使用
+- [视频生成概述](/cn/api-reference/video/overview)
+- [Wan Image 系列](/cn/api-reference/image/wan-image)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

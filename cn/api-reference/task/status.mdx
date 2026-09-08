@@ -27,7 +27,7 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
   "status": "queued",
   "action": "generate",
   "model": "wan2.7",
-  "progress": 0,
+  "progress": "",
   "created_at": 1720000000,
   "urls": {
     "get": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499",
@@ -42,7 +42,7 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
   "status": "processing",
   "action": "generate",
   "model": "wan2.7",
-  "progress": 45,
+  "progress": "45%",
   "created_at": 1720000000,
   "urls": {
     "get": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499",
@@ -57,7 +57,7 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
   "status": "completed",
   "action": "generate",
   "model": "wan2.7",
-  "progress": 100,
+  "progress": "100%",
   "created_at": 1720000000,
   "completed_at": 1720000030,
   "cost": 75000,
@@ -82,7 +82,7 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
   "status": "completed",
   "action": "generate",
   "model": "seedream-5.0-lite",
-  "progress": 100,
+  "progress": "100%",
   "created_at": 1720000000,
   "completed_at": 1720000030,
   "cost": 5500,
@@ -107,7 +107,7 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
   "status": "failed",
   "action": "generate",
   "model": "wan2.7",
-  "progress": 0,
+  "progress": "100%",
   "created_at": 1720000000,
   "completed_at": 1720000005,
   "cost": 0,
@@ -133,7 +133,7 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
 <ResponseField name="status" type="string">
   任务状态:
   - `queued` — 已提交,等待处理
-  - `processing` — 处理中,`progress` 字段表示进度(0-100)
+  - `processing` — 处理中,`progress` 字段表示进度(百分比字符串)
   - `completed` — 完成,`result` 含生成结果
   - `failed` — 失败,`error` 含错误信息
   - `cancelled` — 已取消(只能取消 queued 状态)
@@ -147,16 +147,17 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
   使用的模型 ID(group_name)
 </ResponseField>
 
-<ResponseField name="progress" type="integer">
-  进度,0-100 整数。queued / failed / cancelled 状态下为 `0`,completed 为 `100`
+<ResponseField name="progress" type="string">
+  进度,**百分比字符串**(如 `"30%"`、`"100%"`)。刚入队时可能为空字符串;终态(completed / failed)为 `"100%"`。
+  注意提交响应里的 `progress` 是整数 `0`,查询响应里是字符串,请勿按数字解析。
 </ResponseField>
 
 <ResponseField name="created_at" type="integer">
-  创建时间(Unix 毫秒时间戳)
+  创建时间(Unix **秒**时间戳)
 </ResponseField>
 
 <ResponseField name="completed_at" type="integer">
-  完成时间(Unix 毫秒时间戳),**仅 completed / failed / cancelled 态有此字段**
+  完成时间(Unix **秒**时间戳),**仅 completed / failed / cancelled 态有此字段**
 </ResponseField>
 
 <ResponseField name="cost" type="integer">
@@ -175,7 +176,7 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
 <ResponseField name="result" type="object">
   生成结果,**仅 completed 态有此字段**。根据任务媒体类型,key 为 `images` / `videos` / `audios`(数组),每项含:
   - `url` — `string[]` 数组(单元素也用数组形式)
-  - `expires_at` — Unix 时间戳,链接有效期(默认 3 天)
+  - `expires_at` — Unix 秒时间戳,建议下载期限。该值在**每次查询时**按「当前时间 + 3 天」重新计算,不是存储侧的保留期承诺
 </ResponseField>
 
 <ResponseField name="urls" type="object">
@@ -194,7 +195,7 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
 详见 [任务系统](/cn/docs/task-system) 完整流程说明。
 
 <Warning>
-**生成结果链接 24 小时-3 天有效期**(`expires_at` 字段),请及时下载保存到自己的存储。过期后链接失效,需要重新提交任务。
+**生成结果链接请及时下载保存到自己的存储。** `expires_at` 是查询时刻起 3 天的建议下载期限,每次查询都会重新计算;它不代表文件一定保留到那一刻,也不代表之后一定失效。不要依赖结果链接做长期存储。
 </Warning>
 
 ## 错误码
@@ -208,4 +209,4 @@ curl https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499 \
 
 - [提交任务](/cn/api-reference/task/submit) — `POST /v1/tasks`
 - [取消任务](/cn/api-reference/task/cancel) — `POST /v1/tasks/{task_id}/cancel`
-- [任务系统详解](/cn/docs/task-system)
+- [任务系统](/cn/docs/task-system)

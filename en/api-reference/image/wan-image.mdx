@@ -1,314 +1,214 @@
 ---
 title: "Wan Image Series"
-description: "Alibaba Tongyi Wanxiang image generation — text-to-image / image-to-image / multi-image reference / image groups / interactive editing"
+description: "Alibaba Wan 2.7 image models: one endpoint for generation and editing, with box-targeted edits and custom palettes"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-Alibaba Tongyi Wanxiang 2.7 unified interface for image generation and editing. Covers **wan2.7-image-pro** (professional, text-to-image up to 4K) and **wan2.7-image** (standard, up to 2K) tiers. The two tiers share the same interface via internal tier switching, and are exposed as a single model externally.
+Wan 2.7 Image puts generation and editing in the same request: text-to-image takes only a `prompt`, while image-to-image, local rewrites and multi-image blending all go through `edit` with `image_urls`. This page covers the standard and pro models. Their parameter sets are identical; they differ only in the top text-to-image resolution and unit price — switching tiers means changing `model` and nothing else.
 
-**Six call modes**:
-
-- **Text-to-image (generate)** — `prompt` only, with optional thinking mode
-- **Image-to-image (image2image)** — Free-form generation from a single reference
-- **Image edit (edit)** — Inpainting / style transfer / element replacement
-- **Multi-image reference (reference)** — Fuse up to 9 reference images
-- **Image group (group)** — `enable_sequential` for comic strips / storyboards, max n = 12
-- **Interactive editing (interactive_edit)** — `bbox_list` targeted region editing (exclusive)
-
-Billed per image.
-
-## Pricing
-
-<Note>
-Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
-
-**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
-**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
-</Note>
-
-## Mode Quick Reference
-
-| Mode | Trigger Field | action |
-|---|---|---|
-| **Text-to-image** | `prompt` only (optional `thinking_mode`) | `generate` |
-| **Image-to-image** | `+ image_urls` (single) | `image2image` |
-| **Image edit** | `+ image_urls` (single) + edit-instruction prompt | `edit` |
-| **Multi-image reference fusion** | `+ image_urls` (2-9) | `reference` |
-| **Image group (comic / storyboard)** | `enable_sequential: true` + `n` ≤ 12 | `group` |
-| **Interactive bbox editing** | `+ image_urls` + `bbox_list` | `interactive_edit` |
-
-## Examples
+## Quick start
 
 <CodeGroup>
 
-```bash Text-to-image (minimal)
+```bash Text to image
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: wan-image-demo-001" \
   -d '{
     "model": "wan2.7-image-pro",
-    "prompt": "Classical Chinese landscape scroll, ink-wash mood, distant mountains in dark green, near water in mist",
-    "resolution": "4K",
+    "action": "generate",
+    "prompt": "A summer beach under a blue sky with white clouds and a distant white sailboat",
     "aspect_ratio": "16:9",
-    "thinking_mode": true
+    "resolution": "4k",
+    "thinking_mode": true,
+    "n": 1
   }'
 ```
 
-```bash Multi-image reference (reference)
+```bash Sequential set
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "wan2.7-image-pro",
-    "prompt": "Place the character from the first image into the scene from the second, with outfit inspired by the third",
-    "image_urls": [
-      "https://cdn.example.com/character.jpg",
-      "https://cdn.example.com/scene.jpg",
-      "https://cdn.example.com/outfit.jpg"
-    ],
-    "resolution": "2K",
-    "aspect_ratio": "3:4"
-  }'
-```
-
-```bash Image group (sequential comic)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "wan2.7-image-pro",
-    "prompt": "A day in the life of a little fox: morning / foraging / playing / sleeping, 4-panel comic strip",
+    "model": "wan2.7-image",
+    "action": "generate",
+    "prompt": "a small fox exploring a snowy forest, storybook illustration, three scenes of the same fox",
     "enable_sequential": true,
-    "n": 4,
-    "resolution": "2K",
+    "n": 3,
+    "resolution": "1k",
     "aspect_ratio": "1:1"
   }'
 ```
 
-```bash Interactive editing (bbox selection)
+```bash Edit with multiple references
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: wan-image-edit-001" \
   -d '{
-    "model": "wan2.7-image-pro",
-    "prompt": "Replace the cat in the box with a Shiba Inu, keep pose and lighting",
-    "image_urls": ["https://cdn.example.com/cat.jpg"],
-    "bbox_list": [[[120, 80, 540, 460]]],
-    "resolution": "2K"
+    "model": "wan2.7-image",
+    "action": "edit",
+    "prompt": "Put the person from the first image into the scene from the second, matching the lighting",
+    "image_urls": [
+      "https://cdn.example.com/person.png",
+      "https://cdn.example.com/scene.png"
+    ],
+    "aspect_ratio": "3:2",
+    "resolution": "2k"
   }'
 ```
 
-```bash Custom color palette
+```bash Edit inside a bounding box
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "wan2.7-image-pro",
-    "prompt": "Minimalist poster, geometric composition, restrained whitespace",
-    "color_palette": [
-      {"hex": "#0A2540", "ratio": 50},
-      {"hex": "#F5F5F0", "ratio": 35},
-      {"hex": "#E04B3A", "ratio": 15}
+    "model": "wan2.7-image",
+    "action": "edit",
+    "prompt": "Replace the signage inside the box with a Chinese shop name",
+    "image_urls": ["https://cdn.example.com/street.png"],
+    "bbox_list": [
+      [[120, 80, 540, 460]]
     ],
-    "resolution": "4K",
-    "aspect_ratio": "2:3"
+    "resolution": "2k"
   }'
 ```
 
 </CodeGroup>
 
-<ResponseExample>
-```json Submission successful
-{
-  "task_id": "task-wave1775290140a830128812",
-  "model": "wan2.7-image",
-  "action": "generate",
-  "status": "queued",
-  "created_at": 1775290140120,
-  "progress": 0
-}
-```
-</ResponseExample>
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
 
-After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status). See [Task System](/en/docs/task-system) for details.
-
-## Available Models
-
-| Model ID | Description |
-|---|---|
-| `wan2.7-image` | Alibaba Tongyi Wanxiang 2.7. Unified interface for text-to-image / image-to-image / editing / multi-image reference / image groups / interactive bbox editing. Up to 4K |
-
-## Common Parameters
+## Request parameters
 
 <ParamField body="model" type="string" required>
-  Choose one from the [Available Models](#available-models) list. Currently `wan2.7-image`
+  Either `wan2.7-image` or `wan2.7-image-pro`.
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  - `generate` — text to image (default)
-  - `edit` — image editing; pair with `image_urls`
+  - `generate`: create an image from text; takes no input images
+  - `edit`: rewrite input images; requires `image_urls`
 
-  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-image; one `image_urls` entry is image-to-image; several are multi-image reference; add `mask_url` for inpainting.
+  Image-to-image, local rewrites and multi-image blending all use `edit`; they differ only in how many `image_urls` you send and whether you add `bbox_list`.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
-  Image description. Supports Chinese and English. For image-group mode, storyboard-style descriptions work best
+  The image description or editing instruction, in Chinese or English.
 </ParamField>
 
-<ParamField body="n" type="integer" default="1">
-  Number of images. Standard mode is bounded by service-side limits; image-group mode (`enable_sequential: true`) allows up to **12**
-</ParamField>
-
-<ParamField body="seed" type="integer" default="-1">
-  Random seed. `-1` for random; a fixed value reproduces similar results
-</ParamField>
-
-<ParamField body="aspect_ratio" type="string" default="1:1">
-  Aspect ratio, 7 options:
-  - `1:1` — Square
-  - `16:9` / `9:16` — Widescreen landscape / portrait
-  - `4:3` / `3:4` — Standard landscape / portrait
-  - `3:2` / `2:3` — Camera ratio landscape / portrait
-</ParamField>
-
-<ParamField body="resolution" type="string" default="2K">
-  Output resolution. Options: `1K` / `2K` / `4K`. **Note**: image-group mode caps at `2K`
+<ParamField body="negative_prompt" type="string">
+  Content to avoid in the generated result.
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  Array of reference image URLs:
-  - `image2image` / `edit` / `interactive_edit`: 1 image
-  - `reference`: 2-9 images
+  Input image URLs. Required for `edit`; up to nine images.
 </ParamField>
 
-<ParamField body="callback_url" type="string">
-  Webhook callback URL, invoked when the task reaches a terminal state. See [Callback Mechanism](/en/docs/sync-async#async-task-webhook)
+<ParamField body="aspect_ratio" type="string" default="1:1">
+  Framing: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `3:2`, `2:3`.
 </ParamField>
 
-<ParamField body="callback_events" type="string[]">
-  Subscribed callback event types. See [Callback Mechanism](/en/docs/sync-async#async-task-webhook)
+<ParamField body="resolution" type="string" default="2k">
+  Output resolution. `wan2.7-image` supports `1k` and `2k`; `wan2.7-image-pro` adds `4k` for text-to-image. On both models, `edit` tops out at `2k`.
 </ParamField>
 
-## Model-Specific Parameters
+<ParamField body="n" type="integer" default="1">
+  Number of images to generate. `1`–`4` in standard mode; `1`–`12` with `enable_sequential`. Billed per image, so `n` multiplies the unit price.
+</ParamField>
 
-<ParamField body="watermark" type="boolean" default="false">
-  AI-generated watermark
+<ParamField body="seed" type="integer">
+  Random seed. The same seed with the same parameters keeps results consistent.
+</ParamField>
+
+<ParamField body="watermark" type="boolean">
+  Add a watermark to the output image.
 </ParamField>
 
 <ParamField body="thinking_mode" type="boolean" default="true">
-  Thinking mode — when enabled, the model performs visual reasoning before generation, improving parsing accuracy on complex prompts.
-
-  **Activation conditions**: only applies when **not in image-group mode** (`enable_sequential` not `true`) and **without image input** (`image_urls` not provided); ignored otherwise
+  Reasoning mode: the model thinks before generating, improving quality at the cost of longer generation time. Effective on `generate` only.
 </ParamField>
 
 <ParamField body="enable_sequential" type="boolean" default="false">
-  Image-group mode (comic strip / storyboard). When enabled:
-  - `n` cap raises to **12**
-  - `resolution` capped at **2K**
-  - `thinking_mode` and `color_palette` have no effect
-
-  Suited for storyboards, comic strips, and themed e-commerce sets — any "themed group of related images" use case
-</ParamField>
-
-<ParamField body="color_palette" type="array">
-  Custom color palette. 3-10 items of `{hex, ratio}`, with `ratio` summing to **100%**.
-
-  **Activation condition**: only applies in **non-group mode**. See [Composite Field Reference](#composite-field-reference)
+  Sequential (multi-image) mode, for storyboards and series: one request returns `n` thematically coherent images (`n` up to 12). `thinking_mode` and `color_palette` have no effect when it is on; `wan2.7-image-pro` tops out at `2k` in this mode.
 </ParamField>
 
 <ParamField body="bbox_list" type="array">
-  Interactive editing bbox list, one-to-one with `image_urls`, max **2** boxes per image.
-
-  Only applies when `action: "interactive_edit"`. See [Composite Field Reference](#composite-field-reference)
+  Per-input-image boxes, `[[[x1, y1, x2, y2], …], …]`, in absolute pixel coordinates. The outer length must equal the length of `image_urls`, and each image takes at most two boxes.
 </ParamField>
 
-## Composite Field Reference
+<ParamField body="color_palette" type="array">
+  A custom palette of 3 to 10 entries (8 recommended), each shaped like `{"hex": "#1B4D3E", "ratio": 12.5}`, with all `ratio` values summing to 100.00%. Standard mode only; it has no effect in sequential mode.
+</ParamField>
 
-### `color_palette` — Custom Color Palette
+See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key` and the maximum-cost header.
 
-Specifies primary colors and their proportions for the output. The model distributes color coverage in the image based on the given ratios.
+This series does not accept `quality` or `mask_url`. Any other parameter returns `400` and is not billed.
 
-**Structure**: array, each item is `{hex, ratio}`
+## Limits
 
-| Field | Type | Description |
-|---|---|---|
-| `hex` | string | Hex color, e.g. `#0A2540`, case-insensitive |
-| `ratio` | number | Percentage coverage in the image. All items must sum to **100** |
-
-**Constraints**:
-
-- Item count: **3-10**
-- Sum of `ratio`: strictly **100** (integer percentages)
-- **Only effective in non-group mode** (ignored when `enable_sequential` is `true`)
-
-**Example**:
-
-```json
-"color_palette": [
-  {"hex": "#0A2540", "ratio": 50},
-  {"hex": "#F5F5F0", "ratio": 35},
-  {"hex": "#E04B3A", "ratio": 15}
-]
-```
-
-### `bbox_list` — Interactive Editing Boxes
-
-Draw boxes on a reference image to tell the model "edit only inside the box," leaving the outside unchanged. Exclusive capability of the Wan series for interactive editing.
-
-**Structure**: triple-nested array `[[[x1, y1, x2, y2], ...], ...]`
-
-- **Outermost**: each item corresponds to one image in `image_urls`, **one-to-one** (counts must match)
-- **Middle**: multiple boxes on a single image, **max 2 boxes per image**
-- **Innermost**: coordinates of one box, 4 numbers `[x1, y1, x2, y2]`, top-left and bottom-right corners (pixel coordinates)
-
-**Constraints**:
-
-- Only applies when `action: "interactive_edit"`
-- Max **2** boxes per image
-- Coordinates use the reference image's original pixels
-
-**Example (single image, single box)**:
-
-```json
-"image_urls": ["https://cdn.example.com/cat.jpg"],
-"bbox_list": [[[120, 80, 540, 460]]]
-```
-
-**Example (single image, two boxes)**:
-
-```json
-"image_urls": ["https://cdn.example.com/scene.jpg"],
-"bbox_list": [[[100, 100, 400, 400], [500, 200, 800, 500]]]
-```
-
-**Example (multiple images, one box each)**:
-
-```json
-"image_urls": [
-  "https://cdn.example.com/img-a.jpg",
-  "https://cdn.example.com/img-b.jpg"
-],
-"bbox_list": [
-  [[120, 80, 540, 460]],
-  [[200, 150, 600, 500]]
-]
-```
-
-## Resource Limits
-
-| Item | Limit |
+| Condition | Limit |
 |---|---|
-| Reference images (`reference`) | 2-9 |
-| Reference images (`image2image` / `edit` / `interactive_edit`) | 1 |
-| Single image size | ≤ 30MB, supports JPG/PNG/WEBP |
-| Output resolution | `1K` / `2K` / `4K` (group mode caps at `2K`) |
-| Group count `n` | Up to **12** (requires `enable_sequential: true`) |
-| `bbox_list` boxes | Max **2** per image |
-| `color_palette` items | 3-10, `ratio` sums to 100% |
-| Output file | JPG URL, valid for 24 hours |
+| `n` | Up to 4 images per request in standard mode; up to 12 with `enable_sequential` |
+| `enable_sequential: true` (`wan2.7-image-pro`) | Sequential mode tops out at `2k` |
+| `action: "generate"` | Requires a prompt and accepts no input images |
+| `action: "edit"` | Requires input images and is limited to `2k` |
+| Input images | Up to nine |
+| Resolution | `1k` / `2k` on `wan2.7-image`; `wan2.7-image-pro` adds `4k` for text-to-image |
+| `bbox_list` | Outer length equals the length of `image_urls`, at most two boxes per image |
+| `color_palette` | 3–10 entries with `ratio` summing to 100.00%; no effect in sequential mode |
 
-## Related Docs
+## Pricing
 
-- [Task System](/en/docs/task-system) — Task state machine / polling cadence / async push
-- [Request & Response](/en/docs/request-response) — Common error codes / Headers / rate limits
-- [Authentication](/en/docs/authentication) — API Key application and usage
+Billed at a **fixed price per successfully generated image**, with one price per model; a request for `n` images is charged `n` times the unit price, and the hold at submission is sized by `n`.
+
+Rates are in `price_config` on `GET /v1/models` and in the console's Model Market. What a single call actually cost is the `cost` field on the task response — an integer quota at **500,000 quota = 1 USD**, not dollars.
+
+Within a model, `generate` and `edit` cost the same, and resolution, aspect ratio, input image count, `thinking_mode` and `color_palette` do not affect the price — the unit price times `n` is the whole cost of a call, known before it is sent.
+
+You are only billed for a successfully generated image. Failed and cancelled tasks, and tasks that return no usable image, are refunded in full.
+
+## Response
+
+```json Completed task
+{
+  "task_id": "taski_example",
+  "model": "wan2.7-image",
+  "action": "edit",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788754231,
+  "completed_at": 1788754279,
+  "result": {
+    "images": [
+      {
+        "expires_at": 1789089508,
+        "url": ["https://cdn.example.com/result.jpg"]
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski_example",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski_example/cancel"
+  },
+  "billing_status": "settled",
+  "cost": 13500
+}
+```
+
+Generated images come back in `result.images`, and `expires_at` is when that link stops working. See [Query Task Status](/en/api-reference/task/status) for the full field list.
+
+## Available models
+
+| Model ID | Text-to-image resolutions | Editing resolutions |
+|---|---|---|
+| `wan2.7-image` | `1k` `2k` | `1k` `2k` |
+| `wan2.7-image-pro` | `1k` `2k` `4k` | `1k` `2k` |
+
+Both support `generate` and `edit`, return up to 4 images per request (12 in sequential mode), accept up to nine input images, and share the same aspect ratios: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `3:2`, `2:3`.
+
+## Related
+
+- [Image Generation Overview](/en/api-reference/image/overview)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

@@ -15,6 +15,8 @@ description: "使用 SSE 实时接收文本生成结果"
 
 ## 使用示例
 
+以下示例、`choices`、`[DONE]` 和末帧 `usage.cost` 均针对 `/v1/chat/completions`。Claude Messages 与 OpenAI Responses 的事件结构不同，请按各自接口说明处理。将 `YOUR_MODEL` 替换为账户可用的文本模型名称。
+
 <CodeGroup>
 
 ```python Python
@@ -26,14 +28,20 @@ client = OpenAI(
 )
 
 stream = client.chat.completions.create(
-    model="gpt-4o",
+    model="YOUR_MODEL",
     messages=[{"role": "user", "content": "写一首短诗"}],
     stream=True
 )
 
 for chunk in stream:
-    if chunk.choices[0].delta.content:
-        print(chunk.choices[0].delta.content, end="")
+    if chunk.usage is not None:
+        quota_cost = getattr(chunk.usage, "cost", None)
+        if quota_cost is not None:
+            print(f"\n消耗额度: {quota_cost} quota")
+    if chunk.choices:
+        content = chunk.choices[0].delta.content
+        if content:
+            print(content, end="")
 ```
 
 ```javascript JavaScript
@@ -45,13 +53,17 @@ const client = new OpenAI({
 });
 
 const stream = await client.chat.completions.create({
-  model: 'gpt-4o',
+  model: 'YOUR_MODEL',
   messages: [{ role: 'user', content: '写一首短诗' }],
   stream: true
 });
 
 for await (const chunk of stream) {
-  process.stdout.write(chunk.choices[0]?.delta?.content || '');
+  if (chunk.usage?.cost != null) {
+    process.stdout.write(`\n消耗额度: ${chunk.usage.cost} quota\n`);
+  }
+  const content = chunk.choices?.[0]?.delta?.content;
+  if (content) process.stdout.write(content);
 }
 ```
 
@@ -59,7 +71,7 @@ for await (const chunk of stream) {
 
 ## SSE 数据格式
 
-每个 chunk 是一行 `data: {json}` 格式的 SSE 事件：
+Chat Completions 的每个 chunk 是一个 `data: {json}` 格式的 SSE 事件：
 
 ```
 data: {"id":"chatcmpl-xxx","choices":[{"delta":{"content":"你"},"index":0}]}
@@ -73,7 +85,7 @@ data: [DONE]
 
 ## 末帧 usage 与计费（cost）
 
-`[DONE]` 之前的最后一个数据帧携带本次调用的用量与扣费：
+Chat Completions 启用 usage 输出时，`[DONE]` 之前的最后一个 usage 帧携带本次调用的用量与计费额度。该帧的 `choices` 可以是空数组，因此先检查数组是否为空，再读取 `choices[0]`：
 
 ```
 data: {"id":"chatcmpl-xxx","choices":[],"usage":{"prompt_tokens":12,"completion_tokens":8,"total_tokens":20,"cost":150}}
@@ -81,6 +93,7 @@ data: {"id":"chatcmpl-xxx","choices":[],"usage":{"prompt_tokens":12,"completion_
 data: [DONE]
 ```
 
-- `usage.cost` 是本次调用实际扣除的额度（quota，整数），按调用对账以它为准
+- `usage.cost` 是本次调用的计费额度（quota，整数），不是美元（USD）；`150` 表示 150 quota
 - 默认就会下发；显式传 `stream_options: {"include_usage": false}` 时不下发
 - 使用 OpenAI SDK 时，末帧的 `chunk.usage` 即为该数据
+- 若连接中断或未收到 usage 帧，不要将缺失的 `cost` 当作 0；请到控制台用量记录核对

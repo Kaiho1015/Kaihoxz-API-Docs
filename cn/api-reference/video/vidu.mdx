@@ -1,84 +1,42 @@
 ---
 title: "Vidu Q3 系列"
-description: "生数科技 Vidu Q3 — 参考生 / 图生,智能镜头切换,1-16 秒任意整数"
+description: "生数科技 Vidu Q3：参考图生视频、多参考融合、文生视频与首尾帧，原生音频，最长 16 秒"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-生数科技 Vidu Q3 系列视频生成模型,**参考生视频(R2V)** 是看家本事 — 接受公网图作为主体 / 风格参考,prompt 负责描述动作与镜头,人物外观由参考图决定,适合 **角色一致性 / 风格延续 / 多机位切换** 三类场景。
+生数科技 Vidu Q3 系列。本页覆盖 `vidu-q3`、`vidu-q3-mix`、`vidu-q3-pro` 和 `vidu-q3-turbo`：四个模型走同一个任务接口，都只有 `generate` 一个动作，都按分辨率档与秒数计费，区别在于要不要参考图、支持哪些分辨率档，以及能不能生成音频。前两个是参考生视频（`image_urls` 必填，人物与风格由参考图决定），后两个既能文生视频也能用首帧或首尾帧，并且默认带原生音频。
 
-**两档可选:**
-
-- **`vidu-q3`** — 标准档,日常默认首选,镜头切换更聪明,540p / 720p / 1080p,1-16 秒。比例由参考图决定,**不接受 `aspect_ratio` 参数**
-- **`vidu-q3-mix`** — 混剪档,支持多图混剪生成连贯视频,540p / 720p / 1080p,1-16 秒,支持 `aspect_ratio`,适合短剧分镜重组、广告素材二创
-
-按 **分辨率 × 时长** 计费,**每秒单价**,1-16 秒任意整数。
-
-## 定价
-
-<Note>
-本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
-
-**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
-**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
-</Note>
-
-## 调用示例
+## 快速开始
 
 <CodeGroup>
 
-```bash 参考图生视频(标准档)
+```bash 参考图生视频
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: vidu-demo-001" \
   -d '{
     "model": "vidu-q3",
-    "prompt": "黄昏的海滩,女孩迎着夕阳奔跑,长发飞扬,电影感光影",
-    "image_urls": ["https://cdn.example.com/girl.jpg"],
+    "action": "generate",
+    "prompt": "保持角色形象，在森林中奔跑，镜头跟随",
+    "image_urls": ["https://cdn.example.com/character.jpg"],
     "duration": 5,
     "resolution": "1080p"
   }'
 ```
 
-```bash 图生视频(标准档单图)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "vidu-q3",
-    "prompt": "人物缓缓转身,镜头推近",
-    "image_urls": ["https://cdn.example.com/portrait.jpg"],
-    "duration": 5,
-    "resolution": "1080p"
-  }'
-```
-
-```bash 多图参考(标准档 R2V)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "vidu-q3",
-    "prompt": "保持角色形象,在森林中奔跑,镜头跟随",
-    "image_urls": [
-      "https://cdn.example.com/char-1.jpg",
-      "https://cdn.example.com/style-ref.jpg"
-    ],
-    "duration": 6,
-    "resolution": "1080p"
-  }'
-```
-
-```bash 多图混剪(Mix 档)
+```bash 多参考融合
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "vidu-q3-mix",
-    "prompt": "镜头在多个场景间平滑切换,氛围连贯",
+    "action": "generate",
+    "prompt": "角色在这个场景里坐下，拿起桌上的杯子",
     "image_urls": [
-      "https://cdn.example.com/scene-1.jpg",
-      "https://cdn.example.com/scene-2.jpg",
-      "https://cdn.example.com/scene-3.jpg"
+      "https://cdn.example.com/character.jpg",
+      "https://cdn.example.com/scene.jpg",
+      "https://cdn.example.com/cup.jpg"
     ],
     "duration": 8,
     "resolution": "1080p",
@@ -86,107 +44,160 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   }'
 ```
 
+```bash 文生视频
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "vidu-q3-pro",
+    "action": "generate",
+    "prompt": "日出时分的海边天文台，镜头固定，海浪拍岸",
+    "duration": 5,
+    "resolution": "720p",
+    "aspect_ratio": "16:9",
+    "generate_audio": true
+  }'
+```
+
+```bash 首尾帧
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "vidu-q3-turbo",
+    "action": "generate",
+    "prompt": "镜头从室内缓缓推到窗外的街景",
+    "image_urls": [
+      "https://cdn.example.com/start.jpg",
+      "https://cdn.example.com/end.jpg"
+    ],
+    "duration": 5,
+    "resolution": "720p"
+  }'
+```
+
 </CodeGroup>
 
-<ResponseExample>
-```json 提交成功
-{
-  "task_id": "task-wave1775285160b950328499",
-  "model": "vidu-q3",
-  "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
-}
-```
-</ResponseExample>
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
 
-提交后用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 轮询状态,详见 [任务系统](/cn/docs/task-system)。
-
-## 可用模型
-
-| 模型 ID | 分辨率 | 时长(秒) | Actions | aspect_ratio | 备注 |
-|---|---|---|---|---|---|
-| `vidu-q3` | 540p / 720p / 1080p | 1-16 | generate | 不支持 | 标准档,日常首选,比例由参考图决定 |
-| `vidu-q3-mix` | 540p / 720p / 1080p | 1-16 | generate | 支持 | 混剪档,多素材连贯生成 |
-
-## 通用参数
+## 请求参数
 
 <ParamField body="model" type="string" required>
-  模型 ID,可选值:
-  - `vidu-q3`
-  - `vidu-q3-mix`
+  四选一：`vidu-q3`、`vidu-q3-mix`、`vidu-q3-pro` 或 `vidu-q3-turbo`。
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  `generate` — 本模型唯一动作。
-
-  **模式不靠 action 区分,靠传什么:** 带 `image_urls` 是参考图生视频;带 `first_frame_image` + `last_frame_image` 是首尾帧;带 `video_urls` / `audio_urls` 是参考生视频。
-
-  `vidu-q3` / `vidu-q3-mix` **没有纯文生视频模式**,`image_urls` 必填。
+  `generate` 是本页四个模型唯一的动作。生成模式不由 `action` 区分，而是看 `image_urls` 传了几张：`vidu-q3-pro` 与 `vidu-q3-turbo` 不传是文生视频，传 1 张是起始帧，传 2 张是首尾帧；`vidu-q3` 与 `vidu-q3-mix` 必须传参考图。
 </ParamField>
 
-<ParamField body="prompt" type="string" required>
-  视频描述文本,建议描述 **动作 / 镜头 / 氛围**,人物外观由 `image_urls` 决定
+<ParamField body="prompt" type="string">
+  视频描述，写动作、镜头与氛围；带参考图时人物外观由参考图决定。`vidu-q3` 与 `vidu-q3-mix` 必填；`vidu-q3-pro` 与 `vidu-q3-turbo` 在不传 `image_urls` 时必填。
 </ParamField>
 
-<ParamField body="resolution" type="string" default="720p">
-  输出分辨率,可选值:
-  - `540p`
-  - `720p`
-  - `1080p`
+<ParamField body="image_urls" type="string[]">
+  图片 URL 数组。
+
+  - `vidu-q3`、`vidu-q3-mix`：参考图，必填，决定主体、风格与场景
+  - `vidu-q3-pro`、`vidu-q3-turbo`：可选，最多 2 张，1 张作起始帧、2 张作首尾帧
 </ParamField>
 
-<ParamField body="duration" type="integer" default="5">
-  视频时长(秒),范围 **1-16** 任意整数
+<ParamField body="duration" type="integer">
+  视频时长（秒），整数。
+
+  - `vidu-q3`：`3` 到 `16`
+  - `vidu-q3-mix`：`1` 到 `16`
+  - `vidu-q3-pro`、`vidu-q3-turbo`：`1` 到 `16`，默认 `5`
 </ParamField>
 
-<ParamField body="image_urls" type="string[]" required>
-  参考图片 URL 数组,作为主体 / 风格参考(R2V),或作为首帧 / 混剪素材。`vidu-q3` / `vidu-q3-mix` 均**必填**,**缺少时提交即被拒,不预扣。**
+<ParamField body="resolution" type="string">
+  输出分辨率。
+
+  - `vidu-q3`：`540p`、`720p` 或 `1080p`
+  - `vidu-q3-mix`：`720p` 或 `1080p`
+  - `vidu-q3-pro`、`vidu-q3-turbo`：`540p`、`720p` 或 `1080p`，默认 `720p`
 </ParamField>
 
-<ParamField body="callback_url" type="string">
-  Webhook 回调地址,任务终态时调用。详见 [回调机制](/cn/docs/sync-async#异步任务-webhook)
+<ParamField body="aspect_ratio" type="string">
+  画面比例：`16:9`、`9:16`、`4:3`、`3:4`、`1:1`。`vidu-q3`、`vidu-q3-pro` 和 `vidu-q3-turbo` 不传时为 `16:9`。`vidu-q3-pro` 与 `vidu-q3-turbo` 带 `image_urls` 时不能传这个参数，画幅由输入图片决定。
 </ParamField>
 
-<ParamField body="callback_events" type="string[]">
-  订阅的回调事件,默认订阅终态(`succeeded` / `failed` / `cancelled`)
+<ParamField body="generate_audio" type="boolean" default="true">
+  是否生成音频（对白与音效）。只有 `vidu-q3-pro` 和 `vidu-q3-turbo` 接受，需要无声视频时设为 `false`。
 </ParamField>
 
-## 模型特定参数
+<ParamField body="seed" type="integer">
+  随机种子。同一组参数配同一个种子会得到接近的结果，不保证完全一致。
+</ParamField>
 
-<Tabs>
-  <Tab title="vidu-q3">
-    标准档无特定参数,所有可选项在 [通用参数](#通用参数) 中。
+通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
 
-    <Note>
-    `vidu-q3` **不接受 `aspect_ratio` 参数**,输出比例由参考图 / 模型决定。若需指定比例请用 `vidu-q3-mix`。
-    </Note>
-  </Tab>
+本页四个模型都不接受 `first_frame_image`、`last_frame_image`（首尾帧用 `image_urls` 表达）、`video_urls`、`audio_urls`、`n`、`negative_prompt` 和 `quality`；`generate_audio` 只有 `vidu-q3-pro` 与 `vidu-q3-turbo` 接受。以上之外的参数会返回 `400`，不计费。
 
-  <Tab title="vidu-q3-mix">
-    <ParamField body="aspect_ratio" type="string" default="16:9">
-      画面宽高比(仅 Mix 档支持),可选值:
-      - `16:9` — 横版宽屏
-      - `9:16` — 竖版长屏
-      - `1:1` — 正方形
-    </ParamField>
+## 限制
 
-    Mix 档支持多张参考图混剪,系统会智能转场,适合短剧分镜重组、广告素材二创。
-  </Tab>
-</Tabs>
+| 模型 | 条件 | 限制 |
+|---|---|---|
+| `vidu-q3` `vidu-q3-mix` | 每次请求 | 本模型一次任务只产出一个结果，不支持用 n 批量生成 |
+| `vidu-q3` `vidu-q3-mix` | 每次请求 | 必须提供 `image_urls` |
+| `vidu-q3-pro` `vidu-q3-turbo` | 每次请求 | 每次任务只生成一个视频；最多 2 张图片（1 张起始帧，2 张首尾帧）。 |
+| `vidu-q3-pro` `vidu-q3-turbo` | 传 `image_urls` | 图生视频的画幅由输入图片决定，不能传 `aspect_ratio`。 |
 
-## 资源限制
+## 计费
 
-| 项目 | 限制 |
-|---|---|
-| 参考图片(`image_urls`) | JPG / PNG / WEBP,需公网可下载链接 |
-| Prompt 长度 | 建议 ≤ 2000 字符 |
-| 视频时长 | 1-16 秒任意整数 |
-| 输出 | MP4,链接 24 小时有效 |
+按**分辨率档 × 秒数**计费：分辨率决定每秒单价，`duration` 决定秒数，两者相乘就是这一单的费用，提交前即可确定。四个模型的每秒单价各不相同，同一个模型内分辨率越高越贵。
+
+`generate_audio`、`seed`、画面比例、参考图张数都不影响价格。`vidu-q3-pro` 与 `vidu-q3-turbo` 没带 `resolution` 时按默认档 `720p` 计费。
+
+<Note>
+**本页不列具体单价**——单价会随上游调整，这里只讲计费维度与口径。
+
+实时单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。单次调用的实际费用见任务响应里的 `cost`：整数 quota，**500,000 quota = 1 USD**。
+</Note>
+
+只有成功出片才计费。任务失败、取消，或没有返回可用视频时，全额退款。
+
+## 响应
+
+```json 任务完成
+{
+  "task_id": "taski-c63f1fff62a8c279cb7fd33f8c8586ac-task-wave1788769966b950814242",
+  "model": "vidu-q3-pro",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788769966,
+  "completed_at": 1788770002,
+  "result": {
+    "videos": [
+      {
+        "url": ["https://cdn.example.com/result.mp4"],
+        "expires_at": 1789089508
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 31500,
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski-c63f1fff62a8c279cb7fd33f8c8586ac-task-wave1788769966b950814242",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski-c63f1fff62a8c279cb7fd33f8c8586ac-task-wave1788769966b950814242/cancel"
+  }
+}
+```
+
+`result.videos` 返回生成的视频，`expires_at` 是链接过期时间（Unix 秒），过期前把文件转存到自己的存储。完整字段说明见[查询任务状态](/cn/api-reference/task/status)。
+
+## 可用模型
+
+| 模型 ID | 分辨率 | 时长（秒） | 图片输入 | 备注 |
+|---|---|---|---|---|
+| `vidu-q3` | `540p` `720p` `1080p` | 3–16 | 参考图，必填 | 参考生视频，多镜头切换 |
+| `vidu-q3-mix` | `720p` `1080p` | 1–16 | 参考图，必填 | 多张参考图融合成一段连贯视频 |
+| `vidu-q3-pro` | `540p` `720p` `1080p` | 1–16 | 可选，最多 2 张 | 文生 / 起始帧 / 首尾帧，默认带音频 |
+| `vidu-q3-turbo` | `540p` `720p` `1080p` | 1–16 | 可选，最多 2 张 | 与 Pro 同能力的加速档，单价更低 |
 
 ## 相关文档
 
-- [任务系统详解](/cn/docs/task-system) — 任务状态机 / 轮询节奏 / 异步推送
-- [请求响应格式](/cn/docs/request-response) — 通用错误码 / Headers / 限流
-- [认证](/cn/docs/authentication) — API Key 申请与使用
+- [视频生成概述](/cn/api-reference/video/overview)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

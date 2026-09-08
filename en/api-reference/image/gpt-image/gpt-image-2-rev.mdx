@@ -1,0 +1,147 @@
+---
+title: "GPT Image 2 Reverse"
+description: "Text-to-image and reference editing at a fixed price per image by output resolution"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+`gpt-image-2-rev` provides GPT Image 2 text-to-image generation and reference-image editing through an aggregator. Pricing is fixed by output resolution, making the per-image cost known before submission.
+
+<Warning>
+This is a reverse line, not the official OpenAI API. Use [`gpt-image-2`](/en/api-reference/image/gpt-image/gpt-image-2) for quality tiers, masks, transparent backgrounds, and output-format controls. QWave never switches between the two lines automatically.
+</Warning>
+
+## Quick start
+
+<CodeGroup>
+
+```bash Generate an image
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: image-rev-001" \
+  -d '{
+    "model": "gpt-image-2-rev",
+    "action": "generate",
+    "prompt": "Minimal perfume product photography, warm white background, soft studio light",
+    "aspect_ratio": "4:5",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+```bash Edit a reference image
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: image-rev-edit-001" \
+  -d '{
+    "model": "gpt-image-2-rev",
+    "action": "edit",
+    "prompt": "Keep the subject and replace the background with a pale green studio",
+    "image_urls": ["https://cdn.example.com/source.png"],
+    "aspect_ratio": "1:1",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+</CodeGroup>
+
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
+
+## Request parameters
+
+<ParamField body="model" type="string" required>
+  Must be `gpt-image-2-rev`.
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  - `generate`: create an image from text
+  - `edit`: edit reference images; requires `image_urls`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  The image description or editing instruction.
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Reference image URLs. Required for `edit`; up to 15 images. References do not add a fee.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="1:1">
+  One of `1:1`, `3:2`, `2:3`, `4:3`, `3:4`, `5:4`, `4:5`, `16:9`, `9:16`, `2:1`, `1:2`, `3:1`, `1:3`, `21:9`, or `9:21`.
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1k">
+  Output resolution: `1k`, `2k`, or `4k`.
+</ParamField>
+
+<ParamField body="n" type="integer" default="1">
+  Number of images to generate. Value: `1`. Each request returns one image.
+</ParamField>
+
+See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key`, and the maximum-cost header.
+
+The reverse line does not support `quality`, `mask_url`, `background`, `output_format`, `output_compression`, `moderation` or `seed` — those belong to the official line. Any other parameter returns `400` and is not billed.
+
+## Limits
+
+| Condition | Limit |
+|---|---|
+| Per request | One image |
+| `action: "edit"` | At least one reference image is required |
+| Reference images | Up to 15 |
+
+## Pricing
+
+Successful images are billed at a **fixed price per image**, with a different rate at `1k`, `2k` and `4k`.
+
+Rates are in `price_config` on `GET /v1/models` and in the console's Model Market. What a single call actually cost is the `cost` field on the task response — an integer quota at **500,000 quota = 1 USD**, not dollars.
+
+`generate` and `edit` cost the same, reference images add no fee, and neither aspect ratio nor prompt length changes the price — **resolution is the only billing dimension, so the cost of a call is known before it is sent**. A `resolution` other than `1k`, `2k` or `4k` settles at the `1k` price.
+
+Only a successfully generated image is billed. Failed and cancelled tasks, and tasks that return no usable image, are refunded in full.
+
+## Response
+
+```json Completed task
+{
+  "task_id": "taski_example",
+  "model": "gpt-image-2-rev",
+  "action": "edit",
+  "status": "completed",
+  "progress": "100%",
+  "result": {
+    "images": [
+      {
+        "url": ["https://cdn.example.com/result.png"]
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 4781
+}
+```
+
+`result.images` carries the generated image. The full field reference is in [Task status](/en/api-reference/task/status).
+
+## Official vs reverse
+
+| | `gpt-image-2-rev` | [`gpt-image-2`](/en/api-reference/image/gpt-image/gpt-image-2) |
+|---|---|---|
+| Access | Aggregator reverse line | Official API line |
+| Billing | Fixed by resolution | Actual token usage |
+| Generation / reference editing | Supported | Supported |
+| Quality tiers | Not supported | `low` / `medium` / `high` |
+| Mask inpainting | Not supported | Supported |
+| Background and output format | Not supported | Supported |
+| Output count | 1 | 1 |
+
+## Related
+
+- [GPT Image Series](/en/api-reference/image/gpt-image/overview)
+- [GPT Image 1 and 1.5 Official](/en/api-reference/image/gpt-image/gpt-image-1)
+- [GPT Image 2 Official](/en/api-reference/image/gpt-image/gpt-image-2)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

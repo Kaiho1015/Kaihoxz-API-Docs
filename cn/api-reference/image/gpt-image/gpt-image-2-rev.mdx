@@ -1,0 +1,147 @@
+---
+title: "GPT Image 2 逆向版"
+description: "文生图与参考图编辑，按输出分辨率固定张价"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+`gpt-image-2-rev` 通过聚合供应商提供 GPT Image 2 的文生图和参考图编辑能力。它按输出分辨率固定计费，适合希望在提交前明确知道单张成本的场景。
+
+<Warning>
+这是逆向线路，并非 OpenAI 官方 API。需要画质、掩码、透明背景或输出格式控制时，请使用 [`gpt-image-2`](/cn/api-reference/image/gpt-image/gpt-image-2)。平台不会在两条线路之间自动切换。
+</Warning>
+
+## 快速开始
+
+<CodeGroup>
+
+```bash 文生图
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: image-rev-001" \
+  -d '{
+    "model": "gpt-image-2-rev",
+    "action": "generate",
+    "prompt": "极简主义香水产品图，米白背景，柔和棚拍光线",
+    "aspect_ratio": "4:5",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+```bash 参考图编辑
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: image-rev-edit-001" \
+  -d '{
+    "model": "gpt-image-2-rev",
+    "action": "edit",
+    "prompt": "保持主体不变，把背景改为浅绿色摄影棚",
+    "image_urls": ["https://cdn.example.com/source.png"],
+    "aspect_ratio": "1:1",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+</CodeGroup>
+
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
+
+## 请求参数
+
+<ParamField body="model" type="string" required>
+  固定为 `gpt-image-2-rev`。
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  - `generate`：根据文字生成图片
+  - `edit`：编辑参考图；必须提供 `image_urls`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  图片描述或编辑指令。
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  参考图片 URL。`edit` 时必填，最多 15 张。参考图不额外收费。
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="1:1">
+  支持 `1:1`、`3:2`、`2:3`、`4:3`、`3:4`、`5:4`、`4:5`、`16:9`、`9:16`、`2:1`、`1:2`、`3:1`、`1:3`、`21:9`、`9:21`。
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1k">
+  输出分辨率：`1k`、`2k` 或 `4k`。
+</ParamField>
+
+<ParamField body="n" type="integer" default="1">
+  生成数量，取值 `1`。每次请求返回一张图。
+</ParamField>
+
+通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
+
+逆向线路不支持 `quality`、`mask_url`、`background`、`output_format`、`output_compression`、`moderation` 和 `seed`，这些是官方线路独有的参数。以上之外的参数会返回 `400`，不计费。
+
+## 限制
+
+| 条件 | 限制 |
+|---|---|
+| 每次请求 | 只出 1 张 |
+| `action: "edit"` | 必须提供至少一张参考图 |
+| 参考图张数 | 最多 15 张 |
+
+## 计费
+
+按成功生成的图片**固定张价**收费，`1k` / `2k` / `4k` 三档价格不同。
+
+单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。单次调用的实际花费见任务响应里的 `cost`——整数 quota，**500,000 quota = 1 USD**，不是美元。
+
+`generate` 与 `edit` 同价，参考图不加价，画幅与提示词长度都不影响单张价格——**分辨率是唯一的计费维度，提交前即可确定单次费用**。`resolution` 不是 `1k` / `2k` / `4k` 时，按 `1k` 的价格结算。
+
+只有成功出图才计费。任务失败、取消，或没有返回可用图片时，全额退款。
+
+## 响应
+
+```json 任务完成
+{
+  "task_id": "taski_example",
+  "model": "gpt-image-2-rev",
+  "action": "edit",
+  "status": "completed",
+  "progress": "100%",
+  "result": {
+    "images": [
+      {
+        "url": ["https://cdn.example.com/result.png"]
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 4781
+}
+```
+
+`result.images` 返回生成的图片。完整字段说明见[任务状态](/cn/api-reference/task/status)。
+
+## 与官方线路的区别
+
+| | `gpt-image-2-rev` | [`gpt-image-2`](/cn/api-reference/image/gpt-image/gpt-image-2) |
+|---|---|---|
+| 接入 | 聚合供应商逆向线路 | 官方 API 线路 |
+| 计费 | 按分辨率固定张价 | 按实际 token 用量 |
+| 文生图 / 参考图编辑 | 支持 | 支持 |
+| 画质档位 | 不支持 | `low` / `medium` / `high` |
+| 掩码局部重绘 | 不支持 | 支持 |
+| 背景和输出格式 | 不支持 | 支持 |
+| 每次输出 | 1 张 | 1 张 |
+
+## 相关文档
+
+- [GPT Image 系列](/cn/api-reference/image/gpt-image/overview)
+- [GPT Image 1 与 1.5 官方版](/cn/api-reference/image/gpt-image/gpt-image-1)
+- [GPT Image 2 官方版](/cn/api-reference/image/gpt-image/gpt-image-2)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

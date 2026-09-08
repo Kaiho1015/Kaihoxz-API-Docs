@@ -1,0 +1,77 @@
+---
+title: "查询总额度"
+description: "OpenAI 兼容的额度上限查询"
+api: "GET https://www.qingbo.dev/v1/dashboard/billing/subscription"
+---
+
+返回账号的**总额度**，形状与 OpenAI 的 `/dashboard/billing/subscription` 一致，供既有额度查询工具对接。
+
+<Warning>
+`hard_limit_usd` 是**总额度**（可用余额 + 累计已用），**不是剩余余额**。要剩余余额请用 [查询余额](/cn/api-reference/account/balance)，或按下面的公式相减。
+</Warning>
+
+<RequestExample>
+```bash cURL
+curl https://www.qingbo.dev/v1/dashboard/billing/subscription \
+  -H "Authorization: Bearer $WAVE_API_KEY"
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "object": "billing_subscription",
+  "has_payment_method": true,
+  "hard_limit_usd": 20,
+  "soft_limit_usd": 20,
+  "system_hard_limit_usd": 20,
+  "access_until": 0
+}
+```
+</ResponseExample>
+
+## 鉴权
+
+<ParamField header="Authorization" type="string" required>
+  `Bearer YOUR_API_KEY`。
+</ParamField>
+
+## 响应
+
+<ResponseField name="object" type="string">
+  固定为 `billing_subscription`。
+</ResponseField>
+
+<ResponseField name="hard_limit_usd" type="number">
+  总额度（美元）= 可用余额 + 累计已用。
+</ResponseField>
+
+<ResponseField name="soft_limit_usd" type="number">
+  与 `hard_limit_usd` 相同。钱包制没有独立的软限额，此字段仅为兼容保留。
+</ResponseField>
+
+<ResponseField name="system_hard_limit_usd" type="number">
+  与 `hard_limit_usd` 相同，兼容保留。
+</ResponseField>
+
+<ResponseField name="has_payment_method" type="boolean">
+  恒为 `true`，兼容保留。
+</ResponseField>
+
+<ResponseField name="access_until" type="integer">
+  恒为 `0`——钱包制没有固定到期时间，额度用完为止，不会按时间失效。
+</ResponseField>
+
+## 计算剩余余额
+
+```text
+剩余 USD = hard_limit_usd - usage.total_usage / 100
+```
+
+其中 `usage.total_usage` 来自 [查询已用量](/cn/api-reference/account/usage)，单位是美分。
+一次请求即可取得剩余余额的接口见[查询余额](/cn/api-reference/account/balance)。
+
+## 相关文档
+
+- [查询余额](/cn/api-reference/account/balance)
+- [查询已用量](/cn/api-reference/account/usage)

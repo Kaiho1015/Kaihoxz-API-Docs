@@ -1,0 +1,58 @@
+---
+title: "Get usage"
+description: "OpenAI-compatible cumulative usage lookup"
+api: "GET https://www.qingbo.dev/v1/dashboard/billing/usage"
+---
+
+Returns the account's **cumulative usage** in the same shape as OpenAI's `/dashboard/billing/usage`, so existing credit-checking tools work against it unchanged.
+
+<Warning>
+Two things catch people out: `total_usage` is in **cents** (USD × 100), not dollars; and this endpoint **ignores `start_date` / `end_date`** — a wallet reports a cumulative figure, not a per-day slice.
+</Warning>
+
+<RequestExample>
+```bash cURL
+curl https://www.qingbo.dev/v1/dashboard/billing/usage \
+  -H "Authorization: Bearer $WAVE_API_KEY"
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "object": "list",
+  "total_usage": 348.2914
+}
+```
+</ResponseExample>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  `Bearer YOUR_API_KEY`.
+</ParamField>
+
+## Response
+
+<ResponseField name="object" type="string">
+  Always `list`.
+</ResponseField>
+
+<ResponseField name="total_usage" type="number">
+  Usage to date, **in cents**. Divide by 100 for dollars — the `348.2914` above is $3.482914.
+</ResponseField>
+
+## Deriving the remaining balance
+
+OpenAI's tools compute what is left as total credit minus usage:
+
+```text
+remaining USD = subscription.hard_limit_usd - usage.total_usage / 100
+```
+
+[Get balance](/en/api-reference/account/balance) returns the remaining balance directly as `total_available_usd`, with no subtraction needed.
+
+## Related
+
+- [Get balance](/en/api-reference/account/balance)
+- [Get subscription](/en/api-reference/account/subscription)

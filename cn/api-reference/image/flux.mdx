@@ -1,228 +1,203 @@
 ---
 title: "FLUX 系列"
-description: "Black Forest Labs FLUX — Kontext 图像编辑(FLUX.1 Kontext)与 FLUX.2 文生图"
+description: "Black Forest Labs FLUX 图像模型：FLUX.2 按百万像素档出图，FLUX.1 Kontext 按张固定价做上下文编辑"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-Black Forest Labs 出品的 FLUX 图像模型系列,共 **5 个模型**,分为两类:
+FLUX 是 Black Forest Labs 的图像模型系列，本页覆盖当前可用的五个模型，分成两代：FLUX.2 可以选输出的百万像素档、最多带 8 张参考图，按 MP 档计价；FLUX.1 Kontext 专做上下文编辑，输出固定 1 MP、最多 4 张参考图，按张固定价。两代共用同一个任务接口和同一套动作，换模型只改 `model`。
 
-- **FLUX.1 Kontext(图像编辑)** — `flux-kontext-pro` / `flux-kontext-max`,**以图编图**,擅长局部编辑、风格迁移、元素替换与角色一致性。**必须传入参考图 `image_urls`**,纯文本提示无法出图。
-- **FLUX.2(文生图 / 参考图生成)** — `flux-2-pro` / `flux-2-max` / `flux-2-flex`,文本生成图像,可选传最多 **8 张参考图**(`image_urls`)做图生图与多图融合,支持 `1K` / `2K` 两档分辨率,`2K` 单独计费。`max` 是最高画质档。参考图按张加价。
-
-按张计费,异步任务,提交后轮询任务状态获取结果。
-
-**FLUX.2 按百万像素(MP)档计价**:输出图按其像素落入的 MP 档收费 —— `1K`(1024×1024 ≈ 1.05 MP)落在 **2 MP 档**,不是 1 MP 档。参考图另计:**只传 1 张**时按该图**实际像素**所在的 MP 档(1 / 2 / 3 / 4 MP)加价;**传 2 张及以上**时每张按 **1 MP 档**加价。三个档位(`pro` / `max` / `flex`)各有一组 MP 档单价。
-
-<Warning>
-`flux-kontext-pro` 与 `flux-kontext-max` 是**图像编辑模型**,调用时必须提供参考图 `image_urls`(并配合编辑指令 `prompt`),否则任务会失败。需要纯文本生成图像请改用 `flux-2-pro` / `flux-2-flex`。
-</Warning>
-
-## 定价
-
-<Note>
-本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
-
-**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
-**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
-</Note>
-
-## 模型速查
-
-| 模型 | 类型 | 必需输入 | action | 分辨率 |
-|---|---|---|---|---|
-| `flux-kontext-pro` | 图像编辑 | `prompt` + `image_urls` | `generate` / `edit` | — |
-| `flux-kontext-max` | 图像编辑(增强) | `prompt` + `image_urls` | `generate` / `edit` | — |
-| `flux-2-pro` | 文生图 / 参考图 | `prompt`(可选 `image_urls` ≤ 8) | `generate` | `1K` / `2K` |
-| `flux-2-max` | 文生图 / 参考图(最高画质) | `prompt`(可选 `image_urls` ≤ 8) | `generate` | `1K` / `2K` |
-| `flux-2-flex` | 文生图 / 参考图(灵活档) | `prompt`(可选 `image_urls` ≤ 8) | `generate` | `1K` / `2K` |
-
-## 调用示例
+## 快速开始
 
 <CodeGroup>
 
-```bash Kontext 图像编辑(必传 image_urls)
+```bash 文生图
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: flux-demo-001" \
+  -d '{
+    "model": "flux-2-pro",
+    "action": "generate",
+    "prompt": "雨后的城市街角，霓虹反射在积水里，电影感构图",
+    "aspect_ratio": "16:9",
+    "resolution": "2mp",
+    "output_format": "png"
+  }'
+```
+
+```bash 上下文编辑
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: flux-edit-001" \
   -d '{
     "model": "flux-kontext-pro",
     "action": "edit",
-    "prompt": "把背景换成黄昏海边,人物姿态与服装保持不变",
-    "image_urls": ["https://cdn.example.com/portrait.jpg"],
+    "prompt": "保留人物和构图，把季节改成初雪",
+    "image_urls": ["https://cdn.example.com/source.png"],
     "aspect_ratio": "1:1"
   }'
 ```
 
-```bash Kontext Max(角色一致性,高保真)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "flux-kontext-max",
-    "action": "edit",
-    "prompt": "保持同一角色,换成赛博朋克装束,霓虹氛围",
-    "image_urls": ["https://cdn.example.com/character.jpg"],
-    "aspect_ratio": "3:4"
-  }'
-```
-
-```bash FLUX.2 文生图(1K 默认)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "flux-2-pro",
-    "prompt": "未来主义城市夜景,霓虹灯映在湿润街面,电影感构图",
-    "aspect_ratio": "16:9",
-    "seed": 12345
-  }'
-```
-
-```bash FLUX.2 Flex(2K 档)
+```bash 调节步数与引导强度
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "flux-2-flex",
-    "prompt": "极简产品海报,几何构图,留白克制,工作室柔光",
-    "resolution": "2K",
-    "aspect_ratio": "2:3"
+    "action": "generate",
+    "prompt": "手绘水彩风格的植物图鉴插页，白底",
+    "aspect_ratio": "3:4",
+    "resolution": "1mp",
+    "steps": 28,
+    "guidance": 3.5,
+    "seed": 12345
   }'
 ```
 
 </CodeGroup>
 
-<ResponseExample>
-```json 提交成功
-{
-  "task_id": "task-wave1775290140a830128812",
-  "model": "flux-kontext-pro",
-  "action": "edit",
-  "status": "queued",
-  "created_at": 1775290140120,
-  "progress": 0
-}
-```
-</ResponseExample>
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
 
-提交后用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 轮询状态,详见 [任务系统](/cn/docs/task-system)。
-
-## 可用模型
-
-| 模型 ID | 说明 |
-|---|---|
-| `flux-kontext-pro` | FLUX.1 Kontext Pro,图像编辑模型,需传 `image_urls`,擅长局部编辑与风格迁移 |
-| `flux-kontext-max` | FLUX.1 Kontext Max,增强版编辑模型,角色一致性与高保真更强 |
-| `flux-2-pro` | FLUX.2 Pro,文生图,支持 `1K` / `2K` 两档分辨率 |
-| `flux-2-max` | FLUX.2 Max,最高画质档,适合对保真度要求高于成本的成片,`1K` / `2K` |
-| `flux-2-flex` | FLUX.2 Flex,文生图灵活档,支持 `1K` / `2K` 两档分辨率 |
-
-## 通用参数
+## 请求参数
 
 <ParamField body="model" type="string" required>
-  从 [可用模型](#可用模型) 列表中选一个
+  五选一：`flux-2-pro`、`flux-2-max`、`flux-2-flex`、`flux-kontext-pro` 或 `flux-kontext-max`。
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  - `generate` — 文生图(默认)
-  - `edit` — 图像编辑,配合 `image_urls` 使用
-
-  **模式不靠 action 区分,靠传什么:** 只给 `prompt` 是文生图;带一张 `image_urls` 是图生图;带多张是多图参考融合;再带 `mask_url` 就是局部重绘。
+  - `generate`：根据文字生成图片
+  - `edit`：基于参考图改写；必须提供 `image_urls`
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
-  图像描述或编辑指令文本,支持中英文。Kontext 模型填写"对参考图做什么"的编辑指令
-</ParamField>
-
-<ParamField body="seed" type="integer" default="-1">
-  随机种子,`-1` 为随机;固定值可复现相似结果。FLUX.2 与 Kontext 均支持
-</ParamField>
-
-<ParamField body="aspect_ratio" type="string" default="1:1">
-  画面宽高比,4 个模型均支持以下 7 种:
-  - `1:1` — 正方形
-  - `16:9` / `9:16` — 横/竖版宽屏
-  - `4:3` / `3:4` — 横/竖版标准
-  - `3:2` / `2:3` — 横/竖版相机比
-</ParamField>
-
-<ParamField body="resolution" type="string" default="1K">
-  输出分辨率,**仅 FLUX.2(`flux-2-pro` / `flux-2-flex`)支持**:
-  - `1K` — 1K 档(默认,基准价)
-  - `2K` — 2K 档(单独计费,见 [定价](#定价))
-
-  Kontext 模型(`flux-kontext-pro` / `flux-kontext-max`)不接收该字段。
+  图片描述或编辑指令。
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  参考图片 URL 数组。**Kontext 模型(`flux-kontext-pro` / `flux-kontext-max`)必填**;FLUX.2 三个模型可选传,最多 8 张(输出图与全部参考图总像素不超过 9MP),用于图生图与多图参考融合。FLUX.2 的参考图**按张加价**,单价见 [Explore](https://qingbo.dev/explore) 模型详情页
+  参考图片 URL 数组。`edit` 时必填，`generate` 不接受参考图。FLUX.2 最多 8 张，FLUX.1 Kontext 最多 4 张。
 </ParamField>
 
-<ParamField body="callback_url" type="string">
-  Webhook 回调地址,任务终态时调用。详见 [回调机制](/cn/docs/sync-async#异步任务-webhook)
+<ParamField body="aspect_ratio" type="string" default="1:1">
+  画面比例：`1:1`、`4:3`、`3:4`、`16:9`、`9:16`、`3:2`、`2:3`、`21:9`、`9:21`、`auto`。`auto` 表示由模型决定比例。
 </ParamField>
 
-<ParamField body="callback_events" type="string[]">
-  订阅的回调事件类型,详见 [回调机制](/cn/docs/sync-async#异步任务-webhook)
+<ParamField body="resolution" type="string" default="2mp">
+  输出图的百万像素档：`1mp`、`2mp`、`3mp`、`4mp`。只有 FLUX.2 三个模型接受这个参数；FLUX.1 Kontext 输出固定 1 MP。
 </ParamField>
 
-## 模型特定参数
+<ParamField body="n" type="integer" default="1">
+  生成数量，取值 `1`。每次请求返回一张图。
+</ParamField>
 
-<Tabs>
-  <Tab title="FLUX.1 Kontext(Pro / Max)">
-    **适用模型**:`flux-kontext-pro` / `flux-kontext-max`
+<ParamField body="seed" type="integer">
+  随机种子。同一组参数配同一个种子，结果保持一致。
+</ParamField>
 
-    **支持 action**:`generate` / `edit`
+<ParamField body="output_format" type="string">
+  输出图片格式：`jpeg`、`png` 或 `webp`。FLUX.2 默认 `jpeg`，FLUX.1 Kontext 默认 `png`。
+</ParamField>
 
-    **aspect_ratio**(7 种):`1:1` / `16:9` / `9:16` / `4:3` / `3:4` / `3:2` / `2:3`
+<ParamField body="prompt_upsampling" type="boolean" default="false">
+  是否由上游先扩写提示词再生成。
+</ParamField>
 
-    **resolution**:不接收(沿用模型默认)
+<ParamField body="safety_tolerance" type="integer" default="2">
+  内容安全容忍级别，数值越大越宽松。FLUX.2 取 `0`–`5`，FLUX.1 Kontext 取 `0`–`6`。
+</ParamField>
 
-    **核心特性**:以图编图,擅长局部编辑、风格迁移、元素替换与角色一致性。
+<ParamField body="steps" type="integer" default="50">
+  推理步数，取 `1`–`50`。步数越多细节越足、耗时越长。只有 `flux-2-flex` 支持。
+</ParamField>
 
-    <ParamField body="image_urls" type="string[]" required>
-      参考图片 URL 数组,**必填**。不提供则任务失败
-    </ParamField>
+<ParamField body="guidance" type="number" default="5">
+  提示词引导强度，取 `1.5`–`10`。数值越大越贴合提示词。只有 `flux-2-flex` 支持。
+</ParamField>
 
-    <ParamField body="seed" type="integer" default="-1">
-      随机种子,固定可复现相似编辑结果
-    </ParamField>
-  </Tab>
+通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
 
-  <Tab title="FLUX.2(Pro / Flex)">
-    **适用模型**:`flux-2-pro` / `flux-2-flex`
+本系列不接受 `quality`、`negative_prompt`、`watermark` 和 `mask_url`。以上之外的参数会返回 `400`，不计费。
 
-    **支持 action**:`generate`(纯文生图)
+## 限制
 
-    **aspect_ratio**(7 种):`1:1` / `16:9` / `9:16` / `4:3` / `3:4` / `3:2` / `2:3`
-
-    **resolution**:`1K`(默认) / `2K`(`2K` 档单独计费)
-
-    **核心特性**:纯文本生成图像,无需参考图;`flux-2-pro` 性价比更高,`flux-2-flex` 为灵活档。
-
-    <ParamField body="resolution" type="string" default="1K">
-      输出分辨率,`1K` / `2K`。`2K` 档按 [定价](#定价) 单独计费
-    </ParamField>
-
-    <ParamField body="seed" type="integer" default="-1">
-      随机种子,固定可复现相似结果
-    </ParamField>
-  </Tab>
-</Tabs>
-
-## 资源限制
-
-| 项目 | 限制 |
+| 条件 | 限制 |
 |---|---|
-| 参考图片(Kontext) | 必填,`flux-kontext-pro` / `flux-kontext-max` 使用 `image_urls` |
-| 参考图片(FLUX.2) | 可选,最多 8 张(输出图与全部参考图总像素 ≤ 9MP),按 MP 档加价 |
-| 输出分辨率 | FLUX.2 支持 `1K` / `2K`;Kontext 沿用模型默认 |
-| 单张图片大小 | ≤ 30MB,支持 JPG/PNG/WEBP |
-| 宽高比 | 7 种:`1:1` / `16:9` / `9:16` / `4:3` / `3:4` / `3:2` / `2:3` |
-| 输出文件 | 图片链接,24 小时有效 |
+| 每次请求 | 返回 1 张图，`prompt` 必填 |
+| `action: "generate"` | 不接受参考图 |
+| `action: "edit"` | 必须提供参考图 |
+| 参考图张数 | FLUX.2 最多 8 张；FLUX.1 Kontext 最多 4 张 |
+| 总像素 | 输出图与全部参考图合计不超过 9 MP（1 MP = 1024 × 1024 像素） |
+| 参考图格式 | 必须是可直接下载的 PNG、JPEG、WebP、GIF 或 BMP；读不到尺寸会返回 `400`，不计费 |
+| `resolution` | 只有 FLUX.2 接受；`steps` 与 `guidance` 只有 `flux-2-flex` 接受 |
+
+## 计费
+
+按成功出图的**固定张价**结算，两代的计费维度不同。
+
+单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。单次调用的实际花费见任务响应里的 `cost`——整数 quota，**500,000 quota = 1 USD**，不是美元。
+
+**FLUX.2**（`flux-2-pro` / `flux-2-max` / `flux-2-flex`）
+
+- 输出图按 `resolution` 的百万像素档收费，`1mp`、`2mp`、`3mp`、`4mp` 各一档，档越高越贵；不传或传了档位之外的值时按兜底价结算，兜底价等于 `2mp` 档
+- 参考图每张另计，加在输出图的价格上：只带 1 张时，按该图实际像素向上取整到的 MP 档收；带 2 张及以上时，每张按最低档收
+- 三个模型各有一组 MP 档价，`flux-2-flex` 的 `steps` 与 `guidance` 不影响价格
+
+**FLUX.1 Kontext**（`flux-kontext-pro` / `flux-kontext-max`）
+
+- 单一固定张价，输出固定 1 MP，参考图不加价，画幅与 `output_format` 都不影响价格
+
+只有成功出图才计费。任务失败、取消，或没有返回可用图片时，全额退款。
+
+## 响应
+
+```json 任务完成
+{
+  "task_id": "taski_example",
+  "model": "flux-2-pro",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788754231,
+  "completed_at": 1788754252,
+  "result": {
+    "images": [
+      {
+        "expires_at": 1789089508,
+        "url": ["https://cdn.example.com/result.png"]
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski_example",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski_example/cancel"
+  },
+  "billing_status": "settled",
+  "cost": 20250
+}
+```
+
+`result.images` 返回生成的图片，`expires_at` 是该链接的失效时间戳。完整字段说明见[查询任务状态](/cn/api-reference/task/status)。
+
+## 可用模型
+
+| 模型 ID | 输出分辨率 | 参考图 | 专有参数 |
+|---|---|---|---|
+| `flux-2-pro` | `1mp` `2mp` `3mp` `4mp` | 最多 8 张，按张加价 | `output_format` `prompt_upsampling` `safety_tolerance` |
+| `flux-2-max` | `1mp` `2mp` `3mp` `4mp` | 最多 8 张，按张加价 | `output_format` `prompt_upsampling` `safety_tolerance` |
+| `flux-2-flex` | `1mp` `2mp` `3mp` `4mp` | 最多 8 张，按张加价 | 以上三个，另加 `steps` `guidance` |
+| `flux-kontext-pro` | 固定 1 MP | 最多 4 张，不加价 | `output_format` `prompt_upsampling` `safety_tolerance` |
+| `flux-kontext-max` | 固定 1 MP | 最多 4 张，不加价 | `output_format` `prompt_upsampling` `safety_tolerance` |
+
+五个模型都支持 `generate` 与 `edit`，每次请求出 1 张图，都接受 `seed`，画幅集合相同：`1:1`、`4:3`、`3:4`、`16:9`、`9:16`、`3:2`、`2:3`、`21:9`、`9:21`、`auto`。
+
+- **FLUX.2 用 `resolution` 选百万像素档**：`1mp` 到 `4mp`，默认 `2mp`；档越高越贵
+- **FLUX.1 Kontext 不接受 `resolution`**，输出固定 1 MP
+- **`safety_tolerance` 的范围两代不同**：FLUX.2 是 `0`–`5`，Kontext 是 `0`–`6`，数值越大越宽松
+- **`output_format` 默认值两代不同**：FLUX.2 默认 `jpeg`，Kontext 默认 `png`
 
 ## 相关文档
 
-- [任务系统详解](/cn/docs/task-system) — 任务状态机 / 轮询节奏 / 异步推送
-- [请求响应格式](/cn/docs/request-response) — 通用错误码 / Headers / 限流
-- [认证](/cn/docs/authentication) — API Key 申请与使用
+- [图像生成概述](/cn/api-reference/image/overview)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

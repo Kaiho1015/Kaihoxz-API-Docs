@@ -1,164 +1,227 @@
 ---
 title: "Grok Imagine Series"
-description: "xAI Grok Imagine image generation — three official tiers (standard / quality / 2.0) and economy lines (1.0 / 1.5 / 2.0)"
+description: "xAI Grok Imagine image generation and editing: six models on one task endpoint, all priced per image"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-The xAI Grok Imagine image generation and editing series, in an **official** line and an **economy** line:
+The xAI Grok Imagine image line currently offers six model IDs. All of them are submitted through the unified task endpoint `POST /v1/tasks` and all of them settle at a fixed price per successfully generated image — switching tiers only changes `model`. On the official route, `grok-imagine-image`, `grok-imagine-image-quality` and `grok-imagine-image-2.0` support reference-image editing and resolution selection, and charge separately for each reference image. The economy models `grok-imagine-image-2.0-rev`, `grok-imagine-1.5-rev` and `grok-imagine-1.5-edit-rev` take fewer parameters, output at a fixed tier, and cost less. For video, see [Grok Imagine Video Series](/en/api-reference/video/grok-imagine-video).
 
-**Official** (xAI's official API, billed per image):
-
-- **grok-imagine-image** — standard tier, same price at 1K and 2K, the most affordable official Grok image model; text-to-image + reference-image editing
-- **grok-imagine-image-quality** — quality tier, 1K and 2K priced separately; text-to-image + reference-image editing
-- **grok-imagine-image-2.0** — generation 2.0, 1K / 2K × low / medium tiers; text-to-image + reference-image editing
-
-**Economy** (alternate channel, cheaper, slightly fewer capabilities):
-
-- **grok-imagine-image-2.0-rev** — generation 2.0 at fixed quality, 7 aspect ratios, text-to-image only
-- **grok-imagine-1.0-rev** / **grok-imagine-1.5-rev** — text-to-image (`generate`)
-- **grok-imagine-1.0-edit-rev** / **grok-imagine-1.5-edit-rev** — image editing (requires `image_urls`)
-
-## Pricing
-
-<Note>
-Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
-
-**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
-**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
-</Note>
-
-## Examples
+## Quick start
 
 <CodeGroup>
 
-```bash Text-to-image (grok-imagine-1.5-rev)
+```bash Text to image
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: grok-image-001" \
+  -d '{
+    "model": "grok-imagine-image",
+    "action": "generate",
+    "prompt": "A white ceramic cup on an oak table, soft studio light, product photography",
+    "aspect_ratio": "1:1",
+    "resolution": "2k",
+    "n": 1
+  }'
+```
+
+```bash Reference image edit
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: grok-image-edit-001" \
+  -d '{
+    "model": "grok-imagine-image",
+    "action": "edit",
+    "prompt": "Keep the subject, change the background to a beach at sunset",
+    "image_urls": ["https://cdn.example.com/source.png"],
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+```bash Multiple references
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "grok-imagine-image-quality",
+    "action": "edit",
+    "prompt": "Use the product from the first image in the poster style of the second",
+    "image_urls": [
+      "https://cdn.example.com/product.png",
+      "https://cdn.example.com/style.webp"
+    ],
+    "aspect_ratio": "4:3",
+    "resolution": "2k",
+    "n": 1
+  }'
+```
+
+```bash Choosing quality
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "grok-imagine-image-2.0",
+    "action": "generate",
+    "prompt": "A city street after rain, neon reflections, cinematic",
+    "aspect_ratio": "16:9",
+    "resolution": "2k",
+    "quality": "medium",
+    "n": 1
+  }'
+```
+
+```bash Economy text to image
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "grok-imagine-1.5-rev",
-    "prompt": "Cyberpunk city at night, neon reflecting off rain-soaked streets, cinematic look",
+    "action": "generate",
+    "prompt": "A shiba inu in an astronaut helmet floating in space, cartoon style",
     "aspect_ratio": "16:9",
-    "n": 1
-  }'
-```
-
-```bash Text-to-image (grok-imagine-1.0-rev)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "grok-imagine-1.0-rev",
-    "prompt": "A Shiba Inu wearing an astronaut helmet floating in space, cartoon style",
-    "aspect_ratio": "1:1"
-  }'
-```
-
-```bash Image editing (grok-imagine-1.5-edit-rev)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "grok-imagine-1.5-edit-rev",
-    "prompt": "Replace the background with a snowy mountain at sunset, keep the subject unchanged",
-    "image_urls": ["https://cdn.example.com/portrait.jpg"],
-    "n": 1
-  }'
-```
-
-```bash Image editing (grok-imagine-1.0-edit-rev)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "grok-imagine-1.0-edit-rev",
-    "prompt": "Add a warm color filter to the image, strengthen the dusk atmosphere",
-    "image_urls": ["https://cdn.example.com/street.jpg"]
+    "n": 2
   }'
 ```
 
 </CodeGroup>
 
-<ResponseExample>
-```json Submission successful
-{
-  "task_id": "task-wave1775290140a830128812",
-  "model": "grok-imagine-1.5-rev",
-  "action": "generate",
-  "status": "queued",
-  "created_at": 1775290140120,
-  "progress": 0
-}
-```
-</ResponseExample>
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
 
-After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status). See [Task System](/en/docs/task-system) for details.
-
-## Available Models
-
-| Model ID | Line | action | Notes |
-|---|---|---|---|
-| `grok-imagine-image` | Official · standard | `generate` / `edit` | Same price at 1K / 2K, cheapest official tier, 5 aspect ratios |
-| `grok-imagine-image-quality` | Official · quality | `generate` / `edit` | Higher fidelity, 1K and 2K priced separately |
-| `grok-imagine-image-2.0` | Official · 2.0 | `generate` / `edit` | 1K / 2K × `quality` low / medium, 7 aspect ratios |
-| `grok-imagine-image-2.0-rev` | Economy · 2.0 | `generate` | Fixed quality, 7 aspect ratios, text-to-image only |
-| `grok-imagine-1.0-rev` / `grok-imagine-1.5-rev` | Economy | `generate` | Text-to-image from a prompt alone, 5 aspect ratios |
-| `grok-imagine-1.0-edit-rev` / `grok-imagine-1.5-edit-rev` | Economy | `edit` | Image editing, requires reference images in `image_urls` |
-
-## Common Parameters
+## Request parameters
 
 <ParamField body="model" type="string" required>
-  Pick one from the [Available Models](#available-models) list. The official line (`grok-imagine-image` / `-quality` / `grok-imagine-image-2.0`) supports both `generate` and `edit`; on the economy line use `grok-imagine-1.0-rev` / `1.5-rev` / `grok-imagine-image-2.0-rev` for text-to-image and `grok-imagine-1.0-edit-rev` / `1.5-edit-rev` for editing
+  One of six IDs; see [Available models](#available-models).
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  - `generate` — generate from text
+  - `edit` — rewrite from reference images; `image_urls` is required
+
+  Single-image editing and multi-reference blending both use `edit`; the only difference is how many entries `image_urls` carries. `grok-imagine-image-2.0-rev` and `grok-imagine-1.5-rev` support `generate` only.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
-  Prompt text. Supports Chinese and English. For text-to-image it describes the image; for image editing it is the edit instruction applied to the reference image
+  Image description or editing instruction, in English or Chinese.
 </ParamField>
 
 <ParamField body="n" type="integer" default="1">
-  Number of images to generate, up to the upstream service limit
+  Number of images to return. `grok-imagine-image`, `grok-imagine-image-quality`, `grok-imagine-1.5-rev` and `grok-imagine-1.5-edit-rev` accept `1`–`10`; `grok-imagine-image` returns one image under `edit`. `grok-imagine-image-2.0` and `grok-imagine-image-2.0-rev` accept the value `1`.
 </ParamField>
 
-<ParamField body="callback_url" type="string">
-  Webhook callback URL, invoked when the task reaches a terminal state. See [Callback Mechanism](/en/docs/sync-async#async-task-webhook)
+<ParamField body="aspect_ratio" type="string" default="auto">
+  Frame ratio; the accepted set differs by model, see [Available models](#available-models). `grok-imagine-image`, `grok-imagine-image-quality` and `grok-imagine-image-2.0` default to `auto`, letting the model choose the framing; `grok-imagine-image-2.0-rev` defaults to `1:1`. `grok-imagine-1.5-edit-rev` does not accept this parameter.
 </ParamField>
 
-<ParamField body="callback_events" type="string[]">
-  Event types to receive callbacks for. See [Callback Mechanism](/en/docs/sync-async#async-task-webhook)
+<ParamField body="resolution" type="string" default="1k">
+  Output resolution, `1k` or `2k`. Only `grok-imagine-image`, `grok-imagine-image-quality` and `grok-imagine-image-2.0` accept it; the other three models output at a fixed tier.
 </ParamField>
 
-## Model-Specific Parameters
-
-### Text-to-image (grok-imagine-1.0-rev / grok-imagine-1.5-rev)
-
-<ParamField body="aspect_ratio" type="string" default="1:1">
-  Aspect ratio. 5 options:
-  - `1:1` — Square
-  - `16:9` / `9:16` — Widescreen landscape / portrait
-  - `3:2` / `2:3` — Camera ratio landscape / portrait
+<ParamField body="quality" type="string">
+  Quality tier, `low` or `medium`. Only `grok-imagine-image-2.0` accepts it, and only under `action: "generate"` — do not send it with reference images. Without it, pricing follows the resolution tier.
 </ParamField>
 
-### Image editing (grok-imagine-1.0-edit-rev / grok-imagine-1.5-edit-rev)
+<ParamField body="image_urls" type="string[]">
+  Reference image URLs, publicly reachable. Required for `edit`: `grok-imagine-image` takes 1–5, `grok-imagine-image-quality` and `grok-imagine-image-2.0` take 1–3, `grok-imagine-1.5-edit-rev` takes 1–5. `grok-imagine-1.5-rev` also accepts reference images under `generate`, up to 5; `grok-imagine-image-2.0-rev` does not accept them.
 
-<ParamField body="image_urls" type="string[]" required>
-  URLs of the reference images to edit. The image editing models require this field
+  Array order is preserved for multi-reference requests, so the prompt can refer to the first image, the second image, and so on.
 </ParamField>
 
-<Note>
-The image editing models (`*-edit`) do not support `aspect_ratio` — the output ratio follows the reference image.
-</Note>
+See [Submit Task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key` and the maximum-cost header.
 
-## Resource Limits
+`seed` and `mask_url` are not supported. Any other parameter returns `400` and is not billed.
 
-| Item | Limit |
+## Limits
+
+| Model | Condition | Limit |
+|---|---|---|
+| `grok-imagine-image` | Per request | Generation accepts 1 to 10 output images per request |
+| `grok-imagine-image` | `action: "generate"` | Text-to-image does not take reference images; use edit |
+| `grok-imagine-image` | `action: "edit"` | Editing requires 1 to 5 reference images and returns one image |
+| `grok-imagine-image-quality` | Per request | 1 to 10 output images per request |
+| `grok-imagine-image-quality` | `action: "generate"` | Text-to-image does not take reference images; use edit |
+| `grok-imagine-image-quality` | `action: "edit"` | Edit takes 1-3 reference images (one edits that image, several act as multi-image references) |
+| `grok-imagine-image-2.0` | Per request | One image per request during the initial release |
+| `grok-imagine-image-2.0` | `action: "generate"` | Text-to-image does not take reference images; use the edit action |
+| `grok-imagine-image-2.0` | `action: "edit"` | Editing needs 1 to 3 reference images |
+| `grok-imagine-image-2.0` | `action: "edit"` | Quality cannot be chosen when editing with reference images |
+| `grok-imagine-image-2.0-rev` | Per request | One image per request during the initial release |
+| `grok-imagine-image-2.0-rev` | `action: "generate"` | This route is text-to-image only |
+| `grok-imagine-1.5-rev` | Per request | Up to 10 images per request |
+| `grok-imagine-1.5-edit-rev` | Per request | Up to 10 images per request |
+
+## Pricing
+
+All six models settle at a **fixed price per successfully generated image**. `generate` and `edit` cost the same, and neither aspect ratio nor prompt length affects the price. The billing dimensions differ by model:
+
+| Model | Billing dimensions |
 |---|---|
-| Reference images (`*-edit`) | Supplied via `image_urls` |
-| Size per image | ≤ 30MB, JPG / PNG / WEBP |
-| Aspect ratio (text-to-image) | `1:1` / `16:9` / `9:16` / `3:2` / `2:3` |
-| Output file | Image URL, valid for 24 hours |
+| `grok-imagine-image` | One price per image, the same at `1k` and `2k`; each reference image is charged separately |
+| `grok-imagine-image-quality` | Priced by resolution, `2k` above `1k`; each reference image is charged separately |
+| `grok-imagine-image-2.0` | Priced by resolution × quality (`1k` / `2k` × `low` / `medium`); without `quality`, the resolution tier applies; each reference image is charged separately |
+| `grok-imagine-image-2.0-rev` | One price per image |
+| `grok-imagine-1.5-rev` | One price per image; reference images add no fee |
+| `grok-imagine-1.5-edit-rev` | One price per image; reference images add no fee |
 
-## Related Docs
+With reference images, the cost of a call is (resolution tier price + per-reference-image price × number of reference images) × number of output images. A `resolution` outside the tiers a model supports settles at its fallback price, equal to the `1k` tier.
 
-- [Task System](/en/docs/task-system) — Task state machine / polling cadence / async push
-- [Request & Response](/en/docs/request-response) — Common error codes / Headers / rate limits
-- [Authentication](/en/docs/authentication) — API Key application and usage
+Rates are in `price_config` on `GET /v1/models` and in the console's Model Market. What a single call actually cost is the `cost` field on the task response — an integer quota at **500,000 quota = 1 USD**, not dollars.
+
+You are only billed for a successfully generated image. Failed and cancelled tasks, and tasks that return no usable image, are refunded in full.
+
+## Response
+
+```json Completed task
+{
+  "task_id": "task-wave1775290140a830128812",
+  "model": "grok-imagine-image",
+  "action": "edit",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1775290140,
+  "completed_at": 1775290196,
+  "billing_status": "settled",
+  "cost": 9900,
+  "result": {
+    "images": [
+      {
+        "expires_at": 1775376540,
+        "url": ["https://cdn.example.com/result.jpg"]
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/task-wave1775290140a830128812",
+    "cancel": "https://www.qingbo.dev/v1/tasks/task-wave1775290140a830128812/cancel"
+  }
+}
+```
+
+`result.images` carries the generated images, with one entry per image when `n` is greater than 1. Image links expire, so store them once retrieved. Full field reference: [Query Task Status](/en/api-reference/task/status).
+
+## Available models
+
+| Model ID | Actions | Aspect ratios | Resolution / quality | Reference images |
+|---|---|---|---|---|
+| `grok-imagine-image` | `generate` / `edit` | 14 | `1k` `2k` | 1–5, charged per image |
+| `grok-imagine-image-quality` | `generate` / `edit` | 14 | `1k` `2k` | 1–3, charged per image |
+| `grok-imagine-image-2.0` | `generate` / `edit` | 14 | `1k` `2k` × `low` `medium` | 1–3, charged per image |
+| `grok-imagine-image-2.0-rev` | `generate` | 7 | Fixed | Not supported |
+| `grok-imagine-1.5-rev` | `generate` | 5 | Fixed | Up to 5, no extra fee |
+| `grok-imagine-1.5-edit-rev` | `generate` / `edit` | Not selectable | Fixed | Up to 5, no extra fee |
+
+Aspect ratio sets:
+
+- **14** (`grok-imagine-image`, `grok-imagine-image-quality`, `grok-imagine-image-2.0`): `auto`, `1:1`, `3:4`, `4:3`, `9:16`, `16:9`, `2:3`, `3:2`, `9:19.5`, `19.5:9`, `9:20`, `20:9`, `1:2`, `2:1`
+- **7** (`grok-imagine-image-2.0-rev`): `1:1`, `2:3`, `3:2`, `3:4`, `4:3`, `9:16`, `16:9`
+- **5** (`grok-imagine-1.5-rev`): `1:1`, `16:9`, `9:16`, `3:2`, `2:3`
+
+## Related
+
+- [Grok Imagine Video Series](/en/api-reference/video/grok-imagine-video)
+- [Image Generation Overview](/en/api-reference/image/overview)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

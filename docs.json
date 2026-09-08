@@ -46,6 +46,40 @@
       "href": "https://qingbo.dev/dashboard/keys"
     }
   },
+  "redirects": [
+    {
+      "source": "/cn/api-reference/image/gpt-image",
+      "destination": "/cn/api-reference/image/gpt-image/overview"
+    },
+    {
+      "source": "/cn/api-reference/image/gpt-image-2-rev",
+      "destination": "/cn/api-reference/image/gpt-image/gpt-image-2-rev"
+    },
+    {
+      "source": "/en/api-reference/image/gpt-image",
+      "destination": "/en/api-reference/image/gpt-image/overview"
+    },
+    {
+      "source": "/en/api-reference/image/gpt-image-2-rev",
+      "destination": "/en/api-reference/image/gpt-image/gpt-image-2-rev"
+    },
+    {
+      "source": "/cn/api-reference/image/gemini",
+      "destination": "/cn/api-reference/image/gemini/overview"
+    },
+    {
+      "source": "/en/api-reference/image/gemini",
+      "destination": "/en/api-reference/image/gemini/overview"
+    },
+    {
+      "source": "/cn/api-reference/video/omni",
+      "destination": "/cn/api-reference/video/omni/overview"
+    },
+    {
+      "source": "/en/api-reference/video/omni",
+      "destination": "/en/api-reference/video/omni/overview"
+    }
+  ],
   "navigation": {
     "global": {
       "anchors": [
@@ -96,18 +130,36 @@
               {
                 "group": "文本生成",
                 "pages": [
+                  "cn/api-reference/text/overview",
                   "cn/api-reference/text/general-chat",
+                  "cn/api-reference/text/openai-multimodal",
                   "cn/api-reference/text/claude-messages",
-                  "cn/api-reference/text/gemini-native",
-                  "cn/api-reference/text/openai-multimodal"
+                  "cn/api-reference/text/gemini-native"
                 ]
               },
               {
                 "group": "图像生成",
                 "pages": [
                   "cn/api-reference/image/overview",
-                  "cn/api-reference/image/gemini",
-                  "cn/api-reference/image/gpt-image",
+                  {
+                    "group": "Gemini 图像系列",
+                    "root": "cn/api-reference/image/gemini/overview",
+                    "expanded": true,
+                    "pages": [
+                      "cn/api-reference/image/gemini/nano-banana",
+                      "cn/api-reference/image/gemini/nano-banana-rev"
+                    ]
+                  },
+                  {
+                    "group": "GPT Image 系列",
+                    "root": "cn/api-reference/image/gpt-image/overview",
+                    "expanded": true,
+                    "pages": [
+                      "cn/api-reference/image/gpt-image/gpt-image-1",
+                      "cn/api-reference/image/gpt-image/gpt-image-2",
+                      "cn/api-reference/image/gpt-image/gpt-image-2-rev"
+                    ]
+                  },
                   "cn/api-reference/image/seedream",
                   "cn/api-reference/image/qwen-image",
                   "cn/api-reference/image/wan-image",
@@ -129,11 +181,20 @@
                   "cn/api-reference/video/vidu",
                   "cn/api-reference/video/wan",
                   "cn/api-reference/video/happyhorse",
+                  "cn/api-reference/video/flux/flux-3-video",
                   "cn/api-reference/video/skyreels",
                   "cn/api-reference/video/grok-imagine-video",
                   "cn/api-reference/video/sora",
                   "cn/api-reference/video/pixverse",
-                  "cn/api-reference/video/omni"
+                  {
+                    "group": "Omni 视频系列",
+                    "root": "cn/api-reference/video/omni/overview",
+                    "expanded": true,
+                    "pages": [
+                      "cn/api-reference/video/omni/omni-flash-ext",
+                      "cn/api-reference/video/omni/gemini-omni-flash"
+                    ]
+                  }
                 ]
               },
               {
@@ -141,6 +202,7 @@
                 "pages": [
                   "cn/api-reference/audio/tts",
                   "cn/api-reference/audio/suno",
+                  "cn/api-reference/audio/flow-music/flow-music",
                   "cn/api-reference/audio/whisper-transcription"
                 ]
               },
@@ -157,6 +219,14 @@
                   "cn/api-reference/task/submit",
                   "cn/api-reference/task/status",
                   "cn/api-reference/task/cancel"
+                ]
+              },
+              {
+                "group": "账户与用量",
+                "pages": [
+                  "cn/api-reference/account/balance",
+                  "cn/api-reference/account/usage",
+                  "cn/api-reference/account/subscription"
                 ]
               }
             ]
@@ -216,18 +286,36 @@
               {
                 "group": "Text Generation",
                 "pages": [
+                  "en/api-reference/text/overview",
                   "en/api-reference/text/general-chat",
+                  "en/api-reference/text/openai-multimodal",
                   "en/api-reference/text/claude-messages",
-                  "en/api-reference/text/gemini-native",
-                  "en/api-reference/text/openai-multimodal"
+                  "en/api-reference/text/gemini-native"
                 ]
               },
               {
                 "group": "Image Generation",
                 "pages": [
                   "en/api-reference/image/overview",
-                  "en/api-reference/image/gemini",
-                  "en/api-reference/image/gpt-image",
+                  {
+                    "group": "Gemini Image Series",
+                    "root": "en/api-reference/image/gemini/overview",
+                    "expanded": true,
+                    "pages": [
+                      "en/api-reference/image/gemini/nano-banana",
+                      "en/api-reference/image/gemini/nano-banana-rev"
+                    ]
+                  },
+                  {
+                    "group": "GPT Image Series",
+                    "root": "en/api-reference/image/gpt-image/overview",
+                    "expanded": true,
+                    "pages": [
+                      "en/api-reference/image/gpt-image/gpt-image-1",
+                      "en/api-reference/image/gpt-image/gpt-image-2",
+                      "en/api-reference/image/gpt-image/gpt-image-2-rev"
+                    ]
+                  },
                   "en/api-reference/image/seedream",
                   "en/api-reference/image/qwen-image",
                   "en/api-reference/image/wan-image",
@@ -249,11 +337,20 @@
                   "en/api-reference/video/vidu",
                   "en/api-reference/video/wan",
                   "en/api-reference/video/happyhorse",
+                  "en/api-reference/video/flux/flux-3-video",
                   "en/api-reference/video/skyreels",
                   "en/api-reference/video/grok-imagine-video",
                   "en/api-reference/video/sora",
                   "en/api-reference/video/pixverse",
-                  "en/api-reference/video/omni"
+                  {
+                    "group": "Omni Video Series",
+                    "root": "en/api-reference/video/omni/overview",
+                    "expanded": true,
+                    "pages": [
+                      "en/api-reference/video/omni/omni-flash-ext",
+                      "en/api-reference/video/omni/gemini-omni-flash"
+                    ]
+                  }
                 ]
               },
               {
@@ -261,6 +358,7 @@
                 "pages": [
                   "en/api-reference/audio/tts",
                   "en/api-reference/audio/suno",
+                  "en/api-reference/audio/flow-music/flow-music",
                   "en/api-reference/audio/whisper-transcription"
                 ]
               },
@@ -277,6 +375,14 @@
                   "en/api-reference/task/submit",
                   "en/api-reference/task/status",
                   "en/api-reference/task/cancel"
+                ]
+              },
+              {
+                "group": "Account & Usage",
+                "pages": [
+                  "en/api-reference/account/balance",
+                  "en/api-reference/account/usage",
+                  "en/api-reference/account/subscription"
                 ]
               }
             ]
