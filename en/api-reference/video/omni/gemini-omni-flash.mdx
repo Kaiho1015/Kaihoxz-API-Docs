@@ -4,6 +4,10 @@ description: "The model-chosen-length Gemini Omni video models: text, reference 
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
+<Warning>
+**Upstream shutdown notice**: Google turns the `gemini-omni-flash-preview` endpoint off on **2026-09-30** and QWave API delists the model the same day. Migrate by changing `model` to `gemini-omni-1.1-flash`; details in [Service Notices](/en/changelog/notices).
+</Warning>
+
 This page covers the two Omni models whose length is decided by the model: `gemini-omni-1.1-flash` and `gemini-omni-flash-preview`. They share one request shape and one billing model (resolution tier × seconds); they differ in resolution tiers, reference-material limits, and which image parameters they accept — switching between them means changing `model` and nothing else. When the clip has to land on exactly 4, 6, 8 or 10 seconds, use [Omni-Flash-Ext](/en/api-reference/video/omni/omni-flash-ext).
 
 ## Quick start

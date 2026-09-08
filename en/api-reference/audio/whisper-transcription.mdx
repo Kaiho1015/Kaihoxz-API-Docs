@@ -4,6 +4,10 @@ description: "Transcribe audio into text, on three models behind one synchronous
 api: "POST https://www.qingbo.dev/v1/audio/transcriptions"
 ---
 
+<Warning>
+**Upstream shutdown notice**: OpenAI has announced that `whisper-1`, `gpt-4o-transcribe` and `gpt-4o-mini-transcribe` shut down on **2027-02-26**; they are delisted here the same day. Replacement models will be announced in [Service Notices](/en/changelog/notices) ahead of time. Keep `model` configurable in new integrations.
+</Warning>
+
 A synchronous endpoint: upload an audio file and the request returns the transcript, with no `task_id` and no polling. All three models share this endpoint — switching between them means changing `model` only. For the opposite direction, reading text aloud, use [Text-to-Speech](/en/api-reference/audio/tts).
 
 <RequestExample>

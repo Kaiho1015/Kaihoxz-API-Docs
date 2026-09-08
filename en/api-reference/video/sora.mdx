@@ -4,6 +4,10 @@ description: "OpenAI Sora 2 and Sora 2 Pro: text-to-video and image-to-video wit
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
+<Warning>
+**Upstream shutdown notice**: OpenAI has announced that the Sora 2 models and the Videos API shut down on **2026-09-24**. `sora-2` / `sora-2-pro` are delisted here the same day; tasks submitted afterwards are rejected and not charged. Alternatives are listed in [Service Notices](/en/changelog/notices).
+</Warning>
+
 OpenAI Sora 2 produces physically consistent, photorealistic video with a synchronized audio track (dialogue, sound effects and ambience) and strong multi-shot consistency. This page covers `sora-2` and `sora-2-pro`: both models expose the same action, the same parameters and the same value ranges, and differ only in the resolutions they accept — switching tiers means changing `model`. Every request is submitted asynchronously through `POST /v1/tasks`.
 
 ## Quick start

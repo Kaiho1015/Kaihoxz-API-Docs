@@ -4,6 +4,10 @@ description: "把音频转写成文本，三个模型共用一个同步接口"
 api: "POST https://www.qingbo.dev/v1/audio/transcriptions"
 ---
 
+<Warning>
+**上游停用预告**：OpenAI 已公告 `whisper-1`、`gpt-4o-transcribe`、`gpt-4o-mini-transcribe` 于 **2027-02-26** 关闭，清波 API同日下架；替代模型接入后会提前在 [运营公告](/cn/changelog/notices) 说明。新接入请把 `model` 做成可配置项。
+</Warning>
+
 同步接口：上传音频文件，请求直接返回识别出的文本，没有 `task_id`，不需要轮询。三个模型共用这一个端点，切换时只改 `model`。需要反过来把文本读成语音时用 [TTS 文字转语音](/cn/api-reference/audio/tts)。
 
 <RequestExample>

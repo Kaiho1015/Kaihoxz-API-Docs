@@ -2,6 +2,56 @@
 title: "运营公告"
 ---
 
+<Update label="2026-09-10" description="重要公告 · 新版上线（暂定）">
+**清波 API 新版门户、目录与计费口径正式上线**
+
+新版围绕「一把 Key，看清每一档价格」重建了门户、模型目录与文档，接口路径与 API Key 保持不变，无需改代码。
+
+**新在哪里**
+
+- **门户与控制台**：首页、模型目录（[/explore](https://qingbo.dev/explore)）、价目（[/pricing](https://qingbo.dev/pricing)）、榜单与控制台全部重做；英文站在 `/`，中文站在 `/zh-Hans-CN`。旧路径 `/v2`、`/zh` 自动跳转。
+- **模型目录**：媒体类 92 个模型组（图像 34 · 视频 52 · 音频 6）与全部文本模型，每个模型的每一档价格、支持的动作与参数都在目录页公开，起价可比、可按供应商与任务筛选。
+- **统一任务接口**：图像、视频、音频统一走 `POST /v1/tasks`，用 `action` 区分生成、编辑、延长等动作，链式动作用 `ref_task_id` 引用上一个任务；文本模型仍是 OpenAI 兼容的 `/v1/chat/completions`。
+- **计费口径**：全部按美元计价；提交任务时按报价冻结，上游失败、超时或内容拒绝时自动释放；按 token 用量结算的模型（Nano Banana 官方版、GPT Image 官方版、Gemini Omni 等）完成后按实际用量多退少补。每一次冻结与释放都能在控制台的调用日志里核对。
+- **文档**：所有媒体模型页面重写，统一「快速开始 / 请求参数 / 计费 / 限制」结构；[模型动态](/cn/changelog/models) 与 [价格动态](/cn/changelog/pricing) 记录每一次上架、下架与调价。
+
+<Note>
+现有 API Key、请求路径与响应结构不变。价格以目录页与价格动态为准；如与本地缓存的旧价目不一致，以目录页为准。
+</Note>
+</Update>
+
+<Update label="2026-09-08" description="上游停用预告 · Gemini Omni Flash 预览版">
+**`gemini-omni-flash-preview` 将于 2026-09-30 随上游停止服务**
+
+Google 已于 2026-08-27 正式发布 `gemini-omni-1.1-flash`，并将在 **2026 年 9 月 30 日**关闭预览版端点。清波 API 的 `gemini-omni-flash-preview` 同日下架，此后提交的任务会被拒绝且不计费。
+
+- **迁移**：把 `model` 改为 `gemini-omni-1.1-flash` 即可，请求形状相同；注意正式版默认分辨率是 `720p`，并新增了 `360p` 草稿档与 `4k`，价格按档位不同，见模型页计费表。
+- **文档**：[Gemini Omni Flash](/cn/api-reference/video/omni/gemini-omni-flash)
+</Update>
+
+<Update label="2026-09-08" description="上游停用预告 · Sora 2 系列">
+**`sora-2` / `sora-2-pro` 将于 2026-09-24 随上游停止服务**
+
+OpenAI 已公告 Sora 2 系列模型与 Videos API 于 **2026 年 9 月 24 日**关闭（2026-03-24 公告）。届时清波 API `sora-2` 与 `sora-2-pro` 同日下架，不再接受新任务。
+
+<Warning>
+2026-09-24 之后提交的 `sora-2` / `sora-2-pro` 任务会被直接拒绝，不会产生费用；在此之前提交并已完成的任务不受影响，产物链接请及时保存。
+</Warning>
+
+- **替代建议**：同样自带音轨的写实视频可以换用 `veo3.1-fast` / `veo3.1-quality`、`kling-v3` 或 `seedance-2.0`，参数形状见各模型页；文生视频与图生视频都有对应动作。
+- **文档**：[Sora 2 系列](/cn/api-reference/video/sora)
+</Update>
+
+<Update label="2026-09-08" description="上游停用预告 · 语音转写">
+**`whisper-1` / `gpt-4o-transcribe` / `gpt-4o-mini-transcribe` 将于 2027-02-26 随上游停止服务**
+
+OpenAI 已公告这三个转写模型于 **2027 年 2 月 26 日**关闭（2026-08-26 公告），官方推荐迁移到 `gpt-transcribe` / `gpt-live-transcribe`。清波 API会在上游关闭当日同步下架这三个模型，并在接入替代模型后提前在此公告。
+
+- **影响范围**：`POST /v1/audio/transcriptions` 上的三个模型；语音合成 `gpt-4o-mini-tts` 不在本次范围内。
+- **建议**：新接入的转写业务请把 `model` 做成可配置项，便于届时一行切换。
+- **文档**：[语音转文字](/cn/api-reference/audio/whisper-transcription)
+</Update>
+
 <Update label="2026-07-10" description="重要公告 · 访问方式调整">
 **关于即将关闭中国大陆地区网站访问的通知**
 
