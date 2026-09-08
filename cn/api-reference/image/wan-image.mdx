@@ -26,6 +26,21 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   }'
 ```
 
+```bash 组图
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "wan2.7-image",
+    "action": "generate",
+    "prompt": "一只小狐狸在雪林里探险，绘本插画，同一只狐狸的三个场景",
+    "enable_sequential": true,
+    "n": 3,
+    "resolution": "1k",
+    "aspect_ratio": "1:1"
+  }'
+```
+
 ```bash 多图参考编辑
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
@@ -98,7 +113,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="n" type="integer" default="1">
-  生成数量，取值 `1`。每次请求返回一张图。
+  生成数量。标准模式 `1`–`4`；开启 `enable_sequential` 组图模式 `1`–`12`。按张计费，`n` 乘单价。
 </ParamField>
 
 <ParamField body="seed" type="integer">
@@ -114,7 +129,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="enable_sequential" type="boolean" default="false">
-  组图（连续多图）模式，用于分镜与系列图。开启后 `thinking_mode` 与 `color_palette` 不生效。
+  组图（连续多图）模式，用于分镜与系列图：一次请求生成 `n` 张主题连贯的图（`n` 最多 12）。开启后 `thinking_mode` 与 `color_palette` 不生效；`wan2.7-image-pro` 组图最高 `2k`。
 </ParamField>
 
 <ParamField body="bbox_list" type="array">
@@ -133,7 +148,8 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 | 条件 | 限制 |
 |---|---|
-| 每次请求 | 返回 1 张图 |
+| `n` | 标准模式每次请求最多 4 张；开启 `enable_sequential` 组图模式最多 12 张 |
+| `enable_sequential: true`（`wan2.7-image-pro`） | 组图模式最高 `2k` |
 | `action: "generate"` | 需要提示词，不接受输入图 |
 | `action: "edit"` | 需要输入图，且最高 `2k` |
 | 输入图张数 | 最多 9 张 |
@@ -143,11 +159,11 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 ## 计费
 
-按成功出图的**固定张价**结算，两个模型各有一个单价。
+按成功出图的**固定张价**结算，两个模型各有一个单价；一次请求出 `n` 张就收 `n` 张的钱，提交时按 `n` 冻结。
 
 单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。单次调用的实际花费见任务响应里的 `cost`——整数 quota，**500,000 quota = 1 USD**，不是美元。
 
-同一个模型下，`generate` 与 `edit` 同价，分辨率、画幅、输入图张数、`thinking_mode` 与 `color_palette` 都不影响价格——单价是唯一的计费维度，提交前即可确定单次费用。
+同一个模型下，`generate` 与 `edit` 同价，分辨率、画幅、输入图张数、`thinking_mode` 与 `color_palette` 都不影响价格——单价 × `n` 就是单次费用，提交前即可确定。
 
 只有成功出图才计费。任务失败、取消，或没有返回可用图片时，全额退款。
 
@@ -188,7 +204,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 | `wan2.7-image` | `1k` `2k` | `1k` `2k` |
 | `wan2.7-image-pro` | `1k` `2k` `4k` | `1k` `2k` |
 
-两个模型都支持 `generate` 与 `edit`，每次请求出 1 张图，最多接受 9 张参考图，画幅集合相同：`1:1`、`16:9`、`9:16`、`4:3`、`3:4`、`3:2`、`2:3`。
+两个模型都支持 `generate` 与 `edit`，每次请求最多出 4 张图（组图模式 12 张），最多接受 9 张参考图，画幅集合相同：`1:1`、`16:9`、`9:16`、`4:3`、`3:4`、`3:2`、`2:3`。
 
 ## 相关文档
 

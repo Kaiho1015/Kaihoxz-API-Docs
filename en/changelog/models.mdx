@@ -2,6 +2,15 @@
 title: "Model Updates"
 ---
 
+<Update label="2026-09-08" description="Capability update">
+**Multi-image generation opened on Wan 2.7 Image**
+
+- **Model IDs**: `wan2.7-image` · `wan2.7-image-pro`
+- `n` is no longer fixed at 1: 1–4 images per request in standard mode, 1–12 with `enable_sequential` (one thematically coherent set per request). `wan2.7-image-pro` tops out at `2k` in sequential mode.
+- Billing is unchanged: a fixed price per image, `n` images cost `n` times the unit price, and the hold at submission is sized by `n`.
+- **Docs**: [Wan Image Series](/en/api-reference/image/wan-image)
+</Update>
+
 <Update label="2026-09-08" description="Model launch">
 **Nano Banana Official is live · one more economy tier**
 
