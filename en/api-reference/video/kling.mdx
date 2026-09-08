@@ -1,46 +1,56 @@
 ---
 title: "Kling Series"
-description: "Kuaishou Kling video generation — v2.6 / v3 / v3-omni / video-o1 / 3.0-turbo / motion control, covering text-to-video, image-to-video, first/last frame, multimodal reference, video reference and motion control"
+description: "Kuaishou Kling video models: text-to-video, first/last frames, image and video references, video editing and motion control"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-Kuaishou Kling video generation series.
+Kuaishou's Kling video line currently has seven models: `kling-3.0-turbo`, `kling-v2-6` and `kling-v3` for general generation, `kling-v3-omni` and `kling-video-o1` for video references and video editing, and `kling-v2-6-motion-control` and `kling-v3-motion-control` for motion transfer. They share the task endpoint `POST /v1/tasks` — switching models means changing `model` — but their actions, parameters and durations differ; see Available models for the per-model breakdown.
 
-**Four-generation lineup**:
-
-- **kling-v2-6** — Classic stable release, 720P silent / 1080P with optional audio, further refined semantic adherence and motion stability
-- **kling-v3** — Next-generation base model, adds **4K resolution**, T2V duration extended to **15 seconds**, native audio support
-- **kling-v3-omni** — Unified **multimodal interface** for the v3 family — T2V, I2V, and video reference all share one endpoint, with `<<<image_N>>>` reference syntax in the prompt
-- **kling-video-o1** — First **reasoning-enhanced** video model, performs deep planning over the prompt and reference assets before generation, delivering best-in-class physical consistency, complex motion, and long-form motion semantic adherence
-- **kling-3.0-turbo** — Fast tier, plain resolutions 720P / 1080P; quickest generation and the lowest unit price, good for previews and batches
-- **kling-v3-motion-control** / **kling-v2-6-motion-control** — **Motion control**: one reference image (the character) plus one reference video (the motion) makes the character reproduce the motion from that video
-
-Billed in `$/second`. Audio, a video reference and 4K each switch to a higher tier.
-
-**Reference video** (`video_urls`, on `kling-v3-omni` / `kling-video-o1`): switches to the pricier **video-reference tier**, multiplied by **output seconds only** — the reference clip itself is not billed by the second.
-
-**Motion control** (`kling-v3-motion-control` / `kling-v2-6-motion-control`): billed as **reference-video seconds × the per-second tier rate**, `720P` at the standard (std) tier and `1080P` at the professional (pro) tier; the reference video carries no separate charge on top. Output duration is set by the reference video and matches it — these two models have **no `duration` parameter**.
-
-## Pricing
-
-<Note>
-Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
-
-**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
-**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
-</Note>
-
-## Examples
+## Quick start
 
 <CodeGroup>
 
-```bash Text-to-video (minimal)
+```bash Text to video
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: kling-demo-001" \
+  -d '{
+    "model": "kling-3.0-turbo",
+    "action": "generate",
+    "prompt": "A city street after rain, neon reflected in the puddles, slow dolly in",
+    "duration": 5,
+    "resolution": "720p",
+    "aspect_ratio": "16:9",
+    "n": 1
+  }'
+```
+
+```bash First/last frame
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "kling-v2-6",
+    "action": "generate",
+    "prompt": "The subject turns from profile toward the camera, hair moving in the breeze",
+    "image_urls": [
+      "https://cdn.example.com/first.jpg",
+      "https://cdn.example.com/last.jpg"
+    ],
+    "duration": 5,
+    "resolution": "1080p"
+  }'
+```
+
+```bash Native audio
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "kling-v3",
-    "prompt": "A Shiba Inu in a spacesuit walking on the moon, cinematic lighting",
+    "action": "generate",
+    "prompt": "Waves break against the rocks, gulls overhead, a distant ship horn",
     "duration": 5,
     "resolution": "1080p",
     "aspect_ratio": "16:9",
@@ -48,284 +58,287 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   }'
 ```
 
-```bash Image-to-video (first frame)
+```bash Multi-shot storyboard
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "kling-v2-6",
-    "prompt": "The character walks slowly toward the camera, hair gently moved by the breeze",
-    "first_frame_image": "https://cdn.example.com/portrait.jpg",
+    "model": "kling-v3",
+    "action": "generate",
+    "prompt": "A dancer turns once in soft studio light, stable camera",
     "duration": 5,
-    "resolution": "1080p"
+    "resolution": "720p",
+    "aspect_ratio": "16:9",
+    "multi_shot": true,
+    "shot_type": "customize",
+    "multi_prompt": [
+      { "index": 1, "prompt": "A dancer steps into frame.", "duration": 2 },
+      { "index": 2, "prompt": "The camera holds while she turns.", "duration": 3 }
+    ]
   }'
 ```
 
-```bash Omni multimodal reference
+```bash Video reference
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "kling-v3-omni",
-    "prompt": "Place the character from <<<image_1>>> running through the forest scene from <<<image_2>>>",
-    "image_urls": [
-      "https://cdn.example.com/char.jpg",
-      "https://cdn.example.com/forest.jpg"
-    ],
-    "duration": 6,
-    "resolution": "1080p",
-    "aspect_ratio": "16:9"
+    "action": "generate",
+    "prompt": "Keep the camera move of the reference video, swap the subject for <<<image_1>>>",
+    "image_urls": ["https://cdn.example.com/character.jpg"],
+    "video_urls": ["https://cdn.example.com/reference.mp4"],
+    "duration": 5,
+    "resolution": "720p"
   }'
 ```
 
-```bash O1 reasoning-enhanced (video reference)
+```bash Video editing
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "kling-video-o1",
-    "prompt": "Keep the character look from <<<image_1>>>, follow the camera movement of the reference video",
-    "image_urls": ["https://cdn.example.com/char.jpg"],
-    "video_urls": [
-      {
-        "video_url": "https://cdn.example.com/ref.mp4",
-        "refer_type": "feature",
-        "keep_original_sound": "no"
-      }
-    ],
-    "duration": 10,
-    "resolution": "1080p"
+    "model": "kling-v3-omni",
+    "action": "edit",
+    "prompt": "Grade the whole clip to golden hour, keep the motion",
+    "video_urls": ["https://cdn.example.com/source.mp4"],
+    "duration": 0,
+    "resolution": "720p"
   }'
 ```
 
-```bash Motion control (reference image + reference video)
+```bash Motion control
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "kling-v3-motion-control",
-    "prompt": "Keep the character consistent, follow the reference video turning and waving, cinematic lighting",
+    "action": "generate",
+    "prompt": "The character turns and waves, studio lighting",
     "image_urls": ["https://cdn.example.com/character.jpg"],
-    "video_urls": ["https://cdn.example.com/ref-motion.mp4"],
+    "video_urls": ["https://cdn.example.com/motion.mp4"],
     "character_orientation": "video",
+    "keep_original_sound": "yes",
     "duration": 0,
-    "resolution": "1080P"
+    "resolution": "1080p"
   }'
 ```
 
 </CodeGroup>
 
-<ResponseExample>
-```json Submission accepted
-{
-  "task_id": "task-wave1775285160b950328499",
-  "model": "kling-v3",
-  "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
-}
-```
-</ResponseExample>
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
 
-After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status); see [Task System](/en/docs/task-system) for details.
-
-## Available Models
-
-| Model ID | Resolution | Duration | Supported actions | Highlights |
-|---|---|---|---|---|
-| `kling-video-o1` | 720P / 1080P | 5 / 10 sec | `generate` · `image2video` · `first_last_frame` · `reference` · `reference_video` | Reasoning-enhanced, best physical consistency |
-| `kling-v3-omni` | 720P / 1080P / 4K | 3-15 sec | `generate` · `image2video` · `reference` · `reference_video` | Unified multimodal endpoint |
-| `kling-v3` | 720P / 1080P / 4K | 3-15 sec | `generate` · `image2video` · `first_last_frame` | 4K + native audio |
-| `kling-v2-6` | 720P / 1080P | 5 / 10 sec | `generate` · `image2video` · `first_last_frame` | 1080P with optional audio, top stability |
-| `kling-3.0-turbo` | 720P / 1080P | 5 / 10 sec | `generate` · `image2video` | Fast tier — quickest generation and the lowest unit price, good for previews and batches |
-| `kling-v3-motion-control` | 720P / 1080P | follows the reference video (3-30 sec) | `generate` (reference video **required** as the motion source) | Motion control (v3), no `duration` parameter |
-| `kling-v2-6-motion-control` | 720P / 1080P | follows the reference video (3-30 sec) | `generate` (reference video **required** as the motion source) | Motion control (v2.6), no `duration` parameter |
-
-## Common Parameters
+## Request parameters
 
 <ParamField body="model" type="string" required>
-  Model ID; see the [Available Models](#available-models) table
+  Model ID; see Available models.
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  `generate` — the only action this model takes.
-
-  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-video; `image_urls` is image-to-video; `first_frame_image` + `last_frame_image` is a first/last-frame transition; `video_urls` / `audio_urls` is reference-to-video.
+  - `generate` — generate a video; supported by all seven models
+  - `edit` — edit a source video; only `kling-v3-omni` and `kling-video-o1` support it, and `video_urls` is required
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
-  Video description text. In Omni / O1 you can use the `<<<image_N>>>` syntax to reference the N-th image in `image_urls` (N starts at 1)
+  Video description or edit instruction. On `kling-v3-omni` and `kling-video-o1` the prompt can reference the first and second entries of `image_urls` as `<<<image_1>>>` and `<<<image_2>>>`; with `element_list` on `kling-v3` and `kling-v3-omni`, reference a subject as `@name`.
 </ParamField>
 
-<ParamField body="aspect_ratio" type="string" default="16:9">
-  Frame aspect ratio, **applies to T2V only**; image / video reference modes follow the source asset's ratio. Allowed values:
-  - `16:9` — landscape widescreen
-  - `9:16` — portrait
-  - `1:1` — square
+<ParamField body="n" type="integer" default="1">
+  Number of videos. Value: `1`. Each task returns one video.
+</ParamField>
+
+<ParamField body="duration" type="integer" required>
+  Output duration in seconds, per model:
+
+  - `kling-3.0-turbo`, `kling-v3`, `kling-v3-omni` — an integer from `3` to `15`
+  - `kling-v2-6`, `kling-video-o1` — `5` or `10`
+  - `kling-v2-6-motion-control`, `kling-v3-motion-control` — `0`, meaning the reference video's length
+  - `action: "edit"` on `kling-v3-omni` / `kling-video-o1` — `0`, meaning the source video's length
 </ParamField>
 
 <ParamField body="resolution" type="string" default="720p">
-  Output resolution. See [Available Models](#available-models) for per-model support:
-  - `720p`
-  - `1080p`
-  - `4K` (v3 / omni only)
+  Output resolution tier: `720p` or `1080p`. All seven models offer both.
 </ParamField>
 
-<ParamField body="duration" type="integer" default="5">
-  Video duration in seconds. v2.6 / o1 accept only `5` or `10`; v3 / omni accept any integer from 3-15.
-
-  The two `*-motion-control` models **do not accept this parameter** — output duration is set by the reference video; pass `0` (meaning "follow the reference video's duration") or omit it
+<ParamField body="aspect_ratio" type="string">
+  Frame ratio: `16:9`, `9:16` or `1:1`. The two `*-motion-control` models do not take this parameter. With reference images, the output follows the input image's ratio.
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  Reference image URL array:
-  - **I2V / first-last frame** (v3 / v2.6 / o1 / 3.0-turbo): a **single-element array** triggers I2V
-  - **Multimodal reference** (Omni / O1): multiple images, referenceable via `<<<image_N>>>`
-  - **Motion control** (the two `*-motion-control` models): **required**, 1 image as the character reference. If it is missing, the request is rejected at submission and nothing is held.
-</ParamField>
+  Reference image URLs:
 
-<ParamField body="first_frame_image" type="string">
-  First-frame image URL. Used with `image2video` or `first_last_frame` action (v2.6 / v3 / o1)
-</ParamField>
-
-<ParamField body="last_frame_image" type="string">
-  Last-frame image URL, used with `first_last_frame` action
+  - `kling-3.0-turbo` — up to 1, used as the first frame
+  - `kling-v2-6`, `kling-v3`, `kling-v3-omni`, `kling-video-o1` — up to 2; two images act as first and last frame
+  - The two `*-motion-control` models — required, one character reference image
+  - With `video_urls` on `kling-v3-omni` / `kling-video-o1` — at most 1; `action: "edit"` takes no reference image
 </ParamField>
 
 <ParamField body="video_urls" type="string[]">
-  Reference video URL array (single element):
-  - **Video reference** (Omni / O1): the clip supplies the camera and motion characteristics
-  - **Motion control** (the two `*-motion-control` models): **required**, the motion-source video the referenced character reproduces. If it is missing, the request is rejected at submission and nothing is held.
+  Reference video URLs, at most one entry:
+
+  - `kling-v3-omni`, `kling-video-o1` — a camera/feature reference under `action: "generate"`, the source clip under `action: "edit"`; 3 to 10 seconds
+  - The two `*-motion-control` models — required, the motion source clip; up to 30 seconds
 </ParamField>
 
-<ParamField body="callback_url" type="string">
-  Webhook callback URL, invoked when the task reaches a terminal state. See [Callback Mechanism](/en/docs/sync-async#async-task-webhook)
+<ParamField body="negative_prompt" type="string">
+  Negative prompt. Supported by `kling-v2-6`, `kling-v3` and `kling-v3-omni`.
 </ParamField>
-
-<ParamField body="callback_events" type="string[]">
-  Event types to push; defaults to all terminal events
-</ParamField>
-
-## Model-specific Parameters
-
-<Tabs>
-
-<Tab title="kling-video-o1">
-
-<ParamField body="video_urls" type="string[]">
-  Reference video URL array, **at most 1 clip**. Attaching it switches billing to the "video reference" tier; `generate_audio` cannot be enabled at the same time.
-</ParamField>
-
-</Tab>
-
-<Tab title="kling-v3-omni">
 
 <ParamField body="generate_audio" type="boolean" default="false">
-  Whether to generate audio. **Mutually exclusive with `video_urls`** — cannot be enabled when a video reference is attached
+  Generate native audio. Supported by `kling-v2-6`, `kling-v3` and `kling-v3-omni`; on `kling-v2-6` it requires `resolution: "1080p"`, and on `kling-v3-omni` it cannot be combined with `video_urls`.
 </ParamField>
 
-<ParamField body="watermark" type="boolean" default="false">
-  Whether to add a watermark
+<ParamField body="watermark" type="boolean">
+  Whether to watermark the output video. Supported by every model except `kling-video-o1`.
 </ParamField>
 
-<ParamField body="video_urls" type="string[]">
-  Reference video URL array, **at most 1 clip**. Attaching it switches billing to the "video reference" tier; `generate_audio` cannot be enabled at the same time.
+### Multi-shot and reference subjects (`kling-v3` / `kling-v3-omni`)
+
+<ParamField body="multi_shot" type="boolean" default="false">
+  Enable multi-shot storyboard mode.
 </ParamField>
 
-</Tab>
-
-<Tab title="kling-v3">
-
-<ParamField body="generate_audio" type="boolean" default="false">
-  Whether to generate audio. Native audio is supported across all resolutions
+<ParamField body="shot_type" type="string">
+  Shot split method: `customize` / `intelligence`; required when `multi_shot=true`.
 </ParamField>
 
-<ParamField body="watermark" type="boolean" default="false">
-  Whether to add a watermark
+<ParamField body="multi_prompt" type="array">
+  Multi-shot list (1-6 items) of `{index, prompt, duration}`; index starts at 1 and is contiguous; shot durations must sum to `duration`; requires `multi_shot=true`.
 </ParamField>
 
-</Tab>
-
-<Tab title="kling-v2-6">
-
-<ParamField body="generate_audio" type="boolean" default="false">
-  Whether to auto-generate audio. **Only effective at `resolution=1080p`**; **mutually exclusive with last frame** (cannot enable with `first_last_frame`)
+<ParamField body="element_list" type="array">
+  Reference subjects (up to 3) of `{name, description, element_input_urls}`; 2-4 images per subject, first one frontal; reference a subject in the prompt as `@name`.
 </ParamField>
 
-<ParamField body="watermark" type="boolean" default="false">
-  Whether to add a watermark
+### Role-tagged images (`kling-v3-omni` / `kling-video-o1`)
+
+<ParamField body="image_with_roles" type="array">
+  Role-tagged image array of `{url, role}` (`first_frame` / `last_frame` / `reference`); merged with `first_frame_image` / `last_frame_image`.
 </ParamField>
 
-</Tab>
+### Motion control (`kling-v2-6-motion-control` / `kling-v3-motion-control`)
 
-<Tab title="kling-3.0-turbo">
-
-The fast tier has no model-specific parameters; everything else is in [Common Parameters](#common-parameters). It does not support audio or video reference.
-
-</Tab>
-
-<Tab title="motion-control">
-
-`kling-v3-motion-control` / `kling-v2-6-motion-control` must be given both of:
-
-<ParamField body="image_urls" type="string[]" required>
-  The character reference image (1 image), **required** — it determines the character's appearance in the generated video. If it is missing, the request is rejected at submission and nothing is held.
+<ParamField body="character_orientation" type="string" required>
+  Use the reference image or video for character orientation: `image` or `video`. The two values imply different reference-video lengths; see Limits.
 </ParamField>
 
-<ParamField body="video_urls" type="string[]" required>
-  The motion-source video (1 clip), **required** — the generated video makes the referenced character reproduce its motion and camera work. **3-30 seconds.** If it is missing, the request is rejected at submission and nothing is held.
+<ParamField body="keep_original_sound" type="string" default="yes">
+  Whether to keep the motion reference video's original audio: `yes` or `no`.
 </ParamField>
+
+See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key`, and the maximum-cost header.
+
+The Kling series does not support `seed`, `quality` or `size`. Any other parameter returns `400` and is not billed.
+
+## Limits
+
+| Models | Condition | Limit |
+|---|---|---|
+| All | Every request | Each task returns one video. |
+| `kling-3.0-turbo` | Every request | A prompt is required and at most one first-frame image is accepted. |
+| `kling-3.0-turbo` | `image_urls` provided | Image-to-video follows the input image and does not accept aspect_ratio. |
+| `kling-3.0-turbo`, `kling-v2-6`, `kling-v3` | Every request | An explicit output duration is required. |
+| `kling-v2-6`, `kling-v3`, `kling-v3-omni`, `kling-video-o1` | Every request | A prompt is required. |
+| `kling-v2-6`, `kling-v3`, `kling-v3-omni`, `kling-video-o1` | Every request | At most two reference images are accepted. |
+| `kling-v2-6` | `generate_audio: true` | Native audio requires the 1080p pro tier. |
+| `kling-v2-6` | `generate_audio: true` | Native audio cannot be combined with two-image first/last-frame control. |
+| `kling-v2-6` | Two `image_urls` provided | Two-image first/last-frame control requires the 1080p pro tier. |
+| `kling-v3-omni`, `kling-video-o1` | `video_urls` provided | A video reference accepts at most one image and must be one 3 to 10 second video. |
+| `kling-v3-omni`, `kling-video-o1` | `action: "edit"` | Initial video editing accepts one source video and preserves its duration. |
+| `kling-v3-omni`, `kling-video-o1` | `action: "generate"` | Video generation requires an explicit output duration. |
+| `kling-v3-omni` | `generate_audio: true` with `video_urls` | Video reference cannot be combined with native-audio generation. |
+| `kling-v2-6-motion-control`, `kling-v3-motion-control` | Every request | Motion control requires one image and one video; output duration follows the reference video. |
+| `kling-v2-6-motion-control`, `kling-v3-motion-control` | `character_orientation: "image"` | Image-orientation reference video must be 3 to 10 seconds. |
+| `kling-v2-6-motion-control`, `kling-v3-motion-control` | `character_orientation: "video"` | Video-orientation reference video must be 3 to 30 seconds. |
+
+| Item | Models | Maximum |
+|---|---|---|
+| Videos per task | All | 1 |
+| Reference images | `kling-3.0-turbo`, both `*-motion-control` | 1 |
+| Reference images | `kling-v2-6`, `kling-v3`, `kling-v3-omni`, `kling-video-o1` | 2 |
+| Reference video length | `kling-v3-omni`, `kling-video-o1` | 10 seconds |
+| Reference video length | `kling-v2-6-motion-control`, `kling-v3-motion-control` | 30 seconds |
+| Storyboard shots | `kling-v3`, `kling-v3-omni` | 6 |
+| Reference subjects | `kling-v3`, `kling-v3-omni` | 3, with 2-4 images each |
+
+Requests whose duration follows a reference video (both `*-motion-control` models, and `action: "edit"`) need a video link whose duration can be read. If it cannot, the request returns `400` and is not billed; ordinary MP4 and WebM links work.
+
+## Pricing
+
+Billing is **resolution tier × output seconds**. `resolution` picks the tier (`720p` or `1080p`), and the seconds are the clip's actual output length.
+
+Two situations switch to a different per-second rate while still multiplying by output seconds only:
+
+- **Native audio** — `generate_audio: true` uses the audio tier. `kling-v3` and `kling-v3-omni` have one at both resolutions; `kling-v2-6` has one at 1080p only.
+- **Video reference** — on `kling-v3-omni` and `kling-video-o1`, supplying `video_urls` uses the video-reference tier, under both `action: "generate"` and `action: "edit"`. The reference video's own length is not billed.
+
+Where the output seconds come from:
+
+- Requests that carry a concrete `duration` are billed on that `duration`.
+- Requests with `duration: 0` (both `*-motion-control` models, and `action: "edit"`) follow the reference or source video, and are billed on the duration read from that video.
 
 <Note>
-Motion control requires **both the reference image and the reference video**; the reference video must be MP4 / MOV, 3-30 seconds.
+Per-model rates are in `price_config` on `GET /v1/models`, and in the console's Model Market.
 
-**There is no `duration` parameter** (the upstream does not accept one): output duration is set by the reference video and matches it — pass `duration: 0` or omit it. Billing is **reference-video seconds × the per-second tier rate** (`720P` standard tier / `1080P` professional tier).
+What a single call actually cost is the `cost` field on the task response — an integer quota at 500,000 quota = 1 USD.
 </Note>
 
-</Tab>
+You are only billed for a successfully generated video. Failed and cancelled tasks, and tasks that return no usable video, are refunded in full. The final charge is the `cost` field on the task response — an integer quota, not dollars.
 
-</Tabs>
+## Response
 
-## Special Syntax
-
-**`<<<image_N>>>` prompt image reference** (Omni / O1)
-
-Within `prompt`, use the `<<<image_N>>>` placeholder to explicitly reference the N-th image in `image_urls` (N starts at **1**). The model substitutes the placeholder with the corresponding image content for:
-
-- Character consistency — `<<<image_1>>>` locks the subject's appearance
-- Scene composition — the character from `<<<image_1>>>` appears in the environment of `<<<image_2>>>`
-- Multi-asset guidance — embed N reference images at any position
-
-```text Example
-"Take the girl in red from <<<image_1>>> and place her into the snow-mountain scene of <<<image_2>>>, camera slowly zooming in"
+```json Completed task
+{
+  "task_id": "task-wave1788753089b950634993",
+  "model": "kling-v3",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788753089,
+  "completed_at": 1788753209,
+  "result": {
+    "videos": [
+      {
+        "url": ["https://cdn.example.com/result.mp4"],
+        "expires_at": 1789089508
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/task-wave1788753089b950634993",
+    "cancel": "https://www.qingbo.dev/v1/tasks/task-wave1788753089b950634993/cancel"
+  },
+  "billing_status": "settled",
+  "cost": 189000
+}
 ```
 
-Corresponding `image_urls`:
+Generated videos are returned in `result.videos`; `expires_at` is when the link stops working, so store the file before then. See [Query Task Status](/en/api-reference/task/status) for the full field list.
 
-```json
-"image_urls": [
-  "https://cdn.example.com/girl-red.jpg",
-  "https://cdn.example.com/snow-mountain.jpg"
-]
-```
+## Available models
 
-<Note>
-Non-Omni / O1 models (v2.6 / v3 / 3.0-turbo) do not parse `<<<image_N>>>` placeholders and forward them to the model as literal text.
-</Note>
+| Model ID | Actions | Duration | Resolution | Reference material |
+|---|---|---|---|---|
+| `kling-3.0-turbo` | `generate` | 3-15s | `720p` `1080p` | 1 first-frame image |
+| `kling-v2-6` | `generate` | 5s or 10s | `720p` `1080p` | Up to 2 reference images |
+| `kling-v3` | `generate` | 3-15s | `720p` `1080p` | Up to 2 reference images |
+| `kling-v3-omni` | `generate` `edit` | 3-15s; `edit` follows the source | `720p` `1080p` | Up to 2 images, 1 reference video |
+| `kling-video-o1` | `generate` `edit` | 5s or 10s; `edit` follows the source | `720p` `1080p` | Up to 2 images, 1 reference video |
+| `kling-v2-6-motion-control` | `generate` | Follows the reference video | `720p` `1080p` | 1 image + 1 reference video |
+| `kling-v3-motion-control` | `generate` | Follows the reference video | `720p` `1080p` | 1 image + 1 reference video |
 
-## Resource Limits
+Picking by capability:
 
-| Item | Limit |
-|---|---|
-| Reference image (per file) | ≤ 30MB, JPG / PNG / WEBP |
-| Reference image (count) | I2V: 1; Omni / O1 multimodal: ≤ 4 recommended; motion control: 1 |
-| Reference video (`video_urls`) | MP4 / MOV, **at most 1 clip**; motion control 3-30 sec and ≤ 100MB; video reference ≥ 3 sec, 720px-2160px |
-| Prompt | ≤ 2500 characters |
-| Output | MP4, link valid for 24 hours |
+- **Native audio** (`generate_audio`) — `kling-v2-6` (`1080p` only), `kling-v3`, `kling-v3-omni`
+- **Multi-shot storyboards and reference subjects** (`multi_shot` / `shot_type` / `multi_prompt` / `element_list`) — `kling-v3`, `kling-v3-omni`
+- **Role-tagged images** (`image_with_roles`) — `kling-v3-omni`, `kling-video-o1`
+- **Video editing and video references** (`action: "edit"` / `video_urls`) — `kling-v3-omni`, `kling-video-o1`
+- **Motion transfer** (`character_orientation` / `keep_original_sound`) — `kling-v2-6-motion-control`, `kling-v3-motion-control`
+- **Negative prompts** (`negative_prompt`) — `kling-v2-6`, `kling-v3`, `kling-v3-omni`
 
-## Related Docs
+## Related
 
-- [Task System Reference](/en/docs/task-system) — task state machine / polling cadence / async push
-- [Request & Response Format](/en/docs/request-response) — common error codes / headers / rate limits
-- [Authentication](/en/docs/authentication) — API key signup and usage
+- [Video Generation Overview](/en/api-reference/video/overview)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

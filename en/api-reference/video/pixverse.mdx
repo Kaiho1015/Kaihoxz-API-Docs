@@ -1,146 +1,235 @@
 ---
 title: "PixVerse V6"
-description: "PixVerse V6 — one model for text-to-video and image-to-video. Any duration from 1 to 15 seconds, optional native audio, four resolutions from 360p to 1080p"
+description: "PixVerse V6: text-to-video, image-to-video, first/last frame and multi-reference fusion, any integer duration from 1 to 15 seconds, optional native audio"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-PixVerse V6 is a unified video generation model: **text-to-video and image-to-video** in one endpoint, **any integer duration from 1 to 15 seconds**, four resolutions (360p / 540p / 720p / 1080p), and optional **native audio** (`generate_audio`). A good fit for **short-form content, creative ads and bulk asset production**. Generation is async.
+PixVerse V6 is PixVerse's unified video model: one model covers text-to-video, image-to-video, first/last-frame transitions and multi-image reference fusion, with a multi-shot engine for continuous narrative, native synchronized audio (dialogue, sound effects and background music) and cinematic camera control, at 360p to 1080p and 1 to 15 seconds. The generation mode is selected by the media fields you send, not by the action. Every request is submitted asynchronously through `POST /v1/tasks`.
 
-Billed by **resolution × duration** at a **per-second rate**. Setting `generate_audio` moves the request into the more expensive audio tier (`<resolution>_sound`).
-
-## Pricing
-
-<Note>
-Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
-
-**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
-**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
-</Note>
-
-## Examples
+## Quick start
 
 <CodeGroup>
 
-```bash Text to video (silent)
+```bash Text to video
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: pixverse-demo-001" \
   -d '{
     "model": "pixverse-v6",
-    "prompt": "golden hour, a corgi running through a field of sunflowers, cinematic camera",
+    "action": "generate",
+    "prompt": "Golden hour, a corgi running through a sunflower field, tracking camera",
     "resolution": "540p",
     "duration": 5,
     "aspect_ratio": "16:9"
   }'
 ```
 
-```bash Text to video (with audio)
+```bash With audio
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "pixverse-v6",
-    "prompt": "a neon alley in Tokyo, light rain at night, anamorphic lens flare",
+    "action": "generate",
+    "prompt": "A neon alley in Tokyo, light rain at night, street noise in the distance",
     "resolution": "720p",
     "duration": 8,
     "generate_audio": true
   }'
 ```
 
-```bash Image to video (single image)
+```bash Image to video
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "pixverse-v6",
-    "prompt": "slow push in, a light breeze moving through the leaves",
+    "action": "generate",
+    "prompt": "The camera pushes in slowly, a breeze moves the leaves",
     "image_urls": ["https://cdn.example.com/first-frame.jpg"],
     "resolution": "540p",
     "duration": 5
   }'
 ```
 
+```bash First and last frame
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "pixverse-v6",
+    "action": "generate",
+    "prompt": "Morning fading into dusk, the light turning warm",
+    "first_frame_image": "https://cdn.example.com/first.jpg",
+    "last_frame_image": "https://cdn.example.com/last.jpg",
+    "resolution": "720p",
+    "duration": 5
+  }'
+```
+
+```bash Multi-reference fusion
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "pixverse-v6",
+    "action": "generate",
+    "prompt": "Place the character into the second scene, matching light, slow orbit",
+    "img_references": [
+      "https://cdn.example.com/person.jpg",
+      "https://cdn.example.com/scene.jpg"
+    ],
+    "resolution": "720p",
+    "duration": 8,
+    "aspect_ratio": "16:9"
+  }'
+```
+
 </CodeGroup>
 
-<ResponseExample>
-```json Submission accepted
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
+
+## Request parameters
+
+<ParamField body="model" type="string" required>
+  Must be `pixverse-v6`.
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  `generate` is the only action on this model. The mode follows the media fields you send: `prompt` alone is text-to-video, `image_urls` is image-to-video, `first_frame_image` together with `last_frame_image` is a first/last-frame transition, and `img_references` is multi-image reference fusion.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  The video description, up to 5000 characters.
+</ParamField>
+
+<ParamField body="negative_prompt" type="string">
+  Negative prompt used to exclude unwanted content, up to 2048 characters.
+</ParamField>
+
+<ParamField body="duration" type="integer">
+  Video length in seconds, an integer from `1` to `15`. First/last-frame mode accepts only `5` or `8`.
+</ParamField>
+
+<ParamField body="resolution" type="string">
+  Output resolution: `360p`, `540p`, `720p` or `1080p`. Resolution selects the price tier.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string">
+  Frame ratio: `16:9`, `4:3`, `1:1`, `3:4`, `9:16`, `2:3`, `3:2` or `21:9`. Effective in text-to-video and multi-reference fusion only; other modes follow the input image.
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  Random seed from `0` to `2147483647`. The same prompt and seed reproduce similar results.
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Input image URLs for image-to-video; only the first image is used.
+</ParamField>
+
+<ParamField body="first_frame_image" type="string">
+  Starting frame URL for a first/last-frame transition. Must be sent together with `last_frame_image`.
+</ParamField>
+
+<ParamField body="last_frame_image" type="string">
+  Closing frame URL for a first/last-frame transition. Must be sent together with `first_frame_image`.
+</ParamField>
+
+<ParamField body="watermark" type="boolean" default="false">
+  Whether to add a watermark in the bottom-right corner of the video.
+</ParamField>
+
+<ParamField body="generate_audio" type="boolean" default="false">
+  Whether to generate a video with sound. Enabling it moves the task to the audio price tier, which costs more than the silent tier.
+</ParamField>
+
+<ParamField body="motion_mode" type="string">
+  Motion mode. `pixverse-v6` supports `normal` only.
+</ParamField>
+
+<ParamField body="generate_multi_clip_switch" type="boolean" default="false">
+  Whether to generate a multi-clip continuous video. Effective in text-to-video and image-to-video only.
+</ParamField>
+
+<ParamField body="img_references" type="string[]">
+  Reference image URLs for multi-image fusion, 1 to 7 images. Sending this field selects fusion mode.
+</ParamField>
+
+See [Submit Task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key` and the maximum-cost header.
+
+Any other parameter returns `400` and is not billed.
+
+## Limits
+
+- First/last frame mode only supports 5 or 8 seconds
+- This model produces one result per task; n is not supported
+
+| Item | Limit |
+|---|---|
+| Input image `image_urls` | Only the first image is used |
+| First/last frame | `first_frame_image` and `last_frame_image` must be sent together |
+| Fusion references `img_references` | 1 to 7 images |
+| Prompts | `prompt` up to 5000 characters, `negative_prompt` up to 2048 |
+| Duration `duration` | 1 to 15 seconds; 5 or 8 in first/last-frame mode |
+| Resolution `resolution` | `360p` / `540p` / `720p` / `1080p` |
+
+All image inputs must be publicly reachable HTTP(S) URLs; base64 and Data URIs return an error.
+
+## Pricing
+
+Billing is **resolution tier × output seconds**, where the seconds come from the `duration` you send. Each of the four resolutions is priced separately, and higher resolutions cost more.
+
+`generate_audio` is the second billing dimension: enabling it settles at the **audio tier** for the same resolution, which is above the silent tier. Reference images, first/last frames, the negative prompt and the aspect ratio carry no separate charge.
+
+<Note>
+Rates move with the upstream, so this section describes billing dimensions only and lists no amounts.
+
+Current rates: `price_config` on `GET /v1/models`, or the Model Market in the console.
+Actual cost of one call: the `cost` field on the task response (an integer quota; 500,000 quota = 1 USD).
+</Note>
+
+You are billed only for a delivered video. Failed and cancelled tasks, and upstream successes that carry no deliverable video, are refunded in full. The final charge is the `cost` field on the task response — an integer quota, not dollars (500,000 quota = 1 USD).
+
+## Response
+
+```json Completed task
 {
   "task_id": "task-wave1775285160b950328499",
   "model": "pixverse-v6",
   "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1775285160,
+  "completed_at": 1775285260,
+  "result": {
+    "videos": [
+      {
+        "expires_at": 1775371560,
+        "url": ["https://cdn.example.com/result.mp4"]
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 22500,
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499",
+    "cancel": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499/cancel"
+  }
 }
 ```
-</ResponseExample>
 
-After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status); see [Task System](/en/docs/task-system) for details.
+Generated videos are returned in `result.videos`; `url` is an array and `expires_at` is the link expiry in Unix seconds, so copy the file to your own storage before then. See [Query Task Status](/en/api-reference/task/status) for the full field reference.
 
-## Available Models
+## Available models
 
-| Model ID | Resolution | Duration | Supported action | Notes |
+| Model ID | Resolution | Duration (s) | Action | Notes |
 |---|---|---|---|---|
-| `pixverse-v6` | 360p / 540p / 720p / 1080p | 1–15 sec | generate | Text-to-video and image-to-video in one model, optional native audio |
+| `pixverse-v6` | `360p` / `540p` / `720p` / `1080p` | Any integer 1 to 15 | `generate` | Text, image, first/last frame and fusion in one model, with optional audio |
 
-## Common Parameters
+## Related
 
-<ParamField body="model" type="string" required>
-  Model ID, always `pixverse-v6`
-</ParamField>
-
-<ParamField body="prompt" type="string" required>
-  Video description text. Describe the **scene / subject / action / camera / mood**
-</ParamField>
-
-<ParamField body="duration" type="integer" default="5">
-  Video duration in seconds. Any integer from **1 to 15**
-</ParamField>
-
-<ParamField body="resolution" type="string" default="540p">
-  Output resolution. `360p` / `540p` / `720p` / `1080p`. Determines the pricing tier
-</ParamField>
-
-<ParamField body="aspect_ratio" type="string" default="16:9">
-  Frame aspect ratio. Allowed values: `16:9` / `4:3` / `1:1` / `3:4` / `9:16` / `2:3` / `3:2` / `21:9`
-</ParamField>
-
-<ParamField body="seed" type="integer">
-  Random seed. The same prompt + seed reproduces a similar result
-</ParamField>
-
-<ParamField body="image_urls" type="string[]">
-  Reference image URL array, for image to video. Only the first image is used. Must be a publicly downloadable link
-</ParamField>
-
-<ParamField body="callback_url" type="string">
-  Webhook callback URL, invoked when the task reaches a terminal state. See [Callback Mechanism](/en/docs/sync-async#async-task-webhook)
-</ParamField>
-
-<ParamField body="callback_events" type="string[]">
-  Subscribed callback events; defaults to the terminal states (`succeeded` / `failed` / `cancelled`)
-</ParamField>
-
-## Model-Specific Parameters
-
-<ParamField body="generate_audio" type="boolean" default="false">
-  Whether to generate the video with sound.
-  - `false` (default) — silent output, billed at the silent tier
-  - `true` — native audio, billed at the more expensive audio tier (`<resolution>_sound`); see [Pricing](#pricing)
-</ParamField>
-
-## Resource Limits
-
-| Item | Limit |
-|---|---|
-| Reference image | Image to video uses the first image only; must be a publicly downloadable link (JPG / PNG / WEBP) |
-| Prompt length | ≤ 5000 characters recommended |
-| Video duration | Any integer from 1 to 15 sec |
-| Resolution | 360p / 540p / 720p / 1080p |
-| Output | MP4, link valid for 24 hours |
-
-## Related Docs
-
-- [Task System Reference](/en/docs/task-system) — task state machine / polling cadence / async push
-- [Request & Response Format](/en/docs/request-response) — common error codes / headers / rate limits
-- [Authentication](/en/docs/authentication) — API key signup and usage
+- [Video Generation Overview](/en/api-reference/video/overview)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

@@ -1,228 +1,203 @@
 ---
 title: "FLUX Series"
-description: "Black Forest Labs FLUX — Kontext image editing (FLUX.1 Kontext) and FLUX.2 text-to-image"
+description: "Black Forest Labs FLUX image models: FLUX.2 prices output by megapixel tier, FLUX.1 Kontext does contextual editing at a fixed price per image"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-Black Forest Labs' FLUX image model series, **5 models** in two families:
+FLUX is the image model line from Black Forest Labs. This page covers the five models available today, in two generations: FLUX.2 lets you pick the output megapixel tier and takes up to eight reference images, priced by MP tier; FLUX.1 Kontext focuses on contextual editing, outputs a fixed 1 MP with up to four reference images, and charges a fixed price per image. Both generations use the same task endpoint and the same actions — switching models means changing `model` and nothing else.
 
-- **FLUX.1 Kontext (image editing)** — `flux-kontext-pro` / `flux-kontext-max`. Edits an existing image; good at local edits, style transfer, element replacement, and character consistency. **A reference image in `image_urls` is required** — a text-only prompt will not produce an image.
-- **FLUX.2 (text-to-image / reference-guided)** — `flux-2-pro` / `flux-2-max` / `flux-2-flex`. Generates images from text, optionally guided by up to **8 reference images** (`image_urls`) for image-to-image and multi-image fusion, at `1K` or `2K` resolution; `2K` is billed separately. `max` is the top quality tier. Reference images carry a per-image surcharge.
-
-Per-image pricing, async tasks — submit, then poll task status for the result.
-
-**FLUX.2 is priced by megapixel (MP) tier.** The output image is charged at the MP tier its pixel count falls into — `1K` (1024×1024 ≈ 1.05 MP) lands in the **2 MP tier**, not the 1 MP tier. Reference images are charged separately: with **exactly one** reference image, the surcharge follows that image's **actual** MP tier (1 / 2 / 3 / 4 MP); with **two or more**, each is charged at the **1 MP tier**. `pro`, `max` and `flex` each have their own set of MP-tier rates.
-
-<Warning>
-`flux-kontext-pro` and `flux-kontext-max` are **image editing models**. A call must provide reference images in `image_urls` (together with an edit instruction in `prompt`), or the task fails. For text-only generation, use `flux-2-pro` / `flux-2-flex` instead.
-</Warning>
-
-## Pricing
-
-<Note>
-Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
-
-**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
-**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
-</Note>
-
-## Model Quick Reference
-
-| Model | Type | Required input | action | Resolution |
-|---|---|---|---|---|
-| `flux-kontext-pro` | Image editing | `prompt` + `image_urls` | `generate` / `edit` | — |
-| `flux-kontext-max` | Image editing (enhanced) | `prompt` + `image_urls` | `generate` / `edit` | — |
-| `flux-2-pro` | Text-to-image / reference | `prompt` (optional `image_urls` ≤ 8) | `generate` | `1K` / `2K` |
-| `flux-2-max` | Text-to-image / reference (top quality) | `prompt` (optional `image_urls` ≤ 8) | `generate` | `1K` / `2K` |
-| `flux-2-flex` | Text-to-image / reference (flex tier) | `prompt` (optional `image_urls` ≤ 8) | `generate` | `1K` / `2K` |
-
-## Examples
+## Quick start
 
 <CodeGroup>
 
-```bash Kontext image edit (image_urls required)
+```bash Text to image
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: flux-demo-001" \
+  -d '{
+    "model": "flux-2-pro",
+    "action": "generate",
+    "prompt": "A city corner after rain, neon reflected in puddles, cinematic composition",
+    "aspect_ratio": "16:9",
+    "resolution": "2mp",
+    "output_format": "png"
+  }'
+```
+
+```bash Contextual edit
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: flux-edit-001" \
   -d '{
     "model": "flux-kontext-pro",
     "action": "edit",
-    "prompt": "Replace the background with a seaside at dusk, keep the pose and clothing of the subject unchanged",
-    "image_urls": ["https://cdn.example.com/portrait.jpg"],
+    "prompt": "Keep the subject and composition, change the season to first snow",
+    "image_urls": ["https://cdn.example.com/source.png"],
     "aspect_ratio": "1:1"
   }'
 ```
 
-```bash Kontext Max (character consistency, high fidelity)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "flux-kontext-max",
-    "action": "edit",
-    "prompt": "Keep the same character, change the outfit to cyberpunk, neon atmosphere",
-    "image_urls": ["https://cdn.example.com/character.jpg"],
-    "aspect_ratio": "3:4"
-  }'
-```
-
-```bash FLUX.2 text-to-image (1K default)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "flux-2-pro",
-    "prompt": "Futuristic city night view, neon lights reflected on wet streets, cinematic composition",
-    "aspect_ratio": "16:9",
-    "seed": 12345
-  }'
-```
-
-```bash FLUX.2 Flex (2K tier)
+```bash Tune steps and guidance
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "flux-2-flex",
-    "prompt": "Minimalist product poster, geometric composition, restrained negative space, soft studio lighting",
-    "resolution": "2K",
-    "aspect_ratio": "2:3"
+    "action": "generate",
+    "prompt": "A hand-painted watercolour botanical plate on a white background",
+    "aspect_ratio": "3:4",
+    "resolution": "1mp",
+    "steps": 28,
+    "guidance": 3.5,
+    "seed": 12345
   }'
 ```
 
 </CodeGroup>
 
-<ResponseExample>
-```json Submission successful
-{
-  "task_id": "task-wave1775290140a830128812",
-  "model": "flux-kontext-pro",
-  "action": "edit",
-  "status": "queued",
-  "created_at": 1775290140120,
-  "progress": 0
-}
-```
-</ResponseExample>
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
 
-After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status). See [Task System](/en/docs/task-system) for details.
-
-## Available Models
-
-| Model ID | Description |
-|---|---|
-| `flux-kontext-pro` | FLUX.1 Kontext Pro. Image editing model, requires `image_urls`; good at local edits and style transfer |
-| `flux-kontext-max` | FLUX.1 Kontext Max. Enhanced editing model, stronger character consistency and fidelity |
-| `flux-2-pro` | FLUX.2 Pro. Text-to-image, `1K` / `2K` resolution |
-| `flux-2-max` | FLUX.2 Max. Top quality tier for final renders where fidelity outweighs cost, `1K` / `2K` |
-| `flux-2-flex` | FLUX.2 Flex. Text-to-image flex tier, `1K` / `2K` resolution |
-
-## Common Parameters
+## Request parameters
 
 <ParamField body="model" type="string" required>
-  Choose one from the [Available Models](#available-models) list
+  One of `flux-2-pro`, `flux-2-max`, `flux-2-flex`, `flux-kontext-pro` or `flux-kontext-max`.
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  - `generate` — text to image (default)
-  - `edit` — image editing; pair with `image_urls`
-
-  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-image; one `image_urls` entry is image-to-image; several are multi-image reference; add `mask_url` for inpainting.
+  - `generate`: create an image from text
+  - `edit`: rewrite a reference image; requires `image_urls`
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
-  Image description or edit instruction. Supports Chinese and English. For Kontext models, write what to do to the reference image
-</ParamField>
-
-<ParamField body="seed" type="integer" default="-1">
-  Random seed. `-1` for random; a fixed value reproduces similar results. Supported by both FLUX.2 and Kontext
-</ParamField>
-
-<ParamField body="aspect_ratio" type="string" default="1:1">
-  Aspect ratio. All four models support the same 7 options:
-  - `1:1` — Square
-  - `16:9` / `9:16` — Widescreen landscape / portrait
-  - `4:3` / `3:4` — Standard landscape / portrait
-  - `3:2` / `2:3` — Camera ratio landscape / portrait
-</ParamField>
-
-<ParamField body="resolution" type="string" default="1K">
-  Output resolution, **FLUX.2 (`flux-2-pro` / `flux-2-flex`) only**:
-  - `1K` — 1K tier (default, base rate)
-  - `2K` — 2K tier (billed separately, see [Pricing](#pricing))
-
-  Kontext models (`flux-kontext-pro` / `flux-kontext-max`) do not accept this field.
+  The image description or editing instruction.
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  Array of reference image URLs. **Required for Kontext models (`flux-kontext-pro` / `flux-kontext-max`)**; optional for the three FLUX.2 models, up to 8 images (output plus all reference images must not exceed 9MP in total), used for image-to-image and multi-image reference fusion. FLUX.2 reference images are **billed per image** — see the model page on [Explore](https://qingbo.dev/explore) for the unit price
+  Reference image URLs. Required for `edit`; `generate` accepts none. Up to eight on FLUX.2 and four on FLUX.1 Kontext.
 </ParamField>
 
-<ParamField body="callback_url" type="string">
-  Webhook callback URL, invoked when the task reaches a terminal state. See [Callback Mechanism](/en/docs/sync-async#async-task-webhook)
+<ParamField body="aspect_ratio" type="string" default="1:1">
+  Framing: `1:1`, `4:3`, `3:4`, `16:9`, `9:16`, `3:2`, `2:3`, `21:9`, `9:21`, `auto`. `auto` lets the model choose the ratio.
 </ParamField>
 
-<ParamField body="callback_events" type="string[]">
-  Subscribed callback event types. See [Callback Mechanism](/en/docs/sync-async#async-task-webhook)
+<ParamField body="resolution" type="string" default="2mp">
+  The megapixel tier of the output image: `1mp`, `2mp`, `3mp`, `4mp`. Accepted by the three FLUX.2 models only; FLUX.1 Kontext always outputs 1 MP.
 </ParamField>
 
-## Model-Specific Parameters
+<ParamField body="n" type="integer" default="1">
+  Number of images to generate. Value: `1`. Each request returns one image.
+</ParamField>
 
-<Tabs>
-  <Tab title="FLUX.1 Kontext (Pro / Max)">
-    **Applies to**: `flux-kontext-pro` / `flux-kontext-max`
+<ParamField body="seed" type="integer">
+  Random seed. The same seed with the same parameters keeps results consistent.
+</ParamField>
 
-    **Supported actions**: `generate` / `edit`
+<ParamField body="output_format" type="string">
+  Output image format: `jpeg`, `png` or `webp`. FLUX.2 defaults to `jpeg`, FLUX.1 Kontext to `png`.
+</ParamField>
 
-    **aspect_ratio** (7 options): `1:1` / `16:9` / `9:16` / `4:3` / `3:4` / `3:2` / `2:3`
+<ParamField body="prompt_upsampling" type="boolean" default="false">
+  Let the upstream expand the prompt before generating.
+</ParamField>
 
-    **resolution**: Not accepted (the model default is used)
+<ParamField body="safety_tolerance" type="integer" default="2">
+  Content safety tolerance; higher values are more permissive. `0`–`5` on FLUX.2, `0`–`6` on FLUX.1 Kontext.
+</ParamField>
 
-    **Key features**: Edits an existing image — local edits, style transfer, element replacement, and character consistency.
+<ParamField body="steps" type="integer" default="50">
+  Inference steps, `1`–`50`. More steps add detail and take longer. Supported by `flux-2-flex` only.
+</ParamField>
 
-    <ParamField body="image_urls" type="string[]" required>
-      Array of reference image URLs, **required**. The task fails without it
-    </ParamField>
+<ParamField body="guidance" type="number" default="5">
+  Prompt guidance strength, `1.5`–`10`. Higher values follow the prompt more closely. Supported by `flux-2-flex` only.
+</ParamField>
 
-    <ParamField body="seed" type="integer" default="-1">
-      Random seed. A fixed value reproduces similar edits
-    </ParamField>
-  </Tab>
+See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key` and the maximum-cost header.
 
-  <Tab title="FLUX.2 (Pro / Flex)">
-    **Applies to**: `flux-2-pro` / `flux-2-flex`
+This series does not accept `quality`, `negative_prompt`, `watermark` or `mask_url`. Any other parameter returns `400` and is not billed.
 
-    **Supported actions**: `generate` (text-to-image only)
+## Limits
 
-    **aspect_ratio** (7 options): `1:1` / `16:9` / `9:16` / `4:3` / `3:4` / `3:2` / `2:3`
-
-    **resolution**: `1K` (default) / `2K` (the `2K` tier is billed separately)
-
-    **Key features**: Generates images from text alone, no reference image needed. `flux-2-pro` is the better value; `flux-2-flex` is the flexible tier.
-
-    <ParamField body="resolution" type="string" default="1K">
-      Output resolution, `1K` / `2K`. The `2K` tier is billed separately, see [Pricing](#pricing)
-    </ParamField>
-
-    <ParamField body="seed" type="integer" default="-1">
-      Random seed. A fixed value reproduces similar results
-    </ParamField>
-  </Tab>
-</Tabs>
-
-## Resource Limits
-
-| Item | Limit |
+| Condition | Limit |
 |---|---|
-| Reference images (Kontext) | Required — `flux-kontext-pro` / `flux-kontext-max` take `image_urls` |
-| Reference images (FLUX.2) | Optional, up to 8 (output plus all reference images ≤ 9MP total), surcharged by MP tier |
-| Output resolution | FLUX.2 supports `1K` / `2K`; Kontext uses the model default |
-| Single image size | ≤ 30MB, supports JPG/PNG/WEBP |
-| Aspect ratio | 7 options: `1:1` / `16:9` / `9:16` / `4:3` / `3:4` / `3:2` / `2:3` |
-| Output file | Image URL, valid for 24 hours |
+| Per request | One image returned; `prompt` is required |
+| `action: "generate"` | Takes no reference images |
+| `action: "edit"` | At least one reference image is required |
+| Reference images | Up to 8 on FLUX.2; up to 4 on FLUX.1 Kontext |
+| Total pixels | The output image plus all reference images must stay within 9 MP (1 MP = 1024 × 1024 pixels) |
+| Reference image formats | Directly downloadable PNG, JPEG, WebP, GIF or BMP; an image whose dimensions cannot be read returns `400` and is not billed |
+| `resolution` | Accepted by FLUX.2 only; `steps` and `guidance` by `flux-2-flex` only |
 
-## Related Docs
+## Pricing
 
-- [Task System](/en/docs/task-system) — Task state machine / polling cadence / async push
-- [Request & Response](/en/docs/request-response) — Common error codes / Headers / rate limits
-- [Authentication](/en/docs/authentication) — API Key application and usage
+Billed at a **fixed price per successfully generated image**, with different billing dimensions per generation.
+
+Rates are in `price_config` on `GET /v1/models` and in the console's Model Market. What a single call actually cost is the `cost` field on the task response — an integer quota at **500,000 quota = 1 USD**, not dollars.
+
+**FLUX.2 (`flux-2-pro` / `flux-2-max` / `flux-2-flex`)**
+
+- The output image is billed at the megapixel tier given by `resolution` — `1mp`, `2mp`, `3mp` and `4mp` each have their own price, and higher tiers cost more. Omitting `resolution`, or sending a value outside those tiers, settles at the fallback price, which equals the `2mp` tier.
+- Each reference image adds its own fee on top of the output image: with one reference image it is billed at the MP tier its actual pixel count rounds up to; with two or more, each is billed at the lowest tier.
+- The three models have separate MP tier prices, and `steps` and `guidance` on `flux-2-flex` do not affect the price.
+
+**FLUX.1 Kontext (`flux-kontext-pro` / `flux-kontext-max`)**
+
+- One fixed price per image. Output is always 1 MP, reference images add no fee, and neither aspect ratio nor `output_format` affects the price.
+
+You are only billed for a successfully generated image. Failed and cancelled tasks, and tasks that return no usable image, are refunded in full.
+
+## Response
+
+```json Completed task
+{
+  "task_id": "taski_example",
+  "model": "flux-2-pro",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788754231,
+  "completed_at": 1788754252,
+  "result": {
+    "images": [
+      {
+        "expires_at": 1789089508,
+        "url": ["https://cdn.example.com/result.png"]
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski_example",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski_example/cancel"
+  },
+  "billing_status": "settled",
+  "cost": 20250
+}
+```
+
+Generated images come back in `result.images`, and `expires_at` is when that link stops working. See [Query Task Status](/en/api-reference/task/status) for the full field list.
+
+## Available models
+
+| Model ID | Output resolution | Reference images | Line-specific parameters |
+|---|---|---|---|
+| `flux-2-pro` | `1mp` `2mp` `3mp` `4mp` | Up to 8, each billed | `output_format` `prompt_upsampling` `safety_tolerance` |
+| `flux-2-max` | `1mp` `2mp` `3mp` `4mp` | Up to 8, each billed | `output_format` `prompt_upsampling` `safety_tolerance` |
+| `flux-2-flex` | `1mp` `2mp` `3mp` `4mp` | Up to 8, each billed | Those three plus `steps` and `guidance` |
+| `flux-kontext-pro` | Fixed 1 MP | Up to 4, no extra fee | `output_format` `prompt_upsampling` `safety_tolerance` |
+| `flux-kontext-max` | Fixed 1 MP | Up to 4, no extra fee | `output_format` `prompt_upsampling` `safety_tolerance` |
+
+All five support `generate` and `edit`, return one image per request, accept `seed`, and share the same aspect ratios: `1:1`, `4:3`, `3:4`, `16:9`, `9:16`, `3:2`, `2:3`, `21:9`, `9:21`, `auto`.
+
+- **FLUX.2 picks the megapixel tier with `resolution`**: `1mp` through `4mp`, defaulting to `2mp`; higher tiers cost more
+- **FLUX.1 Kontext does not accept `resolution`** and always outputs 1 MP
+- **`safety_tolerance` ranges differ**: `0`–`5` on FLUX.2 and `0`–`6` on Kontext, with higher values more permissive
+- **`output_format` defaults differ**: `jpeg` on FLUX.2, `png` on Kontext
+
+## Related
+
+- [Image Generation Overview](/en/api-reference/image/overview)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

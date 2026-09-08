@@ -1,39 +1,12 @@
 ---
 title: "MiniMax H3"
-description: "MiniMax H3 — omni-modal video generation. Text, image and reference inputs in one endpoint, native audio, 4–15 seconds."
+description: "MiniMax H3 omni-modal video generation: text, reference images, first / last frames, reference video and audio, plus 2K regeneration"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-MiniMax H3 is MiniMax's omni-modal video model, released July 2026. One endpoint takes **text, images, video and audio** as input and renders a finished clip **with its own audio track** in a single pass — no separate scoring step.
+MiniMax H3 is MiniMax's omni-modal video model: one endpoint takes text, image, video and audio input and renders a finished clip with its own soundtrack in a single pass. This page covers two models — `minimax-h3` generates, and `minimax-h3-regeneration` turns a completed `minimax-h3` 768P clip into native 2K. For plain text-to-video or first-frame video without multimodal references, the [Hailuo Series](/en/api-reference/video/hailuo) costs less.
 
-Three modes share the endpoint; what you send decides which one runs:
-
-- **Text to video** — `prompt` only
-- **Image to video** — `image_urls`, or `first_frame_image` / `last_frame_image` for an explicit first/last frame
-- **Reference to video** — `video_urls` (camera work and style) or `audio_urls` (rhythm and score)
-
-Async: the request returns a `task_id`; poll [task status](/en/api-reference/task/status) until `completed`.
-
-## Pricing
-
-<Note>
-Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
-
-**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
-**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
-</Note>
-
-## Available models
-
-| Model ID | Resolution | Duration (sec) | Audio | Notes |
-|---|---|---|---|---|
-| `minimax-h3` | `768p` / `2k` | any integer 4–15 | ✅ native | Omni-modal input, finished clip with sound in one pass |
-| `minimax-h3-max` | `480p` / `768p` | any integer 4–15 | ✅ native | Faster, cheaper low-resolution tier with the same capabilities as H3 |
-| `minimax-h3-regeneration` | `2k` | any integer 4–15 | ✅ native | Re-renders an existing 768p H3 clip at native 2K; `video_urls` required |
-
-Billed by **resolution × duration**; `2k` costs more. **With a reference video (`video_urls`), reference seconds and output seconds are added together and billed at the same tier** — no tier switch, no doubling; `minimax-h3-regeneration` follows the same rule. A reference video may be at most **15 seconds**. The first 5 reference images are free; beyond that the upstream charges per image, which we currently **do not** pass on.
-
-## Examples
+## Quick start
 
 <CodeGroup>
 
@@ -41,24 +14,14 @@ Billed by **resolution × duration**; `2k` costs more. **With a reference video 
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: h3-demo-001" \
   -d '{
     "model": "minimax-h3",
-    "prompt": "a mountain town at dawn, mist lifting, camera pushing from the rooftops toward the ridge",
+    "action": "generate",
+    "prompt": "A mountain town at dawn, mist clearing, camera moving from the rooftops toward the peaks",
+    "duration": 8,
     "resolution": "2k",
-    "duration": 8
-  }'
-```
-
-```bash Image to video
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "minimax-h3",
-    "prompt": "she slowly lifts her head, wind moves her hair, slight push in",
-    "image_urls": ["https://cdn.example.com/portrait.jpg"],
-    "resolution": "768p",
-    "duration": 6
+    "aspect_ratio": "16:9"
   }'
 ```
 
@@ -68,86 +31,182 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "minimax-h3",
-    "prompt": "day turns to night, the lights come on one by one",
+    "action": "generate",
+    "prompt": "Day turns into night, street lights coming on one by one",
     "first_frame_image": "https://cdn.example.com/day.jpg",
     "last_frame_image": "https://cdn.example.com/night.jpg",
-    "duration": 10
+    "duration": 10,
+    "resolution": "768p"
   }'
 ```
 
-```bash Reference to video
+```bash Multimodal reference
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "minimax-h3",
-    "prompt": "same camera rhythm, snowy mountains instead",
+    "action": "generate",
+    "prompt": "Keep the camera rhythm of the reference clip, move the scene to a snow mountain",
+    "image_urls": ["https://cdn.example.com/character.jpg"],
     "video_urls": ["https://cdn.example.com/reference.mp4"],
     "audio_urls": ["https://cdn.example.com/bgm.mp3"],
-    "resolution": "2k",
-    "duration": 12
+    "duration": 12,
+    "resolution": "2k"
+  }'
+```
+
+```bash 2K regeneration
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "minimax-h3-regeneration",
+    "action": "regenerate",
+    "ref_task_id": "taski-d2d658ce585b5046dde1b95a884cc96c-task-wave1788783825b950188816"
   }'
 ```
 
 </CodeGroup>
 
-## Parameters
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
+
+**Chaining the two models**: generate a clip with `minimax-h3` at `resolution: "768p"`, wait for the task to reach `completed`, then pass the `task_id` it returned as `ref_task_id` to `minimax-h3-regeneration` to get the same content in native 2K. `ref_task_id` is a task ID from this platform, not an upstream ID; the prompt and reference material come from the source task and are not resubmitted.
+
+## Request parameters
 
 <ParamField body="model" type="string" required>
-  Always `minimax-h3`
+  `minimax-h3` or `minimax-h3-regeneration`.
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  - `generate`: the only action of `minimax-h3`
+  - `regenerate`: the only action of `minimax-h3-regeneration`, requires `ref_task_id`
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
-  What the shot should show. Write it even when you supply references — the references say what it looks like, the prompt says what happens
+  Description of the shot. Required for `generate`, including when reference material is attached: the references decide what it looks like, the prompt decides what happens.
 </ParamField>
 
-<ParamField body="resolution" type="string" default="768p">
-  `768p` / `2k`
+<ParamField body="duration" type="integer" required>
+  Clip length in seconds, an integer from `4` to `15`. Required for `generate`.
 </ParamField>
 
-<ParamField body="duration" type="integer" default="5">
-  Any integer from 4 to 15 seconds
+<ParamField body="resolution" type="string" default="2k">
+  Output resolution: `768p` or `2k`. Regeneration with `minimax-h3-regeneration` requires a `768p` source task.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string">
+  Frame ratio: `21:9`, `16:9`, `4:3`, `1:1`, `3:4`, `9:16`. With a first or last frame the ratio follows the image.
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  Reference images, or the opening frame. Publicly reachable image URLs
+  Reference image URLs, up to 9. Every image is treated as a reference image; they are never mapped to first / last frames by count.
 </ParamField>
 
 <ParamField body="first_frame_image" type="string">
-  First-frame image URL
+  URL of the first frame, used as the opening image of the clip.
 </ParamField>
 
 <ParamField body="last_frame_image" type="string">
-  Last-frame image URL; pair with `first_frame_image` for an A-to-B transition
+  URL of the last frame; combine with `first_frame_image` for an A-to-B transition.
 </ParamField>
 
 <ParamField body="video_urls" type="string[]">
-  Reference video — supplies camera movement, pacing and style. At most **15 seconds**; **required** for `minimax-h3-regeneration` — If it is missing, the request is rejected at submission and nothing is held.
+  Reference video URLs for camera work, rhythm and style. Up to 3 clips, 15 seconds in total.
 </ParamField>
 
 <ParamField body="audio_urls" type="string[]">
-  Reference audio — shapes the rhythm and score of the result
+  Reference audio URLs, shaping the rhythm and score of the result. Up to 3 clips, 15 seconds in total; must be sent together with a reference image.
 </ParamField>
 
-<ParamField body="callback_url" type="string">
-  Called when the task reaches a terminal state; see [callbacks](/en/docs/sync-async#async-task-webhook)
+<ParamField body="watermark" type="boolean" default="false">
+  Add a watermark to the output.
 </ParamField>
 
-<Note>
-**Image mode and reference mode are mutually exclusive.** First/last frames (`first_frame_image` / `last_frame_image`) cannot be combined with reference media (`video_urls` / `audio_urls`) in one request — upstream treats them as two different generation modes.
-</Note>
+<ParamField body="ref_task_id" type="string">
+  ID of a completed `minimax-h3` task. Used — and required — only by the `regenerate` action of `minimax-h3-regeneration`. The source must be a successful `minimax-h3` `generate` task on the same account, at `768p` and with an audio track.
+</ParamField>
+
+The shared `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key` and cost-cap headers are documented in [Submit Task](/en/api-reference/task/submit).
+
+`minimax-h3` does not accept `seed`, `n`, `negative_prompt`, `quality` or `generate_audio` (the soundtrack comes with the clip). `minimax-h3-regeneration` accepts only `model` and `ref_task_id`; everything else is inherited from the source task. Anything beyond the parameters above returns `400` and is not billed.
 
 ## Limits
 
-| Item | Limit |
+| Model | Condition | Limit |
+|---|---|---|
+| `minimax-h3` | `action: "generate"` | A prompt is required. |
+| `minimax-h3` | `action: "generate"` | Video generation requires an explicit duration. |
+| `minimax-h3` | `first_frame_image` sent | Frame mode cannot be mixed with multimodal references. |
+| `minimax-h3` | `audio_urls` sent | Reference audio must be provided together with a reference image. |
+| `minimax-h3-regeneration` | `action: "regenerate"` | Regeneration requires a completed local H3 task id. |
+
+| Item | Ceiling |
 |---|---|
-| Reference images | up to 9 |
-| Reference videos | up to 3, each 2–15 sec |
-| Reference audio | up to 3, each 2–15 sec |
-| Total reference duration | ≤ 15 sec |
-| Prompt | ≤ 7000 characters |
+| Duration | 4–15 seconds, integer |
+| Reference images | Up to 9 |
+| Reference video | Up to 3 clips, 15 s in total, 23.976–60 fps |
+| Reference audio | Up to 3 clips, 15 s in total |
+
+## Pricing
+
+`minimax-h3` is billed by **resolution tier times seconds**: `768p` and `2k` each have a per-second rate, multiplied by `duration` for the output part of the bill. Two more dimensions apply only when used:
+
+- **Reference video**: with `video_urls`, output seconds are charged at the reference rate of the same resolution, and the actual total length of the reference video is charged on top as input seconds. When the length of the reference video cannot be read, the 15-second ceiling is used.
+- **Reference images**: the first 5 images in `image_urls` add nothing; from the sixth onward each image adds a fixed amount. First frames, last frames and reference audio are not charged separately.
+
+`minimax-h3-regeneration` follows the same rules at the `2k` rate, with the billed duration and reference material taken from the source task behind `ref_task_id` — reference video and reference images of the source task are charged again on regeneration.
+
+<Note>
+**This page does not list unit prices** — rates change upstream, so this section covers billing dimensions and how they are applied.
+
+Current rates are in `price_config` on `GET /v1/models` and in the console's Model Market. What a single call actually cost is the `cost` field on the task response: an integer quota, **500,000 quota = 1 USD**.
+</Note>
+
+An amount is held at submission along those dimensions and settled against the actual result when the task completes, with the difference returned. You are only billed for a video that is produced: failed and cancelled tasks, and tasks that return no usable video, are refunded in full.
+
+## Response
+
+```json Task completed
+{
+  "task_id": "taski-d2d658ce585b5046dde1b95a884cc96c-task-wave1788783825b950188816",
+  "model": "minimax-h3",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788783825,
+  "completed_at": 1788783934,
+  "result": {
+    "videos": [
+      {
+        "url": ["https://cdn.example.com/result.mp4"],
+        "expires_at": 1789089508
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 144000,
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski-d2d658ce585b5046dde1b95a884cc96c-task-wave1788783825b950188816",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski-d2d658ce585b5046dde1b95a884cc96c-task-wave1788783825b950188816/cancel"
+  }
+}
+```
+
+`result.videos` holds the finished clip with its soundtrack, and `expires_at` is when the link stops working (Unix seconds) — copy the file to your own storage before then. A regeneration task returns the same shape with `model` set to `minimax-h3-regeneration`. Full field reference in [Query Task Status](/en/api-reference/task/status).
+
+## Available models
+
+| Model ID | Action | Resolutions | Duration (s) | Input |
+|---|---|---|---|---|
+| `minimax-h3` | `generate` | `768p` `2k` | 4–15 | Text, reference images, first / last frames, reference video, reference audio |
+| `minimax-h3-regeneration` | `regenerate` | `2k` | From the source task | ID of a completed `minimax-h3` 768P task |
 
 ## Related
 
-- [Task system](/en/docs/task-system) — submit, poll, callbacks
-- [Models](/en/docs/models) — list available models and live prices
+- [Hailuo Series](/en/api-reference/video/hailuo)
+- [Video Generation Overview](/en/api-reference/video/overview)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

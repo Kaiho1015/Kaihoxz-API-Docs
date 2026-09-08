@@ -1,18 +1,24 @@
 ---
 title: "GPT Image 系列"
-description: "GPT Image 2 的官方版与逆向版：同一套请求参数，两种计费方式"
+description: "OpenAI GPT Image 的四个模型：三个官方版按 token 用量计费，一个逆向版按张固定价"
 ---
 
-GPT Image 2 有官方版和逆向版两条线路，都走 `POST /v1/tasks`，请求地址不随线路变化。两条线路的参数基本一致，主要差别在专有参数和计费方式，按需要选一个模型 ID 即可。
+GPT Image 系列的四个模型都走 `POST /v1/tasks`，请求地址不随模型变化。它们的动作和请求形状一致，差别集中在画幅与分辨率的取值、专有参数和计费方式三处，选型只改 `model` 字段。
 
 ## 可用模型
 
 <CardGroup cols={2}>
+  <Card title="GPT Image 1" href="/cn/api-reference/image/gpt-image/gpt-image-1">
+    `gpt-image-1` · 文生图、最多 15 张参考图编辑、掩码重绘与透明背景；按实际 token 用量结算
+  </Card>
+  <Card title="GPT Image 1.5" href="/cn/api-reference/image/gpt-image/gpt-image-1">
+    `gpt-image-1.5` · 与 `gpt-image-1` 同一套动作和参数，计费维度多一项文本输出；按实际 token 用量结算
+  </Card>
   <Card title="GPT Image 2 官方版" href="/cn/api-reference/image/gpt-image/gpt-image-2">
-    `gpt-image-2` · 文生图、最多 16 张参考图编辑、掩码重绘、透明背景与输出格式控制；按实际 token 用量结算
+    `gpt-image-2` · 15 种画幅、`1k` / `2k` / `4k` 分辨率、最多 16 张参考图、掩码重绘与 WebP 输出；按实际 token 用量结算
   </Card>
   <Card title="GPT Image 2 逆向版" href="/cn/api-reference/image/gpt-image/gpt-image-2-rev">
-    `gpt-image-2-rev` · 文生图与最多 15 张参考图编辑；按 1K / 2K / 4K 固定张价结算
+    `gpt-image-2-rev` · 文生图与最多 15 张参考图编辑；按 `1k` / `2k` / `4k` 固定张价结算
   </Card>
 </CardGroup>
 
@@ -20,28 +26,27 @@ GPT Image 2 有官方版和逆向版两条线路，都走 `POST /v1/tasks`，请
 
 | 需求 | 推荐模型 | 原因 |
 |---|---|---|
-| 掩码重绘、透明背景、画质档或输出格式控制 | `gpt-image-2` | 官方线路提供完整参数 |
-| 提交前确定单张价格 | `gpt-image-2-rev` | 按输出分辨率固定计费 |
-| 多图参考编辑 | 两者都支持 | 官方最多 16 张，逆向最多 15 张 |
+| `2k` / `4k` 分辨率，或 `1:1` `2:3` `3:2` 之外的画幅 | `gpt-image-2` | 只有它接受 `resolution`，并支持 15 种画幅 |
+| 提交前确定单张价格 | `gpt-image-2-rev` | 按输出分辨率固定计费，与画幅和提示词长度无关 |
+| 掩码局部重绘、透明背景或输出格式控制 | `gpt-image-1` `gpt-image-1.5` `gpt-image-2` | 三个官方版都提供这组专有参数 |
+| WebP 输出 | `gpt-image-2` | 另外三个模型只输出 `png` 和 `jpeg` |
+| 多图参考编辑 | 四个都支持 | `gpt-image-2` 最多 16 张，其余三个最多 15 张 |
 
 <Note>
-两条线路不会自动互相切换：模型 ID 决定走哪条线路，参数以该线路的页面为准。
+模型之间不会自动切换：`model` 字段决定用哪个模型，参数以该模型的页面为准。
 </Note>
 
-## 两条线路的共同点
+## 共同点
 
-以下部分两条线路完全一致：
+以下部分四个模型完全一致：
 
 | 项目 | 取值 |
 |---|---|
 | 端点 | `POST /v1/tasks`（异步任务，见[任务系统](/cn/docs/task-system)） |
 | 动作 | `generate` 文生图 · `edit` 参考图编辑（必须带 `image_urls`） |
-| 画面比例 | `1:1` `3:2` `2:3` `4:3` `3:4` `5:4` `4:5` `16:9` `9:16` `2:1` `1:2` `3:1` `1:3` `21:9` `9:21`，默认 `1:1` |
-| 分辨率 | `1k` `2k` `4k`，默认 `1k` |
+| 默认画幅 | `1:1`；可选画幅集合各模型不同，见各模型页 |
 | 每次输出 | 1 张 |
 | 不支持 | `seed` |
-
-差异集中在**专有参数**和**计费方式**两处，见「如何选择」。
 
 ## 统一调用方式
 
@@ -54,15 +59,15 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
     "action": "generate",
     "prompt": "一只蓝色陶瓷杯放在白色桌面上，柔和自然光",
     "aspect_ratio": "1:1",
-    "resolution": "1k",
     "n": 1
   }'
 ```
 
-提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
+把 `model` 换成本页任意一个模型 ID 都能直接跑。提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
 
 ## 相关文档
 
+- [GPT Image 1 与 1.5 官方版](/cn/api-reference/image/gpt-image/gpt-image-1)
 - [GPT Image 2 官方版](/cn/api-reference/image/gpt-image/gpt-image-2)
 - [GPT Image 2 逆向版](/cn/api-reference/image/gpt-image/gpt-image-2-rev)
 - [提交任务](/cn/api-reference/task/submit)

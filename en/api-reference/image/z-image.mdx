@@ -1,143 +1,128 @@
 ---
 title: "Z.ai Image"
-description: "Zhipu Z.ai image generation — lightweight and fast, bilingual prompts, low latency and low cost"
+description: "Z-Image Turbo: a lightweight, fast text-to-image model with bilingual prompts and a fixed price per image"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-Lightweight and fast image generation from Zhipu Z.ai, with strong support for both Chinese and English prompts. **Low latency, low price** — suited for high-frequency scenarios like batch sketches, operations creatives, and quick previews.
+Z-Image Turbo is a 6B-parameter text-to-image model from Tongyi Lab. Its distilled few-step (S3-DiT) architecture generates in near real time, it excels at photorealistic portraits, and it renders both Chinese and English text — a good fit for batch drafts, marketing assets and quick previews. It does text-to-image only: no reference images, one image per request. For reference-based editing use the [Seedream Series](/en/api-reference/image/seedream) or the [Qwen Image Series](/en/api-reference/image/qwen-image).
 
-Per-image pricing. Pure text-to-image (no reference images), fixed at 1 image per call.
-
-## Pricing
-
-<Note>
-Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
-
-**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
-**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
-</Note>
-
-## Examples
+## Quick start
 
 <CodeGroup>
 
-```bash Text-to-image (minimal)
+```bash Text to image
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: z-image-demo-001" \
   -d '{
     "model": "z-image-turbo",
-    "prompt": "Seaside cafe at sunset, wooden deck, warm tones",
+    "action": "generate",
+    "prompt": "A coastal observatory at sunrise, photorealistic, soft natural light",
     "aspect_ratio": "16:9",
-    "resolution": "1K"
+    "resolution": "2k"
   }'
 ```
 
-```bash Enable smart rewrite
+```bash With prompt rewriting
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "z-image-turbo",
-    "prompt": "A Shiba Inu",
-    "prompt_extend": true,
-    "aspect_ratio": "1:1",
-    "resolution": "2K"
+    "action": "generate",
+    "prompt": "A traditional Chinese teahouse poster",
+    "aspect_ratio": "3:4",
+    "resolution": "1k",
+    "prompt_extend": true
   }'
 ```
 
 </CodeGroup>
 
-<ResponseExample>
-```json Submission successful
-{
-  "task_id": "task-wave1775285160b950328499",
-  "model": "z-image-turbo",
-  "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
-}
-```
-</ResponseExample>
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
 
-After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status). See [Task System](/en/docs/task-system) for details.
-
-## Available Models
-
-| Model ID | Description |
-|---|---|
-| `z-image-turbo` | Lightweight and fast, bilingual, 1K/2K, pure text-to-image (no reference images) |
-
-## Common Parameters
+## Request parameters
 
 <ParamField body="model" type="string" required>
-  Choose one from the [Available Models](#available-models) list
+  Must be `z-image-turbo`.
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  - `generate` — text to image (default)
-  - `edit` — image editing; pair with `image_urls`
-
-  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-image; one `image_urls` entry is image-to-image; several are multi-image reference; add `mask_url` for inpainting.
+  Value: `generate`. This model does text-to-image only.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
-  Image description. Strong support for both Chinese and English. **Max 800 characters**
+  The image description, in Chinese or English.
 </ParamField>
 
-<ParamField body="n" type="integer" default="1">
-  Number of images. **This model is fixed at 1 image per call; `n > 1` is not supported**
+<ParamField body="aspect_ratio" type="string">
+  Framing: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `3:2`, `2:3`.
 </ParamField>
 
-<ParamField body="seed" type="integer" default="-1">
-  Random seed. `-1` for random; a fixed value reproduces similar results
+<ParamField body="resolution" type="string">
+  Output resolution, `1k` or `2k`.
 </ParamField>
-
-<ParamField body="aspect_ratio" type="string" default="1:1">
-  Aspect ratio. Options:
-  - `1:1` — Square
-  - `4:3` / `3:4` — Standard landscape / portrait
-  - `16:9` / `9:16` — Widescreen landscape / portrait
-  - `3:2` / `2:3` — Camera ratio landscape / portrait
-</ParamField>
-
-<ParamField body="resolution" type="string" default="1K">
-  Output resolution. Options: `1K` / `2K`
-</ParamField>
-
-<ParamField body="callback_url" type="string">
-  Webhook callback URL, invoked when the task reaches a terminal state. See [Callback Mechanism](/en/docs/sync-async#async-task-webhook)
-</ParamField>
-
-<ParamField body="callback_events" type="string[]">
-  Events to receive callbacks for. Defaults to terminal events only. See [Callback Mechanism](/en/docs/sync-async#async-task-webhook)
-</ParamField>
-
-## Model-Specific Parameters
 
 <ParamField body="prompt_extend" type="boolean" default="false">
-  Smart prompt rewrite. When enabled, AI auto-optimizes the prompt for better results, but **adds extra cost**
+  Automatic prompt rewriting: the model expands the prompt into something more specific before generating.
 </ParamField>
 
-## Notes
+See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key` and the maximum-cost header.
 
-- **Single image per call** — `n` is fixed at 1; submit multiple tasks for multiple images
-- **Prompt limit 800 characters** — trim long prompts yourself
-- **Enabling `prompt_extend` increases cost** — AI rewrite consumes extra inference cost; enable selectively for batch scenarios
-- **Pure text-to-image** — does not accept `image_urls` reference images; use other models for image-to-image
+This model does not accept `image_urls`, `n`, `seed`, `quality`, `negative_prompt` or `mask_url`. Any other parameter returns `400` and is not billed.
 
-## Resource Limits
+## Limits
 
-| Item | Limit |
+| Condition | Limit |
 |---|---|
-| Images per call | Fixed at 1 |
-| Prompt length | ≤ 800 characters |
-| Output resolution | `1K` / `2K` |
-| Output file | JPG, URL valid for 24 hours |
+| Per request | One image returned |
+| Actions | `generate` only; takes no reference images |
+| Resolution | `1k` / `2k` |
 
-## Related Docs
+## Pricing
 
-- [Task System](/en/docs/task-system) — Task state machine / polling cadence / async push
-- [Request & Response](/en/docs/request-response) — Common error codes / Headers / rate limits
-- [Authentication](/en/docs/authentication) — API Key application and usage
+Billed at a **fixed price per successfully generated image**, with a single unit price.
+
+Rates are in `price_config` on `GET /v1/models` and in the console's Model Market. What a single call actually cost is the `cost` field on the task response — an integer quota at **500,000 quota = 1 USD**, not dollars.
+
+Resolution, aspect ratio and prompt length do not affect the price, so the cost of a call is known before it is sent.
+
+You are only billed for a successfully generated image. Failed and cancelled tasks, and tasks that return no usable image, are refunded in full.
+
+## Response
+
+```json Completed task
+{
+  "task_id": "taski_example",
+  "model": "z-image-turbo",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788766173,
+  "completed_at": 1788766187,
+  "result": {
+    "images": [
+      {
+        "expires_at": 1789089508,
+        "url": ["https://cdn.example.com/result.png"]
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski_example",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski_example/cancel"
+  },
+  "billing_status": "settled",
+  "cost": 5625
+}
+```
+
+Generated images come back in `result.images`, and `expires_at` is when that link stops working. See [Query Task Status](/en/api-reference/task/status) for the full field list.
+
+## Related
+
+- [Image Generation Overview](/en/api-reference/image/overview)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

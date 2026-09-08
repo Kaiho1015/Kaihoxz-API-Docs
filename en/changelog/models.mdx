@@ -2,6 +2,114 @@
 title: "Model Updates"
 ---
 
+<Update label="2026-09-08" description="Model launch">
+**Nano Banana Official is live · one more economy tier**
+
+- **Model IDs**: `gemini-3-pro-image` (flagship) · `gemini-3.1-flash-image` (fast) · `gemini-3.1-flash-lite-image` (lightest) · `gemini-2.5-flash-image-preview-rev` (previous-generation economy tier)
+- The three official tiers are served on `POST /v1/tasks` with `generate` and `edit` (up to 14 reference images), one image per request. The flagship offers `1k` / `2k` / `4k`; the fast tier offers `0.5k` / `1k` / `2k` / `4k` plus the extreme ratios `1:4`, `4:1`, `1:8` and `8:1`; the lightest always outputs 1K and rejects `resolution`.
+- The official line is **billed from actual token usage**: a hold is placed for the estimated usage at submission, the task settles from actual usage, and the difference is released. The dimensions are text input, image input, text output and image output, with reference images counting as image input.
+- `google_search` / `google_image_search` are accepted only by `gemini-3.1-flash-image` and `gemini-3.1-flash-image-rev`.
+- The economy line adds `gemini-2.5-flash-image-preview-rev`: 11 aspect ratios, fixed 1K, still a fixed price per successful image.
+- **Docs**: [Gemini Image Series](/en/api-reference/image/gemini/overview) · [Nano Banana Official](/en/api-reference/image/gemini/nano-banana) · [Nano Banana Economy](/en/api-reference/image/gemini/nano-banana-rev)
+</Update>
+
+<Update label="2026-09-08" description="Model launch">
+**GPT Image 1 and GPT Image 1.5 are available again**
+
+- **Model IDs**: `gpt-image-1` · `gpt-image-1.5`
+- Both share one contract: text-to-image and reference editing, masked inpainting, transparent backgrounds, `png` / `jpeg` output, aspect ratios `1:1` / `2:3` / `3:2`, four quality tiers, up to 15 reference images, one image per request. Neither accepts `resolution` or `seed`.
+- Billed from actual token usage; `gpt-image-1.5` bills text output on top.
+- **Docs**: [GPT Image Series](/en/api-reference/image/gpt-image/overview) · [GPT Image 1 and 1.5 Official](/en/api-reference/image/gpt-image/gpt-image-1)
+</Update>
+
+<Update label="2026-09-08" description="Model launch">
+**Grok Imagine · four image tiers and the 1.5 reverse video tier**
+
+- **Model IDs**: `grok-imagine-image-2.0` · `grok-imagine-image-2.0-rev` · `grok-imagine-image-quality` · `grok-imagine-1.5-rev` · `grok-imagine-1.5-edit-rev` · `grok-imagine-video-1.5-rev`
+- **Image**: `grok-imagine-image-2.0` official and `-rev` reverse tiers; `grok-imagine-image-quality` is xAI's official quality tier with 14 aspect ratios, `1k` / `2k` tiers and editing with 1–3 reference images, each reference image billed separately; `grok-imagine-1.5-rev` (text-to-image) and `grok-imagine-1.5-edit-rev` (generate / edit) return up to 10 images per request. All are priced per image.
+- **Video**: `grok-imagine-video-1.5-rev` does text- and image-to-video at 480p / 720p, 6–15 seconds, up to 7 reference images, billed by resolution tier × seconds.
+- **Docs**: [Grok Imagine Series](/en/api-reference/image/grok-imagine) · [Grok Imagine Video Series](/en/api-reference/video/grok-imagine-video)
+</Update>
+
+<Update label="2026-09-08" description="Model launch">
+**Gemini Omni Flash is live · video generation with a model-chosen length**
+
+- **Model IDs**: `gemini-omni-1.1-flash` · `gemini-omni-flash-preview`
+- Both run `generate` on `POST /v1/tasks` and build video from text, reference images or one reference clip. Neither takes `duration` — the model decides the length from the content. Aspect ratios `16:9` / `9:16`, one video per request.
+- `gemini-omni-1.1-flash`: `360p` / `720p` / `1080p` / `4k`, 10 reference images in total (frames included), `first_frame_image` / `last_frame_image`, `image_with_roles` and `metadata`, reference video up to 10 s. `gemini-omni-flash-preview`: `720p` only, up to 16 reference images, reference video up to 24 s.
+- Both accept `ref_task_id`: pass the previous task's `task_id` to extend or edit that result. It is mutually exclusive with `video_urls`.
+- Billed on resolution tier × output seconds. A hold is placed at the maximum length on submission and settled on the actual result, with the difference released.
+- **Docs**: [Omni Video Series](/en/api-reference/video/omni/overview) · [Gemini Omni Flash](/en/api-reference/video/omni/gemini-omni-flash) · [Omni-Flash-Ext](/en/api-reference/video/omni/omni-flash-ext)
+</Update>
+
+<Update label="2026-09-08" description="Model launch">
+**Four video models added · Wan 3.0, HappyHorse 1.1 and both FLUX 3 Video tiers**
+
+- **Model IDs**: `wan3.0-video` · `happyhorse-1.1` · `flux-3-video` · `flux-3-video-draft`
+- `wan3.0-video`: the Wan multimodal video entry point — one model ID for text, first/last frames, reference images, videos and audio, plus document (`file_url`) and web-page (`link_url`) references; `480p` / `720p` / `1080p`, 2–30 seconds; `generation_type` selects the `frame` or `reference` input family.
+- `happyhorse-1.1`: one entry point for text-to-video, first-frame image-to-video and reference-image video; `720p` / `1080p`, any integer 3–15 seconds, five aspect ratios.
+- `flux-3-video` / `flux-3-video-draft`: 5–20 second clips with synchronized audio from text, 1–10 ordered keyframes, or a continuation video, across eight aspect ratios including `auto`; the standard tier takes `hd` and `fhd`, the Draft tier is `hd` only at lower quality and lower cost for previews.
+- The `edit` action on `happyhorse-1.0` now has explicit duration semantics: `duration: 0` means "use the source video length", and billed seconds come from the source video.
+- **Docs**: [Wan Series](/en/api-reference/video/wan) · [HappyHorse Series](/en/api-reference/video/happyhorse) · [FLUX 3 Video](/en/api-reference/video/flux/flux-3-video)
+</Update>
+
+<Update label="2026-09-08" description="Model launch">
+**Three video models added · Hailuo 02, Vidu Q3 Pro and Turbo**
+
+- **Model IDs**: `minimax-hailuo-02` · `vidu-q3-pro` · `vidu-q3-turbo`
+- `minimax-hailuo-02`: MiniMax Hailuo 02 — text-to-video, first frame and first-and-last frame at `512p` / `768p` / `1080p`, 5 or 10 seconds. `512p` needs a first frame and `1080p` is 5 seconds only.
+- `vidu-q3-pro` / `vidu-q3-turbo`: the quality and speed tiers of Vidu Q3, with identical capabilities — text, start frame or first-and-last frame at `540p` / `720p` / `1080p`, 1–16 seconds, native audio on by default (`generate_audio`). With input images the aspect ratio follows the image.
+- All three use the `generate` action on `POST /v1/tasks` and bill by resolution tier × seconds.
+- **Docs**: [Hailuo Series](/en/api-reference/video/hailuo) · [Vidu Q3 Series](/en/api-reference/video/vidu)
+</Update>
+
+<Update label="2026-09-08" description="Model launch">
+**Flow Music is live · music generation**
+
+- **Model ID**: `flow-music`
+- Text-to-music on the Lyria engine: `generate` produces a full song or an instrumental (with lyrics, title, BPM, length and seed), and `lyrics` writes lyric text on its own, both through `POST /v1/tasks`. Billed per call, with different prices for the two actions.
+- Suno adds the `download` action in the same batch, exporting a source track as an audio file.
+- **Docs**: [Flow Music](/en/api-reference/audio/flow-music/flow-music) · [Suno Music Generation](/en/api-reference/audio/suno)
+</Update>
+
+<Update label="2026-09-08" description="Capability update">
+**Video edit and extend on Seedance 2.5**
+
+- **Model ID**: `seedance-2.5`
+- Two new actions: `edit` rewrites a source video from the prompt, with `duration: 0` keeping the source length; `extend` continues a source video. Both take the source in `video_urls` and require the `adaptive` aspect ratio.
+- The Seedance, Sora, PixVerse and SkyReels pages were re-checked against the catalog; `seedance-1.0-pro` and `seedance-1.0-pro-fast` durations are corrected to any integer from 2 to 12 seconds.
+- **Docs**: [Seedance Series](/en/api-reference/video/seedance) · [Sora 2 Series](/en/api-reference/video/sora) · [PixVerse V6](/en/api-reference/video/pixverse) · [SkyReels V4 Series](/en/api-reference/video/skyreels)
+</Update>
+
+<Update label="2026-09-08" description="Capability update">
+**Kling and Veo actions and parameters aligned**
+
+- **New actions**: `kling-v3-omni` and `kling-video-o1` support `action: "edit"`, editing a 3–10 second source video and keeping its duration; `veo3.1-fast-rev` and `veo3.1-quality-rev` support `action: "extend"`, continuing their own earlier video via `ref_task_id`.
+- **New parameters**: Kling multi-shot storyboards `multi_shot` / `shot_type` / `multi_prompt` and reference subjects `element_list` (`kling-v3`, `kling-v3-omni`), role-tagged images `image_with_roles` (`kling-v3-omni`, `kling-video-o1`); on Veo, `person_generation` / `resize_mode` / `seed` / `negative_prompt` on the official tiers and `generation_type` / `enable_gif` / `raw` on the economy tiers.
+- **Duration**: `kling-3.0-turbo`, `kling-v3` and `kling-v3-omni` take any integer from 3 to 15 seconds; `veo3.1-fast` and `veo3.1-quality` take 4, 6 or 8 seconds, with 1080p at 8 seconds only.
+- **Docs**: [Kling Series](/en/api-reference/video/kling) · [Veo Series](/en/api-reference/video/veo)
+</Update>
+
+<Update label="2026-09-08" description="Capability update">
+**Midjourney chained actions completed**
+
+- **Model ID**: `midjourney`
+- The action table now covers 12 chained actions: `upscale`, `variation`, `high-variation`, `low-variation`, `reroll`, `zoom`, `pan`, `inpaint`, `modal`, `edit`, `remix-strong` and `remix-subtle`, all referencing the previous step through `ref_task_id` and selecting a grid image with `index`.
+- The page also documents the full `imagine` parameter set (`stylize`, `chaos`, `weird`, `tile`, `iw`, `cref` / `sref` / `dref` with their weights, `raw`, `draft`, `hd`, `stop`, `extra`) and the `speed` / `version` values (`v8.2` added); billing is by action and speed tier.
+- **Docs**: [Midjourney](/en/api-reference/image/midjourney)
+</Update>
+
+<Update label="2026-09-08" description="Model retirement">
+**5 media models retired**
+
+- **Model IDs**: `seedance-2.0-face` · `seedance-2.0-fast-face` · `minimax-h3-max` · `grok-imagine-1.0-rev` · `grok-imagine-1.0-edit-rev`
+- `seedance-2.0-face` / `seedance-2.0-fast-face`: `seedance-2.0` and `seedance-2.0-fast` now accept face references themselves, so the separate face tiers are gone. Switch to the model IDs without the `-face` suffix.
+- `minimax-h3-max`: no longer offered upstream. The MiniMax H3 line continues with `minimax-h3` and `minimax-h3-regeneration`.
+- `grok-imagine-1.0-rev` / `grok-imagine-1.0-edit-rev`: no longer offered upstream. Use `grok-imagine-1.5-rev` / `grok-imagine-1.5-edit-rev` instead.
+- These models are retired as of today; calls to them return an error.
+- **Docs**: [Seedance Series](/en/api-reference/video/seedance) · [MiniMax H3](/en/api-reference/video/minimax-h3) · [Grok Imagine Series](/en/api-reference/image/grok-imagine)
+</Update>
+
 <Update label="2026-09-06" description="Model launch">
 **Nano Banana Economy is live · three Gemini image tiers**
 

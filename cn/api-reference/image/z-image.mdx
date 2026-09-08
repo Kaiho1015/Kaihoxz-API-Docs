@@ -1,139 +1,128 @@
 ---
 title: "Z.ai Image"
-description: "智谱 Z.ai 图像生成 — 轻量快速,中英双语 Prompt,低延迟低成本"
+description: "Z-Image Turbo：轻量快速的文生图模型，中英双语提示词，按张固定价"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-智谱 Z.ai 推出的轻量快速图像生成模型,中英双语 Prompt 均良好支持,**延迟低、单价低**,适合批量草图、运营素材、快速预览等高频场景。
+Z-Image Turbo 是通义实验室的 6B 参数文生图模型，采用蒸馏少步（S3-DiT）架构，出图速度接近实时，擅长写实人像，中英文文字渲染都能处理，适合批量草图、运营素材和快速预览。它只做文生图：不接受参考图，每次请求返回 1 张图；需要参考图编辑时用 [Seedream 系列](/cn/api-reference/image/seedream) 或 [Qwen Image 系列](/cn/api-reference/image/qwen-image)。
 
-按张计费,纯文生图(不接受参考图),固定单次返回 1 张。
-
-## 定价
-
-<Note>
-本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
-
-**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
-**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
-</Note>
-
-## 调用示例
+## 快速开始
 
 <CodeGroup>
 
-```bash 文生图(最简)
+```bash 文生图
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: z-image-demo-001" \
   -d '{
     "model": "z-image-turbo",
-    "prompt": "夕阳下的海边咖啡馆,木质露台,暖色调",
+    "action": "generate",
+    "prompt": "清晨海边的观测台，写实摄影，柔和自然光",
     "aspect_ratio": "16:9",
-    "resolution": "1K"
+    "resolution": "2k"
   }'
 ```
 
-```bash 启用智能改写
+```bash 提示词改写
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "z-image-turbo",
-    "prompt": "一只柴犬",
-    "prompt_extend": true,
-    "aspect_ratio": "1:1",
-    "resolution": "2K"
+    "action": "generate",
+    "prompt": "国风茶馆海报",
+    "aspect_ratio": "3:4",
+    "resolution": "1k",
+    "prompt_extend": true
   }'
 ```
 
 </CodeGroup>
 
-<ResponseExample>
-```json 提交成功
-{
-  "task_id": "task-wave1775285160b950328499",
-  "model": "z-image-turbo",
-  "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
-}
-```
-</ResponseExample>
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
 
-提交后用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 轮询状态,详见 [任务系统](/cn/docs/task-system)。
-
-## 可用模型
-
-| 模型 ID | 说明 |
-|---|---|
-| `z-image-turbo` | 轻量快速,中英双语,1K/2K,纯文生(无参考图) |
-
-## 通用参数
+## 请求参数
 
 <ParamField body="model" type="string" required>
-  从 [可用模型](#可用模型) 列表中选一个
+  固定为 `z-image-turbo`。
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  - `generate` — 文生图(默认)
-  - `edit` — 图像编辑,配合 `image_urls` 使用
-
-  **模式不靠 action 区分,靠传什么:** 只给 `prompt` 是文生图;带一张 `image_urls` 是图生图;带多张是多图参考融合;再带 `mask_url` 就是局部重绘。
+  取值 `generate`。本模型只支持文生图。
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
-  图像描述文本,中英文均良好支持。**最长 800 字符**
+  图片描述，中英文均可。
 </ParamField>
 
-<ParamField body="n" type="integer" default="1">
-  生成数量。**该模型固定单次返回 1 张,不支持 `n > 1`**
+<ParamField body="aspect_ratio" type="string">
+  画面比例：`1:1`、`16:9`、`9:16`、`4:3`、`3:4`、`3:2`、`2:3`。
 </ParamField>
 
-<ParamField body="aspect_ratio" type="string" default="1:1">
-  画面宽高比,可选值:
-  - `1:1` — 正方形
-  - `4:3` / `3:4` — 横/竖版标准
-  - `16:9` / `9:16` — 横/竖版宽屏
-  - `3:2` / `2:3` — 横/竖版相机比
+<ParamField body="resolution" type="string">
+  输出分辨率，`1k` 或 `2k`。
 </ParamField>
-
-<ParamField body="resolution" type="string" default="1K">
-  输出分辨率,可选 `1K` / `2K`
-</ParamField>
-
-<ParamField body="callback_url" type="string">
-  Webhook 回调地址,任务终态时调用。详见 [回调机制](/cn/docs/sync-async#异步任务-webhook)
-</ParamField>
-
-<ParamField body="callback_events" type="string[]">
-  指定要回调的事件,默认仅终态事件。详见 [回调机制](/cn/docs/sync-async#异步任务-webhook)
-</ParamField>
-
-## 模型特定参数
 
 <ParamField body="prompt_extend" type="boolean" default="false">
-  智能改写提示词。开启后 AI 自动优化提示词,效果更好但**费用增加**
+  智能提示词改写：由模型先把提示词扩写得更具体，再生成图片。
 </ParamField>
 
-## 注意事项
+通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
 
-- **单次只能 1 张** — `n` 字段固定为 1,如需多张请多次提交任务
-- **Prompt 上限 800 字符** — 超长 Prompt 请自行裁剪
-- **`prompt_extend` 开启后费用上升** — AI 改写会消耗额外推理成本,批量场景请按需开启
-- **纯文生图** — 不接受 `image_urls` 参考图,如需图生图请选择其他模型
+本模型不接受 `image_urls`、`n`、`seed`、`quality`、`negative_prompt` 和 `mask_url`。以上之外的参数会返回 `400`，不计费。
 
-## 资源限制
+## 限制
 
-| 项目 | 限制 |
+| 条件 | 限制 |
 |---|---|
-| 单次生成数量 | 固定 1 张 |
-| Prompt 长度 | ≤ 800 字符 |
-| 输出分辨率 | `1K` / `2K` |
-| 输出文件 | JPG,链接 24 小时有效 |
+| 每次请求 | 返回 1 张图 |
+| 动作 | 只支持 `generate`，不接受参考图 |
+| 分辨率 | `1k` / `2k` |
+
+## 计费
+
+按成功出图的**固定张价**结算，只有一个单价。
+
+单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。单次调用的实际花费见任务响应里的 `cost`——整数 quota，**500,000 quota = 1 USD**，不是美元。
+
+分辨率、画幅与提示词长度都不影响价格，提交前即可确定单次费用。
+
+只有成功出图才计费。任务失败、取消，或没有返回可用图片时，全额退款。
+
+## 响应
+
+```json 任务完成
+{
+  "task_id": "taski_example",
+  "model": "z-image-turbo",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788766173,
+  "completed_at": 1788766187,
+  "result": {
+    "images": [
+      {
+        "expires_at": 1789089508,
+        "url": ["https://cdn.example.com/result.png"]
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski_example",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski_example/cancel"
+  },
+  "billing_status": "settled",
+  "cost": 5625
+}
+```
+
+`result.images` 返回生成的图片，`expires_at` 是该链接的失效时间戳。完整字段说明见[查询任务状态](/cn/api-reference/task/status)。
 
 ## 相关文档
 
-- [任务系统详解](/cn/docs/task-system) — 任务状态机 / 轮询节奏 / 异步推送
-- [请求响应格式](/cn/docs/request-response) — 通用错误码 / Headers / 限流
-- [认证](/cn/docs/authentication) — API Key 申请与使用
+- [图像生成概述](/cn/api-reference/image/overview)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

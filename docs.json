@@ -65,11 +65,19 @@
     },
     {
       "source": "/cn/api-reference/image/gemini",
-      "destination": "/cn/api-reference/image/gemini/nano-banana-rev"
+      "destination": "/cn/api-reference/image/gemini/overview"
     },
     {
       "source": "/en/api-reference/image/gemini",
-      "destination": "/en/api-reference/image/gemini/nano-banana-rev"
+      "destination": "/en/api-reference/image/gemini/overview"
+    },
+    {
+      "source": "/cn/api-reference/video/omni",
+      "destination": "/cn/api-reference/video/omni/overview"
+    },
+    {
+      "source": "/en/api-reference/video/omni",
+      "destination": "/en/api-reference/video/omni/overview"
     }
   ],
   "navigation": {
@@ -133,12 +141,21 @@
                 "group": "图像生成",
                 "pages": [
                   "cn/api-reference/image/overview",
-                  "cn/api-reference/image/gemini/nano-banana-rev",
+                  {
+                    "group": "Gemini 图像系列",
+                    "root": "cn/api-reference/image/gemini/overview",
+                    "expanded": true,
+                    "pages": [
+                      "cn/api-reference/image/gemini/nano-banana",
+                      "cn/api-reference/image/gemini/nano-banana-rev"
+                    ]
+                  },
                   {
                     "group": "GPT Image 系列",
                     "root": "cn/api-reference/image/gpt-image/overview",
                     "expanded": true,
                     "pages": [
+                      "cn/api-reference/image/gpt-image/gpt-image-1",
                       "cn/api-reference/image/gpt-image/gpt-image-2",
                       "cn/api-reference/image/gpt-image/gpt-image-2-rev"
                     ]
@@ -164,11 +181,20 @@
                   "cn/api-reference/video/vidu",
                   "cn/api-reference/video/wan",
                   "cn/api-reference/video/happyhorse",
+                  "cn/api-reference/video/flux/flux-3-video",
                   "cn/api-reference/video/skyreels",
                   "cn/api-reference/video/grok-imagine-video",
                   "cn/api-reference/video/sora",
                   "cn/api-reference/video/pixverse",
-                  "cn/api-reference/video/omni"
+                  {
+                    "group": "Omni 视频系列",
+                    "root": "cn/api-reference/video/omni/overview",
+                    "expanded": true,
+                    "pages": [
+                      "cn/api-reference/video/omni/omni-flash-ext",
+                      "cn/api-reference/video/omni/gemini-omni-flash"
+                    ]
+                  }
                 ]
               },
               {
@@ -176,6 +202,7 @@
                 "pages": [
                   "cn/api-reference/audio/tts",
                   "cn/api-reference/audio/suno",
+                  "cn/api-reference/audio/flow-music/flow-music",
                   "cn/api-reference/audio/whisper-transcription"
                 ]
               },
@@ -270,12 +297,21 @@
                 "group": "Image Generation",
                 "pages": [
                   "en/api-reference/image/overview",
-                  "en/api-reference/image/gemini/nano-banana-rev",
+                  {
+                    "group": "Gemini Image Series",
+                    "root": "en/api-reference/image/gemini/overview",
+                    "expanded": true,
+                    "pages": [
+                      "en/api-reference/image/gemini/nano-banana",
+                      "en/api-reference/image/gemini/nano-banana-rev"
+                    ]
+                  },
                   {
                     "group": "GPT Image Series",
                     "root": "en/api-reference/image/gpt-image/overview",
                     "expanded": true,
                     "pages": [
+                      "en/api-reference/image/gpt-image/gpt-image-1",
                       "en/api-reference/image/gpt-image/gpt-image-2",
                       "en/api-reference/image/gpt-image/gpt-image-2-rev"
                     ]
@@ -301,11 +337,20 @@
                   "en/api-reference/video/vidu",
                   "en/api-reference/video/wan",
                   "en/api-reference/video/happyhorse",
+                  "en/api-reference/video/flux/flux-3-video",
                   "en/api-reference/video/skyreels",
                   "en/api-reference/video/grok-imagine-video",
                   "en/api-reference/video/sora",
                   "en/api-reference/video/pixverse",
-                  "en/api-reference/video/omni"
+                  {
+                    "group": "Omni Video Series",
+                    "root": "en/api-reference/video/omni/overview",
+                    "expanded": true,
+                    "pages": [
+                      "en/api-reference/video/omni/omni-flash-ext",
+                      "en/api-reference/video/omni/gemini-omni-flash"
+                    ]
+                  }
                 ]
               },
               {
@@ -313,6 +358,7 @@
                 "pages": [
                   "en/api-reference/audio/tts",
                   "en/api-reference/audio/suno",
+                  "en/api-reference/audio/flow-music/flow-music",
                   "en/api-reference/audio/whisper-transcription"
                 ]
               },

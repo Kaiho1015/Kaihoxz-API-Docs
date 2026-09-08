@@ -1,0 +1,73 @@
+---
+title: "Omni 视频系列"
+description: "Gemini Omni 一体化视频模型：三个模型 ID，两种时长控制方式与两种计费维度"
+---
+
+Omni 是 Gemini 的一体化视频模型线，文生视频、图生视频、参考视频改写都在同一个模型里完成，统一走 `POST /v1/tasks`，换模型只改 `model`。三个模型的主要差别在**时长怎么定**（自己传档位还是由模型决定）、**参考素材怎么给**，以及**按什么维度计费**。
+
+## 可用模型
+
+<CardGroup cols={2}>
+  <Card title="Omni-Flash-Ext" href="/cn/api-reference/video/omni/omni-flash-ext">
+    `omni-flash-ext` · 4 / 6 / 8 / 10 秒固定时长，360p 到 4K，首帧或三图参考；按分辨率 × 时长档的整片价计费，带参考视频时按参考视频秒数计费
+  </Card>
+  <Card title="Gemini Omni 1.1 Flash" href="/cn/api-reference/video/omni/gemini-omni-flash">
+    `gemini-omni-1.1-flash` · 模型自定 3–10 秒时长，360p 到 4K，支持首尾帧与最多 10 张参考图；按分辨率档 × 秒数计费
+  </Card>
+  <Card title="Gemini Omni Flash Preview" href="/cn/api-reference/video/omni/gemini-omni-flash">
+    `gemini-omni-flash-preview` · 模型自定 3–10 秒时长，固定 720p，最多 16 张参考图、最长 24 秒的参考视频；按分辨率档 × 秒数计费
+  </Card>
+</CardGroup>
+
+## 如何选择
+
+| 需求 | 推荐模型 | 原因 |
+|---|---|---|
+| 成片时长必须是确定的秒数 | `omni-flash-ext` | `duration` 是请求参数，取 `4` / `6` / `8` / `10` |
+| 提交前就要算出这一单的价格 | `omni-flash-ext` | 不带参考视频时，分辨率与时长档是仅有的两个计费维度 |
+| 首帧 + 尾帧之间做过渡 | `gemini-omni-1.1-flash` | 提供 `first_frame_image` 与 `last_frame_image` |
+| 多主体参考，参考图较多 | `gemini-omni-flash-preview` | 参考图最多 16 张；`gemini-omni-1.1-flash` 最多 10 张，`omni-flash-ext` 最多 3 张 |
+| 连续多轮修改同一段视频 | `gemini-omni-1.1-flash` 或 `gemini-omni-flash-preview` | 带 `ref_task_id` 接着上一次的结果改，不用重新上传素材 |
+| 4K 输出 | `omni-flash-ext` 或 `gemini-omni-1.1-flash` | `gemini-omni-flash-preview` 只输出 720p |
+| 用一段素材做二创、按参考视频长度付费 | `omni-flash-ext` | 带 `video_urls` 时按参考视频秒数计费，不再收输出整片价 |
+
+## 共同点
+
+以下部分三个模型完全一致：
+
+| 项目 | 取值 |
+|---|---|
+| 端点 | `POST /v1/tasks`（异步任务，见[任务系统](/cn/docs/task-system)） |
+| 动作 | `generate` |
+| 画面比例 | `16:9`、`9:16`，默认 `16:9` |
+| 每次输出 | 1 个视频 |
+| 参考视频 | 最多 1 条 |
+| 不支持 | `seed` |
+
+模式不靠 `action` 区分，靠传什么：只给 `prompt` 是文生视频，带 `image_urls` 是图生视频，带 `video_urls` 是参考视频改写。
+
+## 统一调用方式
+
+```bash
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-omni-1.1-flash",
+    "action": "generate",
+    "prompt": "海面上的日落，海鸥掠过水面，电影感光影",
+    "resolution": "720p",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
+
+## 相关文档
+
+- [Omni-Flash-Ext](/cn/api-reference/video/omni/omni-flash-ext)
+- [Gemini Omni Flash](/cn/api-reference/video/omni/gemini-omni-flash)
+- [视频生成概述](/cn/api-reference/video/overview)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

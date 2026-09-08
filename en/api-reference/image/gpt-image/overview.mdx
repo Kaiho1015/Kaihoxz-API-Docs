@@ -1,47 +1,52 @@
 ---
 title: "GPT Image Series"
-description: "The official and reverse lines of GPT Image 2: one set of request parameters, two billing models"
+description: "Four GPT Image models from OpenAI: three official lines billed on token usage, one reverse line at a fixed price per image"
 ---
 
-GPT Image 2 comes in an official and a reverse line, both served on `POST /v1/tasks` — the request URL does not change between them. The parameters are largely the same; the differences are line-specific parameters and billing. Pick the model ID that fits.
+All four models in the GPT Image series are served on `POST /v1/tasks` — the request URL does not change between them. They share the same actions and request shape; the differences are the aspect-ratio and resolution values, the line-specific parameters, and billing. Picking a model only changes the `model` field.
 
 ## Available models
 
 <CardGroup cols={2}>
+  <Card title="GPT Image 1" href="/en/api-reference/image/gpt-image/gpt-image-1">
+    `gpt-image-1` · text-to-image, edits with up to 15 references, mask inpainting and transparency; billed on actual token usage
+  </Card>
+  <Card title="GPT Image 1.5" href="/en/api-reference/image/gpt-image/gpt-image-1">
+    `gpt-image-1.5` · the same actions and parameters as `gpt-image-1`, with text output as an extra billing dimension; billed on actual token usage
+  </Card>
   <Card title="GPT Image 2 Official" href="/en/api-reference/image/gpt-image/gpt-image-2">
-    `gpt-image-2` · text-to-image, edits with up to 16 references, mask inpainting, transparency, and output controls; billed on actual token usage
+    `gpt-image-2` · 15 aspect ratios, `1k` / `2k` / `4k` resolutions, up to 16 references, mask inpainting and WebP output; billed on actual token usage
   </Card>
   <Card title="GPT Image 2 Reverse" href="/en/api-reference/image/gpt-image/gpt-image-2-rev">
-    `gpt-image-2-rev` · text-to-image and edits with up to 15 references; fixed per-image pricing at 1K, 2K, or 4K
+    `gpt-image-2-rev` · text-to-image and edits with up to 15 references; fixed per-image pricing at `1k`, `2k`, or `4k`
   </Card>
 </CardGroup>
 
-## Choose a line
+## Choose a model
 
 | Need | Recommended model | Why |
 |---|---|---|
-| Masks, transparent backgrounds, quality tiers, or output-format controls | `gpt-image-2` | The official line exposes the full parameter set |
-| A fixed per-image price before submission | `gpt-image-2-rev` | Billing is fixed by output resolution |
-| Multi-image reference editing | Either | Official accepts up to 16 images; reverse accepts up to 15 |
+| `2k` / `4k` output, or an aspect ratio beyond `1:1` `2:3` `3:2` | `gpt-image-2` | It is the only model that accepts `resolution`, and it supports 15 aspect ratios |
+| A fixed per-image price before submission | `gpt-image-2-rev` | Billing is fixed by output resolution, independent of aspect ratio and prompt length |
+| Mask inpainting, transparent backgrounds, or output-format control | `gpt-image-1` `gpt-image-1.5` `gpt-image-2` | All three official lines expose these line-specific parameters |
+| WebP output | `gpt-image-2` | The other three models output `png` and `jpeg` only |
+| Multi-image reference editing | All four | `gpt-image-2` accepts up to 16 images; the other three accept up to 15 |
 
 <Note>
-The two lines never switch automatically: the model ID selects the line, and its own page is authoritative for the parameters it accepts.
+The models never switch automatically: the `model` field selects the model, and its own page is authoritative for the parameters it accepts.
 </Note>
 
-## What both lines share
+## What all four share
 
-These are identical on both lines:
+These are identical on all four models:
 
 | Item | Value |
 |---|---|
 | Endpoint | `POST /v1/tasks` (async task, see [Task system](/en/docs/task-system)) |
 | Actions | `generate` text-to-image · `edit` reference-image editing (requires `image_urls`) |
-| Aspect ratios | `1:1` `3:2` `2:3` `4:3` `3:4` `5:4` `4:5` `16:9` `9:16` `2:1` `1:2` `3:1` `1:3` `21:9` `9:21`, default `1:1` |
-| Resolutions | `1k` `2k` `4k`, default `1k` |
+| Default aspect ratio | `1:1`; the available set differs per model, see each model page |
 | Output count | One image per request |
 | Not supported | `seed` |
-
-The differences are concentrated in **line-specific parameters** and **billing** — see "Choose a line" above.
 
 ## Unified request
 
@@ -54,15 +59,15 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
     "action": "generate",
     "prompt": "A blue ceramic cup on a white table in soft natural light",
     "aspect_ratio": "1:1",
-    "resolution": "1k",
     "n": 1
   }'
 ```
 
-A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
+Swap `model` for any model ID on this page and the request still runs. A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
 
 ## Related
 
+- [GPT Image 1 and 1.5 Official](/en/api-reference/image/gpt-image/gpt-image-1)
 - [GPT Image 2 Official](/en/api-reference/image/gpt-image/gpt-image-2)
 - [GPT Image 2 Reverse](/en/api-reference/image/gpt-image/gpt-image-2-rev)
 - [Submit Task](/en/api-reference/task/submit)

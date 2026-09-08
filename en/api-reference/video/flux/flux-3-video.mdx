@@ -1,0 +1,199 @@
+---
+title: "FLUX 3 Video"
+description: "Black Forest Labs FLUX 3 Video: text, keyframes and video continuation with synced audio, billed by resolution tier × seconds"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+FLUX 3 Video is Black Forest Labs' video model. It generates 5–20 second clips with synchronized audio from text, from 1–10 ordered keyframes, or from a continuation video. This page covers the standard tier `flux-3-video` and the draft tier `flux-3-video-draft`: the two take exactly the same parameters, and the draft tier is `hd` only, lower quality and cheaper — useful for previewing a shot before rendering it on the standard tier. Switching tiers means changing `model`; the two never switch automatically.
+
+## Quick start
+
+<CodeGroup>
+
+```bash Text-to-video
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: flux-video-001" \
+  -d '{
+    "model": "flux-3-video",
+    "action": "generate",
+    "prompt": "Rainy Tokyo street at night, neon in the puddles, a person walks by with an umbrella",
+    "resolution": "fhd",
+    "aspect_ratio": "9:16",
+    "duration": 8
+  }'
+```
+
+```bash Keyframes
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "flux-3-video",
+    "action": "generate",
+    "prompt": "Slow push-in as a flower opens from bud to bloom",
+    "image_urls": [
+      "https://cdn.example.com/bud.jpg",
+      "https://cdn.example.com/bloom.jpg"
+    ],
+    "resolution": "hd",
+    "duration": 5
+  }'
+```
+
+```bash Video continuation
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "flux-3-video",
+    "action": "generate",
+    "prompt": "The camera keeps following the lead toward a distant lighthouse",
+    "video_urls": ["https://cdn.example.com/clip.mp4"],
+    "resolution": "hd",
+    "duration": 5
+  }'
+```
+
+```bash Draft preview
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "flux-3-video-draft",
+    "action": "generate",
+    "prompt": "A quiet coastal observatory at sunrise, stable camera, no text",
+    "resolution": "hd",
+    "duration": 5,
+    "generate_audio": false
+  }'
+```
+
+</CodeGroup>
+
+A successful submission returns a `task_id`. Poll [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status) for the result, wait inside the call with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
+
+## Request parameters
+
+<ParamField body="model" type="string" required>
+  One of two: `flux-3-video` or `flux-3-video-draft`.
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  `generate` — the only action on both tiers. Text, keyframe and continuation modes are selected by which assets you send, not by the action.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Description of the video.
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Keyframe images, 1–10, where order carries meaning: one image is the start frame, two are start and end frames, and with 3–10 the first and last are start and end while the middle frames are spaced evenly in time. Cannot be combined with `video_urls`.
+</ParamField>
+
+<ParamField body="video_urls" type="string[]">
+  Continuation video, at most one clip, up to 20 seconds. With it set, the model continues from that clip.
+</ParamField>
+
+<ParamField body="resolution" type="string" default="hd">
+  Output resolution. `flux-3-video` supports `hd` and `fhd`; `flux-3-video-draft` supports `hd` only.
+</ParamField>
+
+<ParamField body="duration" type="integer" default="5">
+  Output length in seconds, any integer `5`–`20`.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="auto">
+  Aspect ratio: `21:9`, `2:1`, `16:9`, `4:3`, `1:1`, `3:4`, `9:16`, or `auto` (the model chooses from the prompt and assets).
+</ParamField>
+
+<ParamField body="generate_audio" type="boolean" default="true">
+  Whether to generate synchronized audio. Set `false` for a silent video; the price is the same.
+</ParamField>
+
+<ParamField body="safety_tolerance" type="integer" default="2">
+  Safety tolerance `0`–`4`; higher is more permissive.
+</ParamField>
+
+See [Submit Task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key`, and the maximum-cost header.
+
+Neither tier supports `n`, `seed`, `quality`, `negative_prompt`, `first_frame_image` or `audio_urls`. Any other parameter returns `400` and is not billed.
+
+## Limits
+
+| Condition | Limit |
+|---|---|
+| Per task | One video per task; 1-10 ordered keyframe images (first, last, evenly spaced middle frames) and at most one continuation video |
+| `video_urls` present | With a continuation video the images are ignored; do not send both |
+| Continuation video length | Up to 20 seconds |
+| `flux-3-video-draft` resolution | `hd` only |
+
+## Pricing
+
+Both tiers are billed by **resolution tier × output seconds**. `price_config.video_prices` is keyed by resolution; a resolution with no key of its own settles at the sibling `default` tier.
+
+| Model ID | Resolution tiers | Continuation tiers |
+|---|---|---|
+| `flux-3-video` | `hd`, `fhd` | `hd_video_ref`, `fhd_video_ref` |
+| `flux-3-video-draft` | `hd` | `hd_video_ref` |
+
+**Continuation tier** — with `video_urls` present, output seconds settle at the `<resolution>_video_ref` rate, which is higher than the plain tier at the same resolution. The continuation video's own seconds are not charged separately.
+
+`generate_audio` has no effect on price: audio and silent output cost the same. `aspect_ratio`, keyframe count and prompt length have no effect either — **resolution tier, whether it is a continuation, and output seconds are the only three billing dimensions**.
+
+You are only billed for a successfully generated video. Failed and cancelled tasks, and tasks that return no usable video, are refunded in full. The final charge is the `cost` field on the task response — an integer quota at **500,000 quota = 1 USD**, not dollars.
+
+<Note>
+**Unit prices are not listed here.** They track upstream changes; this section covers billing dimensions only.
+
+Live rates: the `price_config` field of `GET /v1/models`, or the console's Model Market.
+What one call cost: the `cost` field on the task response (integer quota, 500,000 quota = 1 USD).
+</Note>
+
+## Response
+
+```json Completed task
+{
+  "task_id": "taski-a70bafe415a1a1c4280cc3693261fa80-task-wave1788780141b950265604",
+  "model": "flux-3-video-draft",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788780141,
+  "completed_at": 1788780199,
+  "billing_status": "settled",
+  "cost": 135000,
+  "result": {
+    "videos": [
+      {
+        "expires_at": 1789089508,
+        "url": ["https://cdn.example.com/result.mp4"]
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski-a70bafe415a1a1c4280cc3693261fa80-task-wave1788780141b950265604",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski-a70bafe415a1a1c4280cc3693261fa80-task-wave1788780141b950265604/cancel"
+  }
+}
+```
+
+Generated videos are returned in `result.videos`; `url` is an array and `expires_at` is when the video link expires. See [Query Task Status](/en/api-reference/task/status) for the full field reference.
+
+## Available models
+
+| Model ID | Tier | Resolution | Duration (s) | Media inputs accepted |
+|---|---|---|---|---|
+| `flux-3-video` | Standard | `hd` `fhd` | `5`–`20` | `image_urls` 1–10 · `video_urls` ≤1 |
+| `flux-3-video-draft` | Draft | `hd` only | `5`–`20` | `image_urls` 1–10 · `video_urls` ≤1 |
+
+Both tiers share one parameter set, the same keyframe semantics and the same aspect ratios; they differ only in available resolutions and price.
+
+## Related
+
+- [Video Generation Overview](/en/api-reference/video/overview)
+- [FLUX Series](/en/api-reference/image/flux)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

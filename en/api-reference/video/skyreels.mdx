@@ -1,84 +1,71 @@
 ---
-title: "SkyReels Series"
-description: "Kunlun Wanwei SkyReels V4 — multimodal T2V/I2V/Omni video, with reference images, video extension, and voiceprint sync"
+title: "SkyReels V4 Series"
+description: "SkyReels V4 Fast and Std: text, image, keyframe, reference-image and reference-video generation with joint video and audio, billed by resolution tier × seconds"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-Kunlun Wanwei **SkyReels V4** video generation series.
+SkyReels V4 is a unified multimodal video-and-audio generation model that jointly produces synchronized picture and sound from text, image and video inputs, at 480p to 1080p and 3 to 15 seconds. This page covers `skyreels-v4-fast` and `skyreels-v4-std`: both tiers expose the same action, parameters and value ranges — Fast is the speed-optimized configuration, Std is the default quality configuration — so switching tiers means changing `model`. Every request is submitted asynchronously through `POST /v1/tasks`.
 
-V4 is the multimodal release of SkyReels. Beyond T2V / I2V, it natively supports **Omni multi-asset references** (image / video / audio), **video extension**, **first/last frame & mid-frame keyframes**, **voiceprint sync**, and other advanced capabilities. Duration is any integer in 3-15 seconds.
-
-Billed by **resolution × duration**, with two tiers — Fast / Std:
-
-| Tier | Positioning | Speed | Quality | Recommended Scenarios |
-|---|---|---|---|---|
-| `skyreels-v4-fast` | Fast tier | Quick | Standard | Creative previews, batch drafts, A/B comparisons |
-| `skyreels-v4-std` | Standard quality tier | Slower (~1.5-2x) | More stable | Final delivery, client-facing cuts, complex motion shots |
-
-Both tiers share the same parameters and capabilities (actions / ref_images / ref_videos / mid_frame_images / voiceprint) — they only differ in sampling depth. Recommended workflow: prototype with fast, render the final cut with std.
-
-**Reference video surcharge.** Passing `video_urls` moves the call to the pricier **video-reference tier** (the upstream's "uploaded videos" tier); without it you pay the ordinary tier for that resolution. Either way the price is multiplied by **output seconds only** — the reference clip itself is not billed by the second. Fast and std each have their own video-reference rates.
-
-## Pricing
-
-<Note>
-Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
-
-**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
-**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
-</Note>
-
-## Examples
+## Quick start
 
 <CodeGroup>
 
-```bash Text-to-video (T2V)
+```bash Text to video
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: skyreels-demo-001" \
   -d '{
     "model": "skyreels-v4-fast",
-    "prompt": "A Shiba Inu in a spacesuit walking on the moon, slow camera push-in, cinematic lighting",
+    "action": "generate",
+    "prompt": "A shiba inu in a spacesuit walking on the moon, the camera pushing in slowly",
     "duration": 5,
     "resolution": "1080p",
     "aspect_ratio": "16:9"
   }'
 ```
 
-```bash Image-to-video (I2V first frame)
+```bash First and last frame
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "skyreels-v4-std",
-    "prompt": "Character slowly walks toward the camera, long hair flowing",
-    "first_frame_image": "https://cdn.example.com/portrait.jpg",
+    "action": "generate",
+    "prompt": "She walks toward the camera, hair moving in the wind",
+    "first_frame_image": "https://cdn.example.com/first.jpg",
+    "end_frame_image": "https://cdn.example.com/last.jpg",
     "duration": 8,
     "resolution": "1080p"
   }'
 ```
 
-```bash Omni multi-asset reference
+```bash Reference video
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "skyreels-v4-fast",
-    "prompt": "Keep the character consistent, running through a forest, in sync with the audio rhythm",
+    "action": "generate",
+    "prompt": "Follow the camera motion in @video_1, but set it on a snowy mountain",
+    "video_urls": ["https://cdn.example.com/source.mp4"],
+    "resolution": "720p"
+  }'
+```
+
+```bash Reference image (character consistency)
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "skyreels-v4-std",
+    "action": "generate",
+    "prompt": "@Actor-1 walks through a neon-lit street at night, the camera tracking sideways",
     "ref_images": [
       {
-        "tag": "char",
+        "tag": "@Actor-1",
         "type": "image",
-        "image_urls": ["https://cdn.example.com/char-1.jpg"]
-      },
-      {
-        "tag": "style_grid",
-        "type": "grid",
-        "image_urls": [
-          "https://cdn.example.com/scene-1.jpg",
-          "https://cdn.example.com/scene-2.jpg"
-        ],
-        "audio_url": "https://cdn.example.com/voice.wav"
+        "image_urls": ["https://cdn.example.com/actor-a.jpg"]
       }
     ],
     "duration": 6,
@@ -86,268 +73,146 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   }'
 ```
 
-```bash Video extension (extend)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "skyreels-v4-std",
-    "prompt": "Continue from the previous clip, character turns around and walks off into the distance",
-    "ref_videos": [
-      {
-        "tag": "src",
-        "type": "extend",
-        "video_url": "https://cdn.example.com/source.mp4"
-      }
-    ],
-    "duration": 5,
-    "resolution": "1080p"
-  }'
-```
-
 </CodeGroup>
 
-<ResponseExample>
-```json Submitted
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
+
+## Request parameters
+
+<ParamField body="model" type="string" required>
+  Either `skyreels-v4-fast` or `skyreels-v4-std`.
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  `generate` is the only action in this series. The mode follows the media fields you send: `prompt` alone is text-to-video; `first_frame_image`, `end_frame_image` or `mid_frame_images` is image-to-video; `ref_images` or `video_urls` is reference-driven generation. Image-to-video fields and reference fields cannot be combined.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  The video description. When you send `video_urls`, `ref_images` or `mid_frame_images`, the prompt must contain the matching `@` tag.
+</ParamField>
+
+<ParamField body="duration" type="integer">
+  Video length in seconds, an integer from `3` to `15`. Ignored when `video_urls` is present — the output follows the reference video.
+</ParamField>
+
+<ParamField body="resolution" type="string">
+  Output resolution: `480p`, `720p` or `1080p`. Only `480p` and `720p` are available when `video_urls` is present.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string">
+  Frame ratio: `16:9`, `9:16`, `1:1`, `4:3` or `3:4`. Ignored when a first/end frame image or a reference video is present — the ratio follows the input material.
+</ParamField>
+
+<ParamField body="video_urls" type="string[]">
+  Reference video URLs, used as motion and subject reference. The Nth entry gets the tag `@video_N`, which the prompt must reference (for example `Follow the camera motion in @video_1`); without it the upstream rejects the request and nothing is billed.
+</ParamField>
+
+<ParamField body="first_frame_image" type="string">
+  Starting frame image URL (jpg / jpeg / png / gif / bmp).
+</ParamField>
+
+<ParamField body="end_frame_image" type="string">
+  Closing frame image URL; combine with the first frame for start/end control.
+</ParamField>
+
+<ParamField body="mid_frame_images" type="object[]">
+  Mid keyframe list, up to 6 entries, available in image-to-video mode only. Each entry holds:
+
+  - `tag`: a tag starting with `@` that must appear in the prompt
+  - `image_url`: the image URL
+  - `time_stamp`: the moment it appears, in seconds. `-1` (the default) leaves it unspecified; otherwise `0 < time_stamp < duration`
+</ParamField>
+
+<ParamField body="ref_images" type="object[]">
+  Reference image list, available in reference mode only and mutually exclusive with the image-to-video fields. All entries must share the same `type`. Each entry holds:
+
+  - `tag`: a tag starting with `@` that must appear in the prompt
+  - `type`: `image` for an ordinary reference image, `grid` for a single image composed of several tiles
+  - `image_urls`: an array of image URLs
+  - `audio_url`: a voice audio URL, allowed only when `type` is `image`, up to 15 seconds
+</ParamField>
+
+<ParamField body="prompt_optimizer" type="boolean" default="true">
+  Whether to auto-optimize the prompt before generation.
+</ParamField>
+
+See [Submit Task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key` and the maximum-cost header.
+
+Any other parameter returns `400` and is not billed.
+
+## Limits
+
+- With reference video: duration follows the reference (max 10s), resolution limited to 480p/720p
+- This model produces one result per task; n is not supported
+
+| Item | Limit |
+|---|---|
+| Duration `duration` | 3 to 15 seconds; follows the reference video, capped at 10 seconds, when `video_urls` is present |
+| Resolution `resolution` | `480p` / `720p` / `1080p`; only `480p` / `720p` when `video_urls` is present |
+| Reference video `video_urls` | 1 clip, 1 to 10 seconds, MP4 / MOV |
+| Mid keyframes `mid_frame_images` | Up to 6 entries |
+| Reference images `ref_images` | `type: image`: 1 to 3 entries with 1 to 5 images each; `type: grid`: 1 entry with 1 image |
+| Mutually exclusive | `first_frame_image` / `end_frame_image` / `mid_frame_images` cannot be combined with `ref_images` / `video_urls` |
+
+All input material must be publicly downloadable over HTTP(S).
+
+## Pricing
+
+Billing is **resolution tier × output seconds**, where the seconds come from the `duration` you send. The three resolutions are priced separately, and every `skyreels-v4-std` tier sits above the matching `skyreels-v4-fast` tier.
+
+Sending `video_urls` switches tiers: the output seconds settle at the **reference-video tier**, which is above the ordinary tier at the same resolution, and the reference video's own length is not billed on top. In this mode the output length follows the reference video (capped at 10 seconds) and only `480p` and `720p` are available.
+
+Reference images (`ref_images`), keyframe images and prompt length carry no separate charge.
+
+<Note>
+Rates move with the upstream, so this section describes billing dimensions only and lists no amounts.
+
+Current rates: `price_config` on `GET /v1/models`, or the Model Market in the console.
+Actual cost of one call: the `cost` field on the task response (an integer quota; 500,000 quota = 1 USD).
+</Note>
+
+You are billed only for a delivered video. Failed and cancelled tasks, and upstream successes that carry no deliverable video, are refunded in full. The final charge is the `cost` field on the task response — an integer quota, not dollars (500,000 quota = 1 USD).
+
+## Response
+
+```json Completed task
 {
   "task_id": "task-wave1775285160b950328499",
   "model": "skyreels-v4-fast",
   "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1775285160,
+  "completed_at": 1775285320,
+  "result": {
+    "videos": [
+      {
+        "expires_at": 1775371560,
+        "url": ["https://cdn.example.com/result.mp4"]
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 61875,
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499",
+    "cancel": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499/cancel"
+  }
 }
 ```
-</ResponseExample>
 
-After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status). See [Task System](/en/docs/task-system) for details.
+Generated videos are returned in `result.videos`, with picture and audio in the same file; `url` is an array and `expires_at` is the link expiry in Unix seconds, so copy the file to your own storage before then. See [Query Task Status](/en/api-reference/task/status) for the full field reference.
 
-## Mode Cheat Sheet
+## Available models
 
-Switch generation modes via the `action` field (or the corresponding media fields):
-
-| Mode | `action` | Key Fields | Typical Use |
-|---|---|---|---|
-| Text-to-video | `generate` | `prompt` | Pure text generation |
-| Image-to-video | `image2video` | `first_frame_image` | Animate a single frame |
-| First/last frame inpainting | `first_last_frame` | `first_frame_image` + `last_frame_image` | Precisely control start/end frames |
-| Video reference | `reference_video` | `ref_videos.type=reference` | Replicate camera motion / style |
-| Video extension | `extend` | `ref_videos.type=extend` | Continue an existing video |
-| Audio-driven | `reference_audio` | `audio_urls` or `ref_images[].audio_url` | Voiceprint / beat sync, lip-sync |
-
-<Tip>
-**Usually no need to pass `action` explicitly** — the backend auto-routes based on the media fields you supply. Pass it explicitly to lock the mode and avoid ambiguity (e.g. force video reference when both images and videos are present).
-</Tip>
-
-## Available Models
-
-| Model ID | Tier | Resolution | Duration | Description |
+| Model ID | Resolution | Duration (s) | Action | Notes |
 |---|---|---|---|---|
-| `skyreels-v4-fast` | Fast tier | 480P / 720P / 1080P | 3-15 sec | Full T2V/I2V/Omni capability, faster response |
-| `skyreels-v4-std` | Standard quality tier | 480P / 720P / 1080P | 3-15 sec | Same capability as fast, more stable quality, suited for final delivery |
+| `skyreels-v4-fast` | `480p` / `720p` / `1080p` | Any integer 3 to 15 | `generate` | Speed-optimized configuration, trading some fidelity for quicker generation |
+| `skyreels-v4-std` | `480p` / `720p` / `1080p` | Any integer 3 to 15 | `generate` | Default quality configuration, prioritizing full fidelity |
 
-## Common Parameters
+## Related
 
-<ParamField body="model" type="string" required>
-  Model ID. Allowed values:
-  - `skyreels-v4-fast` — fast tier
-  - `skyreels-v4-std` — standard quality tier
-</ParamField>
-
-<ParamField body="action" type="string" default="generate">
-  `generate` — the only action this model takes.
-
-  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-video; `image_urls` is image-to-video; `first_frame_image` + `last_frame_image` is a first/last-frame transition; `video_urls` / `audio_urls` is reference-to-video.
-</ParamField>
-
-<ParamField body="prompt" type="string">
-  Video description, up to 5000 characters. **Required for T2V**; optional as guidance for other modes
-</ParamField>
-
-<ParamField body="aspect_ratio" type="string" default="16:9">
-  Frame aspect ratio. **Effective in T2V**; modes containing media assets follow the source media's ratio. Allowed values:
-  - `16:9` — landscape widescreen
-  - `9:16` — portrait tall
-  - `4:3` — landscape
-  - `3:4` — portrait
-  - `1:1` — square
-</ParamField>
-
-<ParamField body="resolution" type="string" default="720p">
-  Output resolution. Allowed values:
-  - `480p`
-  - `720p`
-  - `1080p`
-</ParamField>
-
-<ParamField body="duration" type="integer" default="5">
-  Video duration in seconds, any integer in **3-15**
-</ParamField>
-
-<ParamField body="image_urls" type="string[]">
-  Reference image URL array (simplified mode), one of `image_urls` or `ref_images`. For complex cases (need to specify tag / type=image|grid / bind audio_url) use `ref_images`
-</ParamField>
-
-<ParamField body="first_frame_image" type="string">
-  First-frame image URL, triggers **I2V** mode
-</ParamField>
-
-<ParamField body="last_frame_image" type="string">
-  Last-frame image URL. When passed alongside `first_frame_image`, triggers **first/last frame inpainting**
-</ParamField>
-
-<ParamField body="video_urls" type="string[]">
-  Reference video URL array (simplified mode), one of `video_urls` or `ref_videos`. For complex cases (need to specify tag / type=reference|extend) use `ref_videos`
-
-  <Warning>
-  When you pass reference videos, the prompt **must reference them with `@video_1` / `@video_2`** (e.g. `follows the motion in @video_1`). Without that reference the upstream rejects the request with `Reference video tag @video_1 must be in prompt`, and the request is not billed.
-  </Warning>
-</ParamField>
-
-<ParamField body="audio_urls" type="string[]">
-  Reference audio URL array (simplified mode), triggers **voiceprint sync** (`reference_audio` mode), one of `audio_urls` or the `audio_url` field inside `ref_images`. For complex cases (binding audio to a specific asset, linked with image / style group) use `ref_images[].audio_url`
-</ParamField>
-
-<ParamField body="callback_url" type="string">
-  Webhook callback URL, invoked when the task reaches a terminal state. See [Callbacks](/en/docs/sync-async#async-task-webhook)
-</ParamField>
-
-<ParamField body="callback_events" type="string[]">
-  Callback event subscription list. By default subscribes to terminal states (`succeeded` / `failed`). Allowed values:
-  - `queued` — enqueued
-  - `running` — execution started
-  - `succeeded` — success (default)
-  - `failed` — failure (default)
-</ParamField>
-
-## Model-Specific Parameters
-
-Both tiers share identical parameters; they differ only in generation speed and quality. Choose by scenario.
-
-<Tabs>
-  <Tab title="skyreels-v4-fast">
-    **Positioning:** fast tier, quicker response, suited for previews / drafts / high-throughput scenarios.
-
-                <ParamField body="prompt_optimizer" type="boolean" default="true">
-      Whether to enable intelligent prompt rewriting. When on, the backend expands prompt details to improve generation stability; when off, the original prompt is followed strictly
-    </ParamField>
-  </Tab>
-
-  <Tab title="skyreels-v4-std">
-    **Positioning:** standard quality tier — more stable quality and natural motion, suited for delivery-grade video. Generation takes about 1.5-2x longer than fast.
-
-                <ParamField body="prompt_optimizer" type="boolean" default="true">
-      Whether to enable intelligent prompt rewriting. When on, the backend expands prompt details to improve generation stability; when off, the original prompt is followed strictly
-    </ParamField>
-  </Tab>
-</Tabs>
-
-## Composite Field Reference
-
-SkyReels V4's multimodal capabilities are expressed via three array fields, with semantics more precise than the generic `image_urls` / `video_urls`. Recommended for complex scenarios.
-
-### `ref_images` — Omni multi-asset reference
-
-Reference asset list, **up to 6 items**. Each item can be a single image or a multi-image grid, and may bind a driving audio clip.
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `tag` | string | Yes | Asset tag, injected into prompt context. e.g. `char` / `style` / `bg` |
-| `type` | string | Yes | `image` — single image; `grid` — multi-image composite (2-9 images forming one semantic group) |
-| `image_urls` | string[] | Yes | Image URL array. Length 1 when `type=image`; 2-9 when `type=grid` |
-| `audio_url` | string | No | Audio bound to this asset (voiceprint / beat driving), WAV / MP3 |
-
-```json
-"ref_images": [
-  {
-    "tag": "char",
-    "type": "image",
-    "image_urls": ["https://cdn.example.com/char.jpg"]
-  },
-  {
-    "tag": "style",
-    "type": "grid",
-    "image_urls": [
-      "https://cdn.example.com/scene-1.jpg",
-      "https://cdn.example.com/scene-2.jpg",
-      "https://cdn.example.com/scene-3.jpg"
-    ],
-    "audio_url": "https://cdn.example.com/bgm.mp3"
-  }
-]
-```
-
-### `ref_videos` — video reference / video extension
-
-Video asset list, **up to 1 item**. `type` decides the semantics: style reference vs. video continuation.
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `tag` | string | Yes | Asset tag, e.g. `src` / `style_ref` |
-| `type` | string | Yes | `reference` — style / character / motion reference; `extend` — video continuation, the new video is appended to the source |
-| `video_url` | string | Yes | Video URL, MP4 / MOV |
-
-```json
-"ref_videos": [
-  {
-    "tag": "src",
-    "type": "extend",
-    "video_url": "https://cdn.example.com/source.mp4"
-  }
-]
-```
-
-<Note>
-**Pricing reminder** — when any item in `ref_videos` is `reference` or `extend`, the `+video_ref` surcharge applies.
-</Note>
-
-### `mid_frame_images` — mid-frame keyframes
-
-Define key frames in the middle of the video, **up to 6 items**, interpolated by timestamp. Often combined with first/last frames to precisely choreograph shot pacing.
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `tag` | string | Yes | Keyframe tag, e.g. `kf_2s` / `peak` |
-| `image_url` | string | Yes | Keyframe image URL |
-| `time_stamp` | number | Yes | The frame's appearance time (seconds), must lie in `(0, duration)` and be strictly increasing |
-
-```json
-"mid_frame_images": [
-  {
-    "tag": "kf_2s",
-    "image_url": "https://cdn.example.com/kf-2.jpg",
-    "time_stamp": 2.0
-  },
-  {
-    "tag": "kf_5s",
-    "image_url": "https://cdn.example.com/kf-5.jpg",
-    "time_stamp": 5.0
-  }
-]
-```
-
-## Prompt Writing Tips
-
-SkyReels V4's `prompt_optimizer` is on by default, but writing a clear prompt still significantly improves output quality:
-
-- **Camera language** — be explicit about camera motion (push / pull / pan / follow) and shot size (close-up / wide / overhead). Example: `slow camera push-in, from wide shot to facial close-up`
-- **Pacing control** — segment with time words. Example: `still gaze for the first 2 seconds, then turn and walk away over the next 3`. Pairs well with `mid_frame_images`
-- **Style anchoring** — describe lighting / color palette / texture. Example: `cinematic cool tones, natural backlight, film grain`
-- **Avoid negatives** — V4 does not support `negative_prompt`. Rewrite "no X" as a positive description
-- **Multi-asset guidance** — when using `ref_images`, name the tag in the prompt. Example: `keep the char consistent, walking through the style scene`
-
-## Resource Limits
-
-| Item | Limit |
-|---|---|
-| `audio_urls` / `audio_url` | WAV/MP3, ≤ 15MB, 3-30 seconds |
-| `first_frame_image` / `last_frame_image` | JPG/PNG/WEBP, ≤ 30MB |
-| Output | MP4, link valid for 24 hours |
-| Concurrency | ≤ 5 queued tasks per account at the same time |
-
-## Related Docs
-
-- [Task System](/en/docs/task-system) — task state machine / polling cadence / async push
-- [Request & Response Format](/en/docs/request-response) — common error codes / Headers / rate limits
-- [Authentication](/en/docs/authentication) — API Key issuance and usage
-- [Callbacks](/en/docs/sync-async#async-task-webhook) — Webhook signing / retries / event subscriptions
+- [Video Generation Overview](/en/api-reference/video/overview)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

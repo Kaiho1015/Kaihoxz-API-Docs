@@ -1,266 +1,382 @@
 ---
 title: "Wan Series"
-description: "Alibaba Tongyi Wanxiang — text-to-video / image-to-video / reference-to-video / video editing, one task endpoint, billed per second"
+description: "Alibaba Tongyi Wanxiang video models: text, image, reference and video editing on one task endpoint, billed by resolution tier × seconds"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-Alibaba Tongyi Wanxiang (Wan) video generation series, covering **text-to-video / image-to-video / reference-to-video / video editing** through a single async task endpoint.
+Wan is Alibaba Tongyi's video model line. This page covers eight video models: `wan2.5-preview`, `wan2.6`, `wan2.6-i2v` and `wan2.6-i2v-flash` handle text- and image-to-video; `wan2.7` and `wan3.0-video` are multimodal entry points (text, frames, reference assets and video continuation all use one model ID); `wan2.7-r2v` does reference-to-video; `wan2.7-videoedit` does video editing. All eight share `POST /v1/tasks` and switching models means changing `model`, but the parameter set, the media inputs each takes, and the billing dimensions differ. For Wan image models, see [Wan Image Series](/en/api-reference/image/wan-image).
 
-Seven tiers:
-
-- **`wan2.7`** — the current flagship; one entry point for text- and image-to-video (pass `image_urls` to switch to image mode: first frame, or first + last frame), 720P / 1080P, any integer 2-15 sec, negative prompt and smart prompt expansion
-- **`wan2.6`** — the stable classic tier, text- and image-to-video, 720p / 1080p, 5 / 10 / 15 sec
-- **`wan2.6-i2v`** — 2.6 image-to-video, standard tier; driven by a reference image with synchronized audio, 720p / 1080p, 5 / 10 / 15 sec, requires `image_urls`
-- **`wan2.6-i2v-flash`** — 2.6 image-to-video, fast tier at roughly half the price of the standard I2V tier, 720p / 1080p, 5 / 10 / 15 sec, requires `image_urls`
-- **`wan2.5-preview`** — the 2.5 preview tier, text- and image-to-video (pass `image_urls` for image mode), 480p / 720p / 1080p, 5 / 10 sec, the most affordable price point
-- **`wan2.7-r2v`** — reference-to-video (R2V): one or more reference images drive subject / style, for character consistency and style continuity; requires `image_urls`
-- **`wan2.7-videoedit`** — video editing: a source video plus a text instruction for style transfer / content replacement / full rewrite; requires `video_urls`
-
-The whole series is **billed per second**: cost = the per-second price for the chosen resolution × duration in seconds.
-
-## Pricing
-
-<Note>
-No unit prices on this page — prices track upstream changes, and anything written here will drift out of date.
-
-**Live prices:** the console's Model Market, or the `GET /v1/models` endpoint (see [Model list](/en/docs/models)).
-**Actual cost of one call:** every response carries `cost` / `usage.cost` — that is the number to trust.
-</Note>
-
-**Video editing and reference-to-video count the input video too.** `wan2.7-r2v` and `wan2.7-videoedit` are billed **(source-video seconds + output seconds) × the video-reference unit price**, which is lower than the text-to-video tier. The source video may be at most **15 seconds** (`wan2.7-r2v`) or **10 seconds** (`wan2.7-videoedit`).
-
-## Examples
+## Quick start
 
 <CodeGroup>
 
-```bash Text-to-video (wan2.7)
+```bash Text-to-video
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-    "model": "wan2.7",
-    "prompt": "A coastal road at sunset, slow push-in, cinematic look",
-    "duration": 8,
-    "resolution": "1080P",
-    "aspect_ratio": "16:9"
-  }'
-```
-
-```bash Image-to-video (wan2.7, first frame)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "wan2.7",
-    "prompt": "The person slowly stands up and walks toward the camera",
-    "image_urls": ["https://cdn.example.com/person.jpg"],
-    "duration": 8,
-    "resolution": "1080P"
-  }'
-```
-
-```bash Text-to-video (wan2.6)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: wan-t2v-001" \
   -d '{
     "model": "wan2.6",
-    "prompt": "A cute cat running across a meadow",
-    "duration": 5,
-    "resolution": "720p",
-    "aspect_ratio": "16:9"
+    "action": "generate",
+    "prompt": "A coastal road at sunset, slow push-in, cinematic look",
+    "resolution": "1080p",
+    "aspect_ratio": "16:9",
+    "duration": 5
   }'
 ```
 
-```bash Image-to-video (wan2.6-i2v-flash)
+```bash Image-to-video (first frame)
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "wan2.6-i2v-flash",
-    "prompt": "The subject turns and smiles at the camera",
-    "image_urls": ["https://cdn.example.com/portrait.jpg"],
-    "duration": 5,
-    "resolution": "720p"
+    "model": "wan2.6-i2v",
+    "action": "generate",
+    "prompt": "The person slowly stands up and walks toward the camera",
+    "image_urls": ["https://cdn.example.com/first.jpg"],
+    "resolution": "720p",
+    "duration": 5
   }'
 ```
 
-```bash Reference-to-video (wan2.7-r2v)
+```bash First and last frame
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "wan2.7",
+    "action": "generate",
+    "prompt": "A smile widens into laughter, background light shifts from cool to warm",
+    "first_frame_image": "https://cdn.example.com/first.jpg",
+    "last_frame_image": "https://cdn.example.com/last.jpg",
+    "resolution": "720p",
+    "duration": 5
+  }'
+```
+
+```bash Video continuation
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "wan2.7",
+    "action": "generate",
+    "prompt": "The camera keeps following the lead toward a distant lighthouse",
+    "video_urls": ["https://cdn.example.com/clip.mp4"],
+    "resolution": "720p",
+    "duration": 5
+  }'
+```
+
+```bash Reference-to-video
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "wan2.7-r2v",
+    "action": "generate",
     "prompt": "Keep the character consistent, running through a forest, camera follows",
     "image_urls": [
       "https://cdn.example.com/char-1.jpg",
       "https://cdn.example.com/char-2.jpg"
     ],
-    "duration": 8,
-    "resolution": "1080P",
-    "aspect_ratio": "16:9"
+    "resolution": "1080p",
+    "aspect_ratio": "16:9",
+    "duration": 8
   }'
 ```
 
-```bash Video editing (wan2.7-videoedit)
+```bash Multimodal reference
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "wan3.0-video",
+    "action": "generate",
+    "prompt": "The person from video 1 holds the object in image 1 and plays a soft folk tune",
+    "generation_type": "reference",
+    "image_urls": ["https://cdn.example.com/object.jpg"],
+    "video_urls": ["https://cdn.example.com/role.mp4"],
+    "resolution": "480p",
+    "duration": 5
+  }'
+```
+
+```bash Video editing
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "wan2.7-videoedit",
+    "action": "edit",
     "prompt": "Change the scene to a snowy day, keep the character motion",
     "video_urls": ["https://cdn.example.com/source.mp4"],
-    "duration": 8,
-    "resolution": "1080P"
+    "image_urls": ["https://cdn.example.com/style.jpg"],
+    "resolution": "720p",
+    "duration": 0,
+    "metadata": { "audio_setting": "origin" }
   }'
 ```
 
 </CodeGroup>
 
-<ResponseExample>
-```json Submitted
+A successful submission returns a `task_id`. Poll [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status) for the result, wait inside the call with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
+
+## Request parameters
+
+<ParamField body="model" type="string" required>
+  One of eight: `wan2.5-preview`, `wan2.6`, `wan2.6-i2v`, `wan2.6-i2v-flash`, `wan2.7`, `wan2.7-r2v`, `wan2.7-videoedit`, `wan3.0-video`.
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  - `generate` — generate a video. The only action for the seven models other than `wan2.7-videoedit`
+  - `edit` — edit an input video. Only `wan2.7-videoedit` supports it, and it supports nothing else
+</ParamField>
+
+<ParamField body="prompt" type="string">
+  Description of the video, or the edit instruction.
+
+  Required for `wan2.7-r2v`. Required for `wan2.7` and `wan3.0-video` when no media input is present. Optional elsewhere, but useful to guide camera and motion.
+</ParamField>
+
+<ParamField body="negative_prompt" type="string">
+  Content to avoid. `wan3.0-video` does not take this parameter; the other seven models do.
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Image input. Meaning and caps differ by model:
+
+  - `wan2.5-preview` / `wan2.6` — passing it switches to image-to-video mode
+  - `wan2.6-i2v` / `wan2.6-i2v-flash` — **required**, exactly one image used as the first frame; the aspect ratio follows the image
+  - `wan2.7` — 1–2 images (one = first frame, two = first and last frame); mutually exclusive with `first_frame_image`, `video_urls` and `aspect_ratio`
+  - `wan2.7-r2v` — 1–5 subject / style references; mutually exclusive with `video_urls`; at most 4 when combined with `first_frame_image`
+  - `wan2.7-videoedit` — up to 4 style / content references
+  - `wan3.0-video` — up to 10; with `generation_type: "frame"` only 1–2 frame images
+</ParamField>
+
+<ParamField body="first_frame_image" type="string">
+  First-frame image URL. Taken by `wan2.7`, `wan2.7-r2v` and `wan3.0-video`.
+
+  - `wan2.7` — cannot be mixed with `image_urls`, `video_urls` or `aspect_ratio`
+  - `wan2.7-r2v` — may accompany up to 4 reference images; cannot be mixed with `video_urls` or `aspect_ratio`, and the ratio follows the first frame
+  - `wan3.0-video` — cannot be mixed with `image_urls`, `video_urls`, `audio_urls`, `file_url` or `link_url`
+</ParamField>
+
+<ParamField body="last_frame_image" type="string">
+  Last-frame image URL. Taken by `wan2.7` and `wan3.0-video`, and only together with `first_frame_image`.
+</ParamField>
+
+<ParamField body="video_urls" type="string[]">
+  Video input. Clip count and duration caps differ by model:
+
+  - `wan2.7` — at most 1 clip, 2–10 s, for video continuation
+  - `wan2.7-r2v` — at most 5 clips, each up to 5 s, 25 s in total
+  - `wan2.7-videoedit` — **required**, exactly 1 clip, 2–10 s
+  - `wan3.0-video` — at most 5 clips, each up to 15 s, 15 s in total
+</ParamField>
+
+<ParamField body="audio_urls" type="string[]">
+  Custom audio. `wan2.6-i2v-flash` takes at most 1 clip (3–30 s), `wan2.7` at most 1 clip (2–30 s), `wan3.0-video` at most 5 clips (each 1–15 s, 15 s in total). The other models do not take it.
+</ParamField>
+
+<ParamField body="generate_audio" type="boolean">
+  Whether the output carries an audio track. `wan2.5-preview` and `wan2.6` default to `false`; `wan2.6-i2v-flash` and `wan3.0-video` default to `true`. The other models do not take this parameter.
+</ParamField>
+
+<ParamField body="resolution" type="string">
+  Output resolution:
+
+  - `wan2.5-preview` — `480p`, `720p`, `1080p`
+  - `wan2.6`, `wan2.6-i2v`, `wan2.6-i2v-flash`, `wan2.7`, `wan2.7-r2v`, `wan2.7-videoedit` — `720p`, `1080p`
+  - `wan3.0-video` — `480p`, `720p`, `1080p`
+
+  Defaults: `720p` for `wan2.6-i2v`, `wan2.6-i2v-flash`, `wan2.7`, `wan2.7-r2v` and `wan2.7-videoedit`; `480p` for `wan3.0-video`.
+</ParamField>
+
+<ParamField body="duration" type="integer">
+  Output length in seconds:
+
+  - `wan2.5-preview` — `5` or `10`
+  - `wan2.6` — `5`, `10` or `15`
+  - `wan2.6-i2v`, `wan2.6-i2v-flash`, `wan2.7`, `wan2.7-r2v` — any integer `2`–`15`
+  - `wan2.7-videoedit` — any integer `2`–`10`, plus `0` (keep the source video length)
+  - `wan3.0-video` — any integer `2`–`30`
+
+  `wan2.6-i2v` defaults to `5`. With `video_urls` present the output length is capped further: 10 seconds for `wan2.7` and `wan2.7-r2v`, 15 seconds for `wan3.0-video`.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string">
+  Aspect ratio. `wan2.5-preview`, `wan2.6`, `wan2.7`, `wan2.7-r2v` and `wan2.7-videoedit` support `16:9`, `9:16`, `1:1`, `4:3` and `3:4`; `wan3.0-video` adds `adaptive` and defaults to it.
+
+  `wan2.6-i2v` and `wan2.6-i2v-flash` do not take this parameter — the aspect ratio follows the input image. It also cannot be sent by `wan2.6` alongside `image_urls`, by `wan2.7` alongside `first_frame_image` / `image_urls` / `video_urls`, or by `wan2.7-r2v` alongside `first_frame_image`; in those cases the aspect ratio follows the input asset.
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  Random seed. The same request with the same seed produces similar results. All eight models take it.
+</ParamField>
+
+<ParamField body="watermark" type="boolean">
+  Whether to add a watermark to the output. All eight models take it.
+</ParamField>
+
+<ParamField body="prompt_extend" type="boolean" default="true">
+  Smart prompt expansion, a clear improvement for short prompts. `wan3.0-video` does not take this parameter; the other seven models do.
+
+  `wan2.6-i2v` and `wan2.6-i2v-flash` require `prompt_extend` to be `true` whenever `shot_type` is set.
+</ParamField>
+
+<ParamField body="shot_type" type="string">
+  Shot type: `single` (one continuous shot) or `multi` (multi-shot narrative). Only `wan2.6`, `wan2.6-i2v` and `wan2.6-i2v-flash` take it.
+</ParamField>
+
+<ParamField body="template" type="string">
+  Effect template. It needs one image only, and the `prompt` is ignored.
+
+  Values for `wan2.6-i2v` and `wan2.6-i2v-flash`: `squish`, `rotation`, `poke`, `inflate`, `dissolve`, `carousel`, `singleheart`, `flying`, `rose`, `hug`, `frenchkiss`, `coupleheart`. `wan2.6` takes an effect template name as a string.
+</ParamField>
+
+<ParamField body="audio_url" type="string">
+  Audio URL; takes precedence over `generate_audio`. Only `wan2.5-preview` and `wan2.6` take it.
+</ParamField>
+
+<ParamField body="image_with_roles" type="array">
+  Role-tagged image array of `{url, role}`, where `role` is `first_frame`, `last_frame` or `reference`; merged with `first_frame_image` / `last_frame_image`. Only `wan2.7`, `wan2.7-r2v` and `wan3.0-video` take it.
+</ParamField>
+
+<ParamField body="generation_type" type="string">
+  How the image array is classified: `frame` (first / last frame) or `reference` (reference images). Only `wan3.0-video` takes it; omitted, the classification follows the input assets.
+</ParamField>
+
+<ParamField body="file_url" type="string">
+  Reference document URL. Only `wan3.0-video` takes it, and it is mutually exclusive with `link_url`.
+</ParamField>
+
+<ParamField body="link_url" type="string">
+  Reference web page URL. Only `wan3.0-video` takes it, and it is mutually exclusive with `file_url`.
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Extra options object; currently only `audio_setting`: `auto` (generate audio) or `origin` (keep the source video's audio). Only `wan2.7-videoedit` takes it.
+</ParamField>
+
+See [Submit Task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key`, and the maximum-cost header.
+
+None of the eight models support `n` or `quality`. Any other parameter returns `400` and is not billed.
+
+## Limits
+
+| Model ID | Condition | Limit |
+|---|---|---|
+| All eight models | Per task | This model produces one result per task; n is not supported |
+| `wan2.5-preview` | `resolution: "480p"` | 480p only supports 16:9 / 9:16 / 1:1 |
+| `wan2.6` | `image_urls` present | aspect_ratio is not supported in image-to-video mode |
+| `wan2.6-i2v` | Per task | One video per task; exactly one first-frame image, the aspect ratio follows the image |
+| `wan2.6-i2v` | `shot_type` present | prompt_extend must be true when shot_type is set |
+| `wan2.6-i2v-flash` | Per task | Exactly one first-frame image and at most one custom audio clip are accepted |
+| `wan2.6-i2v-flash` | `shot_type` present | shot_type requires prompt_extend=true |
+| `wan2.7` | Per task | At most one reference video and one custom audio clip are accepted |
+| `wan2.7` | No media input | Text-only and audio-only requests require a prompt |
+| `wan2.7` | `last_frame_image` present | A last frame requires a first frame |
+| `wan2.7` | `first_frame_image` present | Explicit frames cannot be mixed with image arrays, video, or aspect ratio |
+| `wan2.7` | `image_urls` present | Image-to-video accepts one or two images and follows the input ratio |
+| `wan2.7` | `video_urls` present | Video continuation does not accept custom audio or aspect ratio |
+| `wan2.7-r2v` | Per task | At most five reference videos are accepted; a prompt is required |
+| `wan2.7-r2v` | No images and no video | Reference images or reference videos are required |
+| `wan2.7-r2v` | `image_urls` present | Image and video references cannot be combined in one request |
+| `wan2.7-r2v` | `video_urls` present | With reference video, images cannot be mixed in and output is limited to ten seconds |
+| `wan2.7-r2v` | `first_frame_image` present | A first frame may accompany up to four reference images and determines the ratio |
+| `wan2.7-videoedit` | Per task | Video editing requires exactly one input video |
+| `wan3.0-video` | Per task | At most five reference videos and five audio clips are accepted |
+| `wan3.0-video` | No input at all | A prompt or reference media is required |
+| `wan3.0-video` | `last_frame_image` present | A last frame requires a first frame |
+| `wan3.0-video` | `first_frame_image` present | Frame controls cannot be mixed with reference media |
+| `wan3.0-video` | `generation_type: "frame"` | Frame mode accepts one or two frame images only |
+| `wan3.0-video` | `generation_type: "reference"` | Reference mode cannot include frame controls |
+| `wan3.0-video` | `video_urls` present | With reference video, output is limited to 15 seconds |
+| `wan3.0-video` | `file_url` present | file_url and link_url are mutually exclusive |
+
+## Pricing
+
+The whole series is billed by **resolution tier × output seconds**. `price_config.video_prices` is keyed by resolution; a resolution with no key of its own settles at the sibling `default` tier.
+
+| Model ID | Billing dimensions |
+|---|---|
+| `wan2.5-preview` `wan2.6` `wan2.6-i2v` `wan3.0-video` | Resolution tier × output seconds |
+| `wan2.6-i2v-flash` | Resolution tier × output seconds; audio output uses the sound tier |
+| `wan2.7` `wan2.7-r2v` | Resolution tier × output seconds; a reference video adds a separate charge for its own seconds |
+| `wan2.7-videoedit` | Resolution tier × output seconds, with a six-second floor |
+
+**Sound tier (`wan2.6-i2v-flash`)** — besides `720p` / `1080p`, the price table carries `720p_sound` / `1080p_sound`. Audio generation (`generate_audio: true`, which is this model's default) or a supplied `audio_urls` settles at the sound tier.
+
+**Reference video (`wan2.7` / `wan2.7-r2v`)** — the price table carries two extra key groups, `<resolution>_video_ref` and `<resolution>_video_input_second`. With `video_urls` present, output seconds settle at the `_video_ref` tier, and the reference video's own seconds are charged separately at `_video_input_second`. Total reference-video length is capped at 10 seconds for `wan2.7` and 25 seconds for `wan2.7-r2v`. How input seconds are read, and what happens when they cannot be read, is in [Video Generation Overview](/en/api-reference/video/overview#input-video-duration-and-billing).
+
+**Minimum billed duration (`wan2.7-videoedit`)** — `price_config.min_billing_duration` is `6`, so billed seconds are the larger of the requested duration and 6. `duration: 0` settles on the source video length, also with the six-second floor.
+
+**Default tier (`wan3.0-video`)** — with no `resolution`, the task settles at the `480p` tier.
+
+You are only billed for a successfully generated video. Failed and cancelled tasks, and tasks that return no usable video, are refunded in full. The final charge is the `cost` field on the task response — an integer quota at **500,000 quota = 1 USD**, not dollars.
+
+<Note>
+**Unit prices are not listed here.** They track upstream changes; this section covers billing dimensions only.
+
+Live rates: the `price_config` field of `GET /v1/models`, or the console's Model Market.
+What one call cost: the `cost` field on the task response (integer quota, 500,000 quota = 1 USD).
+</Note>
+
+## Response
+
+```json Completed task
 {
   "task_id": "task-wave1775285160b950328499",
   "model": "wan2.7",
   "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1775285160,
+  "completed_at": 1775285281,
+  "billing_status": "settled",
+  "cost": 225000,
+  "result": {
+    "videos": [
+      {
+        "expires_at": 1775544360,
+        "url": ["https://cdn.example.com/result.mp4"]
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499",
+    "cancel": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499/cancel"
+  }
 }
 ```
-</ResponseExample>
 
-After submitting, poll [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status) for status — see [Task system](/en/docs/task-system).
+Generated videos are returned in `result.videos`; `url` is an array and `expires_at` is when the video link expires. See [Query Task Status](/en/api-reference/task/status) for the full field reference.
 
 ## Available models
 
-| Model ID | Resolution | Duration | Aspect ratio | Required | Notes |
-|---|---|---|---|---|---|
-| `wan2.7` | 720P / 1080P | any integer 2-15 sec | 16:9 / 9:16 / 1:1 / 4:3 / 3:4 | `prompt` | One entry for text / image mode; pass `image_urls` for image mode |
-| `wan2.6` | 720p / 1080p | 5 / 10 / 15 sec | 16:9 / 9:16 / 1:1 | `prompt` | Stable classic tier, text / image |
-| `wan2.6-i2v` | 720p / 1080p | 5 / 10 / 15 sec | 16:9 / 9:16 / 1:1 | `prompt` + `image_urls` | 2.6 image-to-video standard tier, synchronized audio |
-| `wan2.6-i2v-flash` | 720p / 1080p | 5 / 10 / 15 sec | 16:9 / 9:16 / 1:1 | `prompt` + `image_urls` | 2.6 image-to-video fast tier, about half price; billed as audio when `audio` is omitted |
-| `wan2.5-preview` | 480p / 720p / 1080p | 5 / 10 sec | 16:9 / 9:16 / 1:1 | `prompt` | 2.5 preview tier, text / image; pass `image_urls` for image mode |
-| `wan2.7-r2v` | 720P / 1080P | any integer 2-15 sec | 16:9 / 9:16 / 1:1 | `prompt` + `image_urls` | Reference-to-video, character / style consistency |
-| `wan2.7-videoedit` | 720P / 1080P | any integer 2-15 sec | 16:9 / 9:16 / 1:1 | `prompt` + `video_urls` | Video editing, style transfer / content replacement |
+**Generation (`action: "generate"`)**
 
-<Note>
-Resolution casing differs by model: `wan2.7` / `wan2.7-r2v` / `wan2.7-videoedit` take upper-case `720P` / `1080P`; `wan2.6` / `wan2.6-i2v` / `wan2.6-i2v-flash` / `wan2.5-preview` take lower-case `720p` / `1080p` (`wan2.5-preview` also has `480p`).
-</Note>
+| Model ID | Resolution | Duration (s) | Media inputs accepted |
+|---|---|---|---|
+| `wan2.5-preview` | `480p` `720p` `1080p` | `5` `10` | `image_urls` · `audio_url` |
+| `wan2.6` | `720p` `1080p` | `5` `10` `15` | `image_urls` · `audio_url` |
+| `wan2.6-i2v` | `720p` `1080p` | `2`–`15` | `image_urls` (1 required) |
+| `wan2.6-i2v-flash` | `720p` `1080p` | `2`–`15` | `image_urls` (1 required) · `audio_urls` ≤1 |
+| `wan2.7` | `720p` `1080p` | `2`–`15` | `image_urls` ≤2 · `first_frame_image` / `last_frame_image` · `video_urls` ≤1 · `audio_urls` ≤1 |
+| `wan2.7-r2v` | `720p` `1080p` | `2`–`15` | `image_urls` ≤5 · `first_frame_image` · `video_urls` ≤5 |
+| `wan3.0-video` | `480p` `720p` `1080p` | `2`–`30` | `image_urls` ≤10 · `first_frame_image` / `last_frame_image` · `video_urls` ≤5 · `audio_urls` ≤5 · `file_url` / `link_url` |
 
-## Common parameters
+**Video editing (`action: "edit"`)**
 
-<ParamField body="model" type="string" required>
-  Model ID — see the [Available models](#available-models) table
-</ParamField>
-
-<ParamField body="prompt" type="string" required>
-  Description of the video. Required in text mode; optional in image / reference / edit mode but recommended to guide camera and motion. Up to 5000 characters
-</ParamField>
-
-<ParamField body="image_urls" type="string[]">
-  Reference / input image URLs:
-  - `wan2.7`: passing it switches to image mode — 1 image = first frame, 2 images = first + last frame
-  - `wan2.6`: 1 image only; passing it switches to image mode
-  - `wan2.6-i2v` / `wan2.6-i2v-flash`: **required**, 1 image as the driving first frame
-  - `wan2.5-preview`: passing it switches to image mode (image-to-video)
-  - `wan2.7-r2v`: **required**, as subject / style reference (R2V)
-  - `wan2.7-videoedit`: optional style / content reference images, **up to 4**
-
-  For the tiers marked **required** (`wan2.6-i2v` / `wan2.6-i2v-flash` / `wan2.7-r2v`): If it is missing, the request is rejected at submission and nothing is held.
-</ParamField>
-
-<ParamField body="video_urls" type="string[]">
-  Source video URL (single element). **Required** for `wan2.7-videoedit` — If it is missing, the request is rejected at submission and nothing is held. At most 10 seconds; base64 is not accepted — must be a publicly downloadable link
-</ParamField>
-
-<ParamField body="resolution" type="string">
-  Output resolution, per the [Available models](#available-models) table:
-  - `wan2.7` / `wan2.7-r2v` / `wan2.7-videoedit`: `720P` / `1080P` (default `1080P`)
-  - `wan2.6` / `wan2.6-i2v` / `wan2.6-i2v-flash`: `720p` / `1080p` (default `720p`)
-  - `wan2.5-preview`: `480p` / `720p` / `1080p` (default `720p`)
-</ParamField>
-
-<ParamField body="duration" type="integer">
-  Video length in seconds:
-  - `wan2.7` / `wan2.7-r2v` / `wan2.7-videoedit`: any integer `2`-`15` (default `5`)
-  - `wan2.6` / `wan2.6-i2v` / `wan2.6-i2v-flash`: `5` / `10` / `15` only (default `5`)
-  - `wan2.5-preview`: `5` / `10` only (default `5`)
-
-  `wan2.7-videoedit` is settled on the output duration you specify; `0` keeps the source video's duration and is settled on the probed source duration (see [Input video duration and billing](/en/api-reference/video/overview#input-video-duration-and-billing)).
-</ParamField>
-
-<ParamField body="aspect_ratio" type="string" default="16:9">
-  Aspect ratio (ignored in image mode — the input image decides):
-  - `wan2.7`: `16:9` / `9:16` / `1:1` / `4:3` / `3:4`
-  - `wan2.6` / `wan2.6-i2v` / `wan2.6-i2v-flash` / `wan2.5-preview` / `wan2.7-r2v` / `wan2.7-videoedit`: `16:9` / `9:16` / `1:1`
-</ParamField>
-
-<ParamField body="seed" type="integer">
-  Random seed (≥ 0). The same request with the same seed produces similar results; omit for a different result each time
-</ParamField>
-
-<ParamField body="callback_url" type="string">
-  Webhook URL, called when the task reaches a terminal state. See [Callbacks](/en/docs/sync-async#async-task-webhook)
-</ParamField>
-
-<ParamField body="callback_events" type="string[]">
-  Callback events to subscribe to. Defaults to terminal states (`succeeded` / `failed` / `cancelled`)
-</ParamField>
-
-## Model-specific parameters
-
-<Tabs>
-  <Tab title="wan2.7">
-    <ParamField body="prompt_extend" type="boolean" default="true">
-      Smart prompt expansion — a clear improvement for short prompts, at the cost of extra latency
-    </ParamField>
-
-    <ParamField body="negative_prompt" type="string">
-      Content to avoid. Example: `"blurry, distorted, low quality"`
-    </ParamField>
-  </Tab>
-
-  <Tab title="wan2.6">
-    Wan 2.6 has no extra parameters — everything available is in [Common parameters](#common-parameters). Text vs image mode is decided by whether `image_urls` is passed.
-  </Tab>
-
-  <Tab title="wan2.6-i2v / wan2.6-i2v-flash">
-    Both tiers require `image_urls` (1 image, used as the first frame). Optional:
-
-    <ParamField body="audio" type="boolean" default="true">
-      Generate video with audio. `wan2.6-i2v` is always with audio; for `wan2.6-i2v-flash` the upstream charges half price for silent output, but **we currently bill as audio whether the flag is omitted or set to `false`** — this will be split once the billing chain supports it
-    </ParamField>
-
-    <ParamField body="negative_prompt" type="string">
-      Content to avoid
-    </ParamField>
-  </Tab>
-
-  <Tab title="wan2.5-preview">
-    The 2.5 preview tier has no extra parameters — everything available is in [Common parameters](#common-parameters). Text vs image mode is decided by whether `image_urls` is passed.
-  </Tab>
-
-  <Tab title="wan2.7-r2v">
-    The R2V tier has no extra parameters. `image_urls` is required as the character / style reference; the prompt describes motion and camera.
-  </Tab>
-
-  <Tab title="wan2.7-videoedit">
-    The VideoEdit tier has no extra parameters. `video_urls` (source video) is required; `image_urls` can add style / content references (≤ 4); `duration` sets the output length.
-  </Tab>
-</Tabs>
-
-## Limits
-
-| Item | Limit |
-|---|---|
-| Source video (videoedit) | MP4 / MOV, ≤ 100MB, publicly downloadable |
-| Reference images | JPG / PNG / WEBP, publicly downloadable URLs (videoedit: up to 4) |
-| Prompt | ≤ 5000 characters |
-| Output | MP4, link valid for 24 hours — download promptly |
+| Model ID | Resolution | Duration (s) | Media inputs accepted |
+|---|---|---|---|
+| `wan2.7-videoedit` | `720p` `1080p` | `2`–`10`, or `0` to keep the source length | `video_urls` (1 required) · `image_urls` ≤4 |
 
 ## Related
 
-- [Task system](/en/docs/task-system) — state machine / polling cadence / async push
-- [Request & response format](/en/docs/request-response) — common error codes / headers / rate limits
-- [Authentication](/en/docs/authentication) — getting and using an API key
+- [Video Generation Overview](/en/api-reference/video/overview)
+- [Wan Image Series](/en/api-reference/image/wan-image)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

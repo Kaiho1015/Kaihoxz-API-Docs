@@ -1,0 +1,73 @@
+---
+title: "Omni Video Series"
+description: "The all-in-one Gemini Omni video models: three model IDs, two ways to set the length, two billing shapes"
+---
+
+Omni is Gemini's all-in-one video line: text-to-video, image-to-video and reference-video editing all run on the same model, served on `POST /v1/tasks`. Switching models means changing `model` and nothing else. The three models differ in **how the length is decided** (a duration you send, or one the model picks), **how reference material is supplied**, and **what they are billed on**.
+
+## Available models
+
+<CardGroup cols={2}>
+  <Card title="Omni-Flash-Ext" href="/en/api-reference/video/omni/omni-flash-ext">
+    `omni-flash-ext` · fixed 4 / 6 / 8 / 10 second clips, 360p to 4K, first-frame or three-image references; billed at a whole-clip price by resolution × duration, or per second of the reference video
+  </Card>
+  <Card title="Gemini Omni 1.1 Flash" href="/en/api-reference/video/omni/gemini-omni-flash">
+    `gemini-omni-1.1-flash` · model-chosen length of 3–10 s, 360p to 4K, first/last frames and up to 10 reference images; billed by resolution tier × seconds
+  </Card>
+  <Card title="Gemini Omni Flash Preview" href="/en/api-reference/video/omni/gemini-omni-flash">
+    `gemini-omni-flash-preview` · model-chosen length of 3–10 s, 720p only, up to 16 reference images and a reference video of up to 24 s; billed by resolution tier × seconds
+  </Card>
+</CardGroup>
+
+## Choose a model
+
+| Need | Recommended model | Why |
+|---|---|---|
+| An exact clip length | `omni-flash-ext` | `duration` is a request parameter: `4`, `6`, `8` or `10` |
+| A price you can compute before submitting | `omni-flash-ext` | Without a reference video, resolution and duration are the only billing dimensions |
+| A transition between a first and a last frame | `gemini-omni-1.1-flash` | It accepts `first_frame_image` and `last_frame_image` |
+| Many reference images for multiple subjects | `gemini-omni-flash-preview` | Up to 16 images; `gemini-omni-1.1-flash` takes 10 and `omni-flash-ext` takes 3 |
+| Several rounds of edits on the same clip | `gemini-omni-1.1-flash` or `gemini-omni-flash-preview` | `ref_task_id` continues from the previous result without re-uploading anything |
+| 4K output | `omni-flash-ext` or `gemini-omni-1.1-flash` | `gemini-omni-flash-preview` outputs 720p only |
+| Reworking existing footage and paying for its length | `omni-flash-ext` | With `video_urls` it is billed per second of the reference video instead of the whole-clip price |
+
+## What the three models share
+
+These are identical across all three:
+
+| Item | Value |
+|---|---|
+| Endpoint | `POST /v1/tasks` (async task, see [Task System](/en/docs/task-system)) |
+| Action | `generate` |
+| Aspect ratios | `16:9`, `9:16`, default `16:9` |
+| Output count | One video per request |
+| Reference video | At most one |
+| Not supported | `seed` |
+
+The mode is not selected with `action` but by what you send: `prompt` alone is text-to-video, `image_urls` makes it image-to-video, and `video_urls` reworks an existing clip.
+
+## Unified request
+
+```bash
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-omni-1.1-flash",
+    "action": "generate",
+    "prompt": "sunset over the sea, gulls skimming the water, cinematic light",
+    "resolution": "720p",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
+
+## Related
+
+- [Omni-Flash-Ext](/en/api-reference/video/omni/omni-flash-ext)
+- [Gemini Omni Flash](/en/api-reference/video/omni/gemini-omni-flash)
+- [Video Generation Overview](/en/api-reference/video/overview)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

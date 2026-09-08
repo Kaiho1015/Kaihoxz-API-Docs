@@ -1,201 +1,186 @@
 ---
 title: "Qwen Image Series"
-description: "Alibaba Tongyi Qianwen image — generation / editing / multi-image reference unified, 2K high-fidelity output"
+description: "Alibaba Qwen image models: unified text-to-image and reference editing, strong at bilingual layout and text rendering"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-Alibaba Tongyi Qianwen image series — **two generations, four tiers**:
+Qwen Image is the image foundation model line from Alibaba's Qwen team. It unifies text-to-image generation and image editing behind one interface and is strongest at bilingual (Chinese and English) typography, infographics and text inside posters. This page covers the four models available today, in two generations: the 2.0 generation returns up to six images per request at a single per-image price, while the 3.0 generation adds multi-reference editing and prompt expansion and prices reference images separately.
 
-- **3.0 Pro** — Gen-3 flagship, built for dense information layouts: restaurant menus, product tables, multi-column pages, storyboards. 1K and 2K are priced separately
-- **3.0** — Gen-3 standard. Markedly more reliable text rendering — headlines and body copy stay legible in both Chinese and English on posters and dense layouts. Same price at 1K and 2K
-- **2.0 Pro** — Gen-2 flagship highest-fidelity tier. Native 2K, strong detail, accurate composition, professional-grade text rendering
-- **2.0** — Gen-2 standard. Combined generation and editing, supports very long prompts, 2K high-quality output
-
-Per-image pricing, unified interface supporting text-to-image / image-to-image / multi-image reference.
-
-## Pricing
-
-<Note>
-Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
-
-**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
-**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
-</Note>
-
-## Mode Quick Reference
-
-| Mode | Trigger Field | Supported Versions |
-|---|---|---|
-| **Text-to-image** | `prompt` only | All |
-| **Image-to-image** | `+ image_urls` (single) + `action: "image2image"` | All |
-| **Multi-image reference fusion** | `+ image_urls` (multiple) + `action: "reference"` | All |
-
-## Examples
+## Quick start
 
 <CodeGroup>
 
-```bash Text-to-image (minimal)
+```bash Text to image
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: qwen-image-demo-001" \
   -d '{
-    "model": "qwen-image-2.0-pro",
-    "prompt": "Chinese-style poster: ink-wash landscape background, vertical title \"千问\" centered, gold-foil accents, professional typography",
-    "resolution": "2K",
-    "aspect_ratio": "3:4"
+    "model": "qwen-image-3.0",
+    "action": "generate",
+    "prompt": "A cafe menu poster, bilingual, serif headings, two-column body text",
+    "aspect_ratio": "3:4",
+    "resolution": "2k",
+    "n": 1
   }'
 ```
 
-```bash Image-to-image
+```bash Edit with multiple references
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: qwen-image-edit-001" \
+  -d '{
+    "model": "qwen-image-3.0-pro",
+    "action": "edit",
+    "prompt": "Place the product from the first image on the display stand in the second, matching the lighting",
+    "image_urls": [
+      "https://cdn.example.com/product.png",
+      "https://cdn.example.com/scene.png"
+    ],
+    "aspect_ratio": "1:1",
+    "resolution": "1k"
+  }'
+```
+
+```bash Several images in one request
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "qwen-image-2.0",
-    "prompt": "Convert this photo to cyberpunk style, preserve facial features",
-    "image_urls": ["https://cdn.example.com/portrait.jpg"],
-    "resolution": "2K",
-    "aspect_ratio": "9:16"
-  }'
-```
-
-```bash Multi-image reference fusion
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "qwen-image-2.0-pro",
-    "prompt": "Dress the character from the first image in the outfit from the second, place them in the scene from the third",
-    "image_urls": [
-      "https://cdn.example.com/character.jpg",
-      "https://cdn.example.com/outfit.jpg",
-      "https://cdn.example.com/scene.jpg"
-    ],
-    "resolution": "2K",
-    "aspect_ratio": "16:9"
+    "action": "generate",
+    "prompt": "A flat-illustration city skyline in four colour variants",
+    "negative_prompt": "text, watermark",
+    "aspect_ratio": "16:9",
+    "resolution": "2k",
+    "n": 4
   }'
 ```
 
 </CodeGroup>
 
-<ResponseExample>
-```json Submission successful
-{
-  "task_id": "task-wave1775285160b950328499",
-  "model": "qwen-image-2.0-pro",
-  "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
-}
-```
-</ResponseExample>
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
 
-After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status). See [Task System](/en/docs/task-system) for details.
-
-## Available Models
-
-| Model ID | Description |
-|---|---|
-| `qwen-image-3.0-pro` | Gen-3 flagship for dense layouts (menus / product tables / multi-column). 1K and 2K priced separately |
-| `qwen-image-3.0` | Gen-3 standard, more reliable text rendering, same price at 1K and 2K |
-| `qwen-image-2.0-pro` | Flagship, native 2K, strong detail, accurate composition, professional-grade text rendering |
-| `qwen-image-2.0` | Standard, combined generation + editing, very long prompts, 2K high-quality output |
-
-## Common Parameters
+## Request parameters
 
 <ParamField body="model" type="string" required>
-  Choose one from the [Available Models](#available-models) list
+  One of `qwen-image-2.0`, `qwen-image-2.0-pro`, `qwen-image-3.0` or `qwen-image-3.0-pro`.
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  - `generate` — text to image (default)
-  - `edit` — image editing; pair with `image_urls`
-
-  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-image; one `image_urls` entry is image-to-image; several are multi-image reference; add `mask_url` for inpainting.
+  - `generate`: create an image from text
+  - `edit`: rewrite reference images; requires `image_urls`
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
-  Image description. Supports Chinese and English. Qwen Image is friendly to very long prompts and Chinese text rendering
-</ParamField>
-
-<ParamField body="n" type="integer" default="1">
-  Number of images to generate (returned in a single call)
-</ParamField>
-
-<ParamField body="seed" type="integer" default="-1">
-  Random seed. `-1` for random; a fixed value reproduces similar results
-</ParamField>
-
-<ParamField body="aspect_ratio" type="string" default="1:1">
-  Aspect ratio. Options:
-  - `1:1` — Square
-  - `4:3` / `3:4` — Standard landscape / portrait
-  - `16:9` / `9:16` — Widescreen landscape / portrait
-  - `3:2` / `2:3` — Camera ratio landscape / portrait
-</ParamField>
-
-<ParamField body="resolution" type="string" default="2K">
-  Output resolution. Options:
-  - `1K` — Standard resolution
-  - `2K` — High resolution (default)
+  The image description or editing instruction, in Chinese or English.
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  Array of reference / input image URLs. **Only publicly accessible URLs are supported; base64 is not accepted**
-  - `image2image` mode: 1 image
-  - `reference` mode: multiple images
+  Reference image URLs. `qwen-image-3.0` and `qwen-image-3.0-pro` require one to three of them on `edit` and accept none on `generate`.
 </ParamField>
 
-<ParamField body="callback_url" type="string">
-  Webhook callback URL, invoked when the task reaches a terminal state. See [Callback Mechanism](/en/docs/sync-async#async-task-webhook)
+<ParamField body="aspect_ratio" type="string">
+  Framing: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `3:2`, `2:3`. `qwen-image-3.0` and `qwen-image-3.0-pro` default to `1:1`.
 </ParamField>
 
-<ParamField body="callback_events" type="string[]">
-  Subscribed callback event types. Defaults to terminal states (`succeeded` / `failed`)
+<ParamField body="resolution" type="string">
+  Output resolution, `1k` or `2k`. `qwen-image-3.0` and `qwen-image-3.0-pro` default to `1k`.
 </ParamField>
 
-## Model-Specific Parameters
+<ParamField body="n" type="integer" default="1">
+  Number of images to generate. `qwen-image-2.0` and `qwen-image-2.0-pro` accept `1`–`6`; `qwen-image-3.0` and `qwen-image-3.0-pro` accept `1`.
+</ParamField>
 
-<Tabs>
-  <Tab title="Qwen Image 2.0 Pro">
-    **Supported actions**: `generate` / `image2image` / `reference`
+<ParamField body="negative_prompt" type="string">
+  Content to avoid in the generated result, up to 500 characters.
+</ParamField>
 
-    **resolution**: `1K` / `2K`
+<ParamField body="prompt_extend" type="boolean" default="false">
+  Let the model expand the prompt; disabled by default. Supported by `qwen-image-3.0` and `qwen-image-3.0-pro` only.
+</ParamField>
 
-    **aspect_ratio**: `1:1` / `4:3` / `3:4` / `16:9` / `9:16` / `3:2` / `2:3`
+<ParamField body="prompt_extend_mode" type="string">
+  Prompt expansion mode, `direct` or `agent`. Supported by `qwen-image-3.0` and `qwen-image-3.0-pro` only, requires `prompt_extend: true`, and `edit` accepts `direct` only.
+</ParamField>
 
-    **Key features**: Flagship highest-fidelity tier. Native 2K, strong detail, accurate composition, professional-grade text rendering. Suited for infographics, posters, and marketing assets
+See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key` and the maximum-cost header.
 
-    No model-specific parameters; all tunable fields are listed under [Common Parameters](#common-parameters).
-  </Tab>
+This series does not accept `seed`, `quality`, `watermark` or `mask_url`. Any other parameter returns `400` and is not billed.
 
-  <Tab title="Qwen Image 2.0">
-    **Supported actions**: `generate` / `image2image` / `reference`
+## Limits
 
-    **resolution**: `1K` / `2K`
-
-    **aspect_ratio**: `1:1` / `4:3` / `3:4` / `16:9` / `9:16` / `3:2` / `2:3`
-
-    **Key features**: Standard version. Combined generation and editing, supports very long prompts, 2K high-quality output. Suited for use cases needing clear text and professional design aesthetics
-
-    No model-specific parameters; all tunable fields are listed under [Common Parameters](#common-parameters).
-  </Tab>
-</Tabs>
-
-## Resource Limits
-
-| Item | Limit |
+| Condition | Limit |
 |---|---|
-| `prompt` length | ≤ 800 characters |
-| `negative_prompt` length | ≤ 500 characters |
-| Reference image source | **Must be a publicly accessible URL; base64 upload not supported** |
-| Single reference image size | ≤ 30MB, supports JPG / PNG / WEBP |
-| Output resolution | `1K` / `2K` |
-| Output file | URL valid for 24 hours |
+| `qwen-image-2.0` / `qwen-image-2.0-pro` | Up to 6 images per request |
+| `qwen-image-3.0` / `qwen-image-3.0-pro` | A prompt is required and each request generates one image |
+| `action: "generate"` (both 3.0 models) | Text-to-image does not take reference images; use `edit` |
+| `action: "edit"` (both 3.0 models) | Image editing requires 1 to 3 reference images |
+| `prompt_extend_mode` | Requires `prompt_extend=true` |
+| `prompt_extend_mode` on `edit` | Image editing accepts `direct` prompt extension only |
 
-## Related Docs
+## Pricing
 
-- [Task System](/en/docs/task-system) — Task state machine / polling cadence / async push
-- [Request & Response](/en/docs/request-response) — Common error codes / Headers / rate limits
-- [Authentication](/en/docs/authentication) — API Key application and usage
+Billed at a **fixed price per successfully generated image**.
+
+Rates are in `price_config` on `GET /v1/models` and in the console's Model Market. What a single call actually cost is the `cost` field on the task response — an integer quota at **500,000 quota = 1 USD**, not dollars.
+
+The billing dimensions differ by generation:
+
+- **`qwen-image-2.0` / `qwen-image-2.0-pro`** — one per-image price; `1k` and `2k` cost the same, and neither aspect ratio nor prompt length affects it. The total is that price times `n`.
+- **`qwen-image-3.0`** — `1k` and `2k` cost the same.
+- **`qwen-image-3.0-pro`** — `2k` costs more than `1k`.
+- **Reference images on both 3.0 models** — each reference image in the request adds its own per-image fee on top of the output image. `generate` carries no reference images and no such fee.
+
+A `resolution` outside the tiers a model supports settles at its fallback price, equal to that model's base tier.
+
+You are only billed for a successfully generated image. Failed and cancelled tasks, and tasks that return no usable image, are refunded in full.
+
+## Response
+
+```json Completed task
+{
+  "task_id": "taski_example",
+  "model": "qwen-image-3.0",
+  "action": "edit",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788754231,
+  "completed_at": 1788754266,
+  "result": {
+    "images": [
+      {
+        "expires_at": 1789089508,
+        "url": ["https://cdn.example.com/result.png"]
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski_example",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski_example/cancel"
+  },
+  "billing_status": "settled",
+  "cost": 12377
+}
+```
+
+Generated images come back in `result.images`, and `expires_at` is when that link stops working. With `n` greater than 1 the `images` array holds several entries. See [Query Task Status](/en/api-reference/task/status) for the full field list.
+
+## Available models
+
+| Model ID | Resolutions | `n` | Reference images | Line-specific parameters |
+|---|---|---|---|---|
+| `qwen-image-2.0` | `1k` `2k` (same price) | 1–6 | Supplied on `edit` | `negative_prompt` |
+| `qwen-image-2.0-pro` | `1k` `2k` (same price) | 1–6 | Supplied on `edit` | `negative_prompt` |
+| `qwen-image-3.0` | `1k` `2k` (same price) | `1` | 1–3, billed separately | `negative_prompt` `prompt_extend` `prompt_extend_mode` |
+| `qwen-image-3.0-pro` | `1k` `2k` (`2k` costs more) | `1` | 1–3, billed separately | `negative_prompt` `prompt_extend` `prompt_extend_mode` |
+
+All four support `generate` and `edit` and share the same aspect ratios: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `3:2`, `2:3`.
+
+## Related
+
+- [Image Generation Overview](/en/api-reference/image/overview)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

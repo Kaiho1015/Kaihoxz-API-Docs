@@ -16,32 +16,32 @@ POST https://www.qingbo.dev/v1/tasks
 ## 支持的模型
 
 <CardGroup cols={2}>
-  <Card title="Nano Banana 经济版" href="/cn/api-reference/image/gemini/nano-banana-rev">
-    Google Gemini 图像 — Pro / 2 / 2 Lite 三档经济线路,按张固定价,最多 14 张参考图
+  <Card title="Gemini 图像系列" href="/cn/api-reference/image/gemini/overview">
+    Nano Banana 官方版三档按实际 token 用量结算，经济版四档按张固定价，最多 14 张参考图
   </Card>
   <Card title="GPT Image 系列" href="/cn/api-reference/image/gpt-image/overview">
-    GPT Image 2 官方版与逆向版 — 同一套请求参数,两种计费方式
+    GPT Image 1 / 1.5 / 2 官方版按实际 token 用量结算，GPT Image 2 逆向版按张固定价
   </Card>
-  <Card title="Seedream" href="/cn/api-reference/image/seedream">
-    字节豆包 Seedream — 4.0 / 4.5 / 5.0-lite,14 张参考,组图生成
+  <Card title="Seedream 系列" href="/cn/api-reference/image/seedream">
+    字节跳动 Seedream 4.0 / 4.5 / 5.0 Lite / 5.0 Pro，文生图与参考图编辑
   </Card>
-  <Card title="Qwen Image" href="/cn/api-reference/image/qwen-image">
-    阿里通义千问 Qwen Image 2.0 / Pro,1K/2K,文字渲染强
+  <Card title="Qwen Image 系列" href="/cn/api-reference/image/qwen-image">
+    阿里通义千问 Qwen Image 2.0 / 2.0 Pro / 3.0 / 3.0 Pro，文字渲染强
   </Card>
-  <Card title="Wan Image" href="/cn/api-reference/image/wan-image">
-    阿里通义万相 Wan 2.7 — 6 种 action,组图 / bbox 框选 / 颜色主题
+  <Card title="Wan Image 系列" href="/cn/api-reference/image/wan-image">
+    阿里通义万相 Wan 2.7 Image / Image Pro，文生图、参考图编辑、框选编辑与配色主题
   </Card>
-  <Card title="Z-Image" href="/cn/api-reference/image/z-image">
-    智谱 Z.ai Z-Image-Turbo — 轻量快速,中英双语
+  <Card title="Z.ai Image" href="/cn/api-reference/image/z-image">
+    Z-Image-Turbo，轻量快速，中英双语
   </Card>
-  <Card title="FLUX" href="/cn/api-reference/image/flux">
-    Black Forest Labs FLUX — Kontext 编辑(pro/max)+ FLUX.2 文生图(pro/flex)
+  <Card title="FLUX 系列" href="/cn/api-reference/image/flux">
+    Black Forest Labs FLUX.2 Pro / Max / Flex 与 Kontext Pro / Max，文生图与参考图编辑
   </Card>
-  <Card title="Grok Imagine" href="/cn/api-reference/image/grok-imagine">
-    xAI Grok Imagine 1.0 / 1.5 — 文生图 + 图像编辑
+  <Card title="Grok Imagine 系列" href="/cn/api-reference/image/grok-imagine">
+    xAI Grok Imagine 1.5 逆向档、2.0 官方与逆向档、高质量档，文生图与参考图编辑
   </Card>
   <Card title="Midjourney" href="/cn/api-reference/image/midjourney">
-    Midjourney — 13 种 action,文生图 + 放大 / 变体 / 缩放 / 平移 / v8 重塑等链式操作
+    imagine 一次出四张，放大、变体、缩放、平移、重绘等 12 种链式动作
   </Card>
 </CardGroup>
 
@@ -52,14 +52,14 @@ POST https://www.qingbo.dev/v1/tasks
 | | `POST /v1/tasks` | `POST /v1/images/generations` · `/v1/images/edits` |
 |---|---|---|
 | 返回 | 异步，先拿 `task_id` 再查结果（可用 `Prefer: wait` 在一次调用里等） | 同步，直接返回图片 |
-| 请求形状 | 本站统一字段：`action` / `aspect_ratio` / `resolution` / `image_urls` | OpenAI 原生形状：`size` / `quality` / `n` / `response_format` |
+| 请求形状 | 任务接口的统一字段：`action` / `aspect_ratio` / `resolution` / `image_urls` | OpenAI 原生形状：`size` / `quality` / `n` / `response_format` |
 | 参数校验 | **完整**——动作、画幅、分辨率、画质、参考图张数都会校验，不合规直接返回 `400`，不计费 | 兼容层不做这层校验，参数不合规不会被提前拦下 |
 | 适合 | 新接入、需要掩码重绘 / 画质档 / 分辨率档 / 多图参考的场景 | 已有 OpenAI SDK 的项目，改 `base_url` 就能跑 |
 
 <Note>
-用 OpenAI SDK 迁移时，把 `base_url` 指向 `https://www.qingbo.dev/v1`，`model` 换成本站的模型 ID 即可。
+用 OpenAI SDK 迁移时，把 `base_url` 指向 `https://www.qingbo.dev/v1`，`model` 换成对应的模型 ID 即可。
 各模型独有的能力（掩码 `mask_url`、`1k` / `2k` / `4k` 分辨率档、参考图张数上限等）以任务接口的文档为准，
-本站的模型页描述的都是任务接口的参数。
+各模型页描述的都是任务接口的参数。
 </Note>
 
 ## 通用参数(全系列共有)
@@ -125,10 +125,10 @@ POST https://www.qingbo.dev/v1/tasks
 | 模式 | 触发字段 | 典型 vendor |
 |---|---|---|
 | **文生图(T2I)** | 仅 `prompt` | 全部 |
-| **图生图 / 多图参考** | `+ image_urls`(单图或多图) | Seedream / Gemini / GPT-Image / Wan / Qwen |
-| **图像编辑(局部重绘 / 光影修改)** | `+ image_urls + action: edit` | Seedream 4.0/4.5 / Gemini / GPT-Image / Wan |
-| **局部重绘(带 mask)** | `+ image_urls + mask_url + action: edit` | 仅 [`gpt-image-2`](/cn/api-reference/image/gpt-image/gpt-image-2)(官方线路);Nano Banana 经济版**不支持** |
-| **组图生成(主题相关一组)** | `sequential_image_generation: auto` 或 `enable_sequential: true` | Seedream / Wan |
+| **图生图 / 多图参考** | `+ image_urls`(单图或多图) | Seedream / Gemini / GPT Image / Wan / Qwen / FLUX / Grok |
+| **图像编辑(局部重绘 / 光影修改)** | `+ image_urls + action: edit` | Seedream / Gemini / GPT Image / Wan / Qwen / FLUX / Grok |
+| **局部重绘(带 mask)** | `+ image_urls + mask_url + action: edit` | [GPT Image 官方版](/cn/api-reference/image/gpt-image/overview)三档;Nano Banana 经济版**不支持** |
+| **组图生成(主题相关一组)** | `enable_sequential: true` | Wan Image |
 | **交互式编辑(bbox 框选)** | `+ image_urls + bbox_list` | Wan Image |
 
 <Note>
@@ -140,11 +140,11 @@ POST https://www.qingbo.dev/v1/tasks
 - **媒体引用统一复数** — 一律 `image_urls`,即使单张也用单元素数组 `["one.jpg"]`
 - **画面比例统一** `aspect_ratio` — vendor 内部用 `size` / `ratio` 等是实现细节,无需感知
 - **分辨率统一** `resolution` — vendor 内部用 `quality` 等是实现细节
-- **遮罩字段** `mask_url`(`gpt-image-2` 局部重绘用)
+- **遮罩字段** `mask_url`(GPT Image 官方版局部重绘用)
 
 ## 相关文档
 
-- [任务系统详解](/cn/docs/task-system) — 任务状态机 / 轮询节奏 / Webhook
+- [任务系统](/cn/docs/task-system) — 任务状态机 / 轮询节奏 / Webhook
 - [请求响应格式](/cn/docs/request-response) — 通用错误码 / Headers / 限流
 - [认证](/cn/docs/authentication) — API Key 申请与使用
 - [模型列表](/cn/docs/models) — 全模型查询接口

@@ -26,7 +26,7 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 
 <ParamField body="extra" type="object" deprecated>
   不再接受。模型特有参数直接放在请求体根级，且只接受对应模型文档中声明的参数；
-  传入非空 `extra` 会在预扣前返回 400（`code: capability_violation`，`param: extra`）。
+  传入非空 `extra` 会返回 400，不计费（`code: capability_violation`，`param: extra`）。
 </ParamField>
 
 更多参数请参考 [图像生成概述](/cn/api-reference/image/overview) 或 [视频生成概述](/cn/api-reference/video/overview)。
@@ -46,7 +46,7 @@ api: "POST https://www.qingbo.dev/v1/tasks"
 ```
 
 <ResponseField name="pre_consumed_cost" type="integer">
-  提交时预扣的额度（quota）。任务完成后以查询接口返回的 `cost` 为准结算：
+  提交时冻结的额度（quota）。任务完成后以查询接口返回的 `cost` 为准结算：
   成功 = 实际扣费；失败/取消 = 自动全额退款（`cost: 0`）。
 </ResponseField>
 

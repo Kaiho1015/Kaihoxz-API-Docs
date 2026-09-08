@@ -1,0 +1,196 @@
+---
+title: "Omni-Flash-Ext"
+description: "固定时长档的 Omni 视频模型：文生视频、首帧或三图参考，以及参考视频改写"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+`omni-flash-ext` 是 Omni 系列里时长可控的一档：`duration` 取 `4` / `6` / `8` / `10` 秒，输出 360p 到 4K，可以只给提示词，也可以用一张首帧图、三张参考图，或一段参考视频作为素材。需要模型自己决定时长、或者要多轮接着改同一段视频时，用 [Gemini Omni Flash](/cn/api-reference/video/omni/gemini-omni-flash)。
+
+## 快速开始
+
+<CodeGroup>
+
+```bash 文生视频
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: omni-ext-001" \
+  -d '{
+    "model": "omni-flash-ext",
+    "action": "generate",
+    "prompt": "海面上的日落，海鸥掠过水面，电影感光影",
+    "duration": 6,
+    "resolution": "720p",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```bash 首帧图生视频
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "omni-flash-ext",
+    "action": "generate",
+    "prompt": "人物微笑并缓缓转身，镜头轻微推近",
+    "generation_type": "frame",
+    "image_urls": ["https://cdn.example.com/character.jpg"],
+    "duration": 6,
+    "resolution": "1080p",
+    "aspect_ratio": "9:16"
+  }'
+```
+
+```bash 三图参考
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "omni-flash-ext",
+    "action": "generate",
+    "prompt": "把三张图里的场景、人物和产品组合成一个连贯镜头",
+    "generation_type": "reference",
+    "image_urls": [
+      "https://cdn.example.com/scene.jpg",
+      "https://cdn.example.com/character.jpg",
+      "https://cdn.example.com/product.jpg"
+    ],
+    "duration": 10,
+    "resolution": "1080p",
+    "aspect_ratio": "9:16"
+  }'
+```
+
+```bash 参考视频
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "omni-flash-ext",
+    "action": "generate",
+    "prompt": "同样的场景，改成霓虹灯下的夜景",
+    "resolution": "720p",
+    "aspect_ratio": "16:9",
+    "video_urls": ["https://cdn.example.com/reference.mp4"]
+  }'
+```
+
+</CodeGroup>
+
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
+
+## 请求参数
+
+<ParamField body="model" type="string" required>
+  固定为 `omni-flash-ext`。
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  取值 `generate`，可以省略。生成模式不靠 `action` 区分，靠传入的素材：只给 `prompt` 是文生视频，带 `image_urls` 是图生视频，带 `video_urls` 是参考视频改写。
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  视频描述文本。描述场景、主体、动作、环境、镜头运动与视觉风格越具体，结果越稳定。
+</ParamField>
+
+<ParamField body="duration" type="integer" default="6">
+  视频时长（秒），取值 `4`、`6`、`8`、`10`。
+
+  带 `video_urls` 时不要传这个字段，时长由参考视频决定。
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  输出分辨率：`360p`、`720p`、`1080p` 或 `4k`，大小写不敏感。
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  画面比例：`16:9` 横版或 `9:16` 竖版。带 `video_urls` 时输出通常跟随参考视频的比例。
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  参考图片 URL 数组，需公网可访问。可以不传、传 1 张，或传 3 张；张数与 `generation_type` 的对应关系见「限制」。
+
+  与 `video_urls` 可以同时传：图片作为形象或构图参考，视频作为运动参考。
+</ParamField>
+
+<ParamField body="video_urls" type="string[]">
+  参考视频 URL 数组，需公网可下载的直链。最多 1 条，最长 10 秒。传入时不要再传 `duration`。
+</ParamField>
+
+<ParamField body="generation_type" type="string">
+  图片用法：`frame` 首帧（限 1 张）/ `reference` 参考图（1 或 3 张）。
+</ParamField>
+
+通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
+
+本模型不支持 `seed`、`first_frame_image`、`last_frame_image` 和 `ref_task_id`；首帧图用 `generation_type: "frame"` 加一张 `image_urls` 表达。以上之外的参数会返回 `400`，不计费。
+
+## 限制
+
+- 每次任务只生成一个视频；图片 0、1 或 3 张（2 张会被上游拒绝）。
+- `generation_type=frame` 时恰好 1 张图片作为首帧。
+- `generation_type=reference` 时 1 或 3 张参考图。
+- 带参考视频时不能传 `duration`（省略即可），最多 1 条、≤10 秒；按参考视频秒数计费。
+
+| 项目 | 上限 |
+|---|---|
+| 参考图 | 最多 3 张 |
+| 参考视频 | 最多 1 条，最长 10 秒 |
+| 时长 | `4` / `6` / `8` / `10` 秒 |
+| 分辨率 | `360p` / `720p` / `1080p` / `4k` |
+| 画面比例 | `16:9` / `9:16` |
+
+## 计费
+
+**不带参考视频**时，按**分辨率 × 时长档的整片价**计费：`resolution` 与 `duration` 是仅有的两个计费维度，四档分辨率与四档时长的每种组合各一个价，提交前即可确定单次费用。参考图不额外收费。
+
+**带参考视频**（`video_urls`）时换一种收法：按**参考视频的秒数**计费，输出整片价不再收取。每档分辨率有各自的每秒单价，参考视频最长 10 秒。参考视频秒数如何取整见[视频生成概述](/cn/api-reference/video/overview#输入视频的时长与计费)。
+
+提交任务时冻结一笔额度，任务完成后按实际生成结果结算，差额退回。
+
+只有成功生成视频才计费。任务失败、取消，或没有返回可用视频时，全额退款。最终费用以任务响应里的 `cost` 为准——整数 quota，**500,000 quota = 1 USD**，不是美元。
+
+<Note>
+各模型的单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。
+
+本节只说明计费维度与口径，不列具体金额。
+</Note>
+
+## 响应
+
+```json 任务完成
+{
+  "task_id": "taski-f4df1815445069da8995fa77f7cfc947-task-wave1788784802b950097545",
+  "model": "omni-flash-ext",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788784802,
+  "completed_at": 1788784868,
+  "result": {
+    "videos": [
+      {
+        "expires_at": 1789089508,
+        "url": ["https://cdn.example.com/result.mp4"]
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 67500,
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/{task_id}",
+    "cancel": "https://www.qingbo.dev/v1/tasks/{task_id}/cancel"
+  }
+}
+```
+
+`result.videos` 返回生成的视频，`url` 是数组，`expires_at` 是链接过期时间（秒级时间戳）。完整字段说明见[查询任务状态](/cn/api-reference/task/status)。
+
+## 相关文档
+
+- [Omni 视频系列](/cn/api-reference/video/omni/overview)
+- [Gemini Omni Flash](/cn/api-reference/video/omni/gemini-omni-flash)
+- [视频生成概述](/cn/api-reference/video/overview)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

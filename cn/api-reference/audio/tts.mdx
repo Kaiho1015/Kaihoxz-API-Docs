@@ -4,9 +4,7 @@ description: "将文本转换为自然流畅的语音"
 api: "POST https://www.qingbo.dev/v1/audio/speech"
 ---
 
-同步接口 — 请求完成后直接返回音频流。
-
-按**输入文本字符数**计费,不收输出费用;单价见 `GET /v1/models` 的 `price_config`。
+同步接口：请求返回的就是音频文件本身，没有 `task_id`，不需要轮询。本端点只服务 `gpt-4o-mini-tts`；需要歌曲或人声演唱时用 [Suno 音乐生成](/cn/api-reference/audio/suno)。
 
 <RequestExample>
 ```bash cURL
@@ -16,9 +14,9 @@ curl https://www.qingbo.dev/v1/audio/speech \
   -d '{
     "model": "gpt-4o-mini-tts",
     "voice": "nova",
-    "input": "欢迎使用 清波 API 文字转语音服务。"
+    "input": "欢迎使用清波 API 文字转语音服务。"
   }' \
-  --output output.mp3
+  --output output.wav
 ```
 
 ```python Python
@@ -32,10 +30,11 @@ client = OpenAI(
 response = client.audio.speech.create(
     model="gpt-4o-mini-tts",
     voice="nova",
-    input="欢迎使用 清波 API 文字转语音服务。"
+    input="欢迎使用清波 API 文字转语音服务。",
+    response_format="wav"
 )
 
-response.stream_to_file("output.mp3")
+response.stream_to_file("output.wav")
 ```
 
 ```javascript JavaScript
@@ -50,11 +49,12 @@ const client = new OpenAI({
 const response = await client.audio.speech.create({
   model: 'gpt-4o-mini-tts',
   voice: 'nova',
-  input: '欢迎使用 清波 API 文字转语音服务。'
+  input: '欢迎使用清波 API 文字转语音服务。',
+  response_format: 'wav'
 });
 
 const buffer = Buffer.from(await response.arrayBuffer());
-fs.writeFileSync('output.mp3', buffer);
+fs.writeFileSync('output.wav', buffer);
 ```
 
 ```go Go
@@ -72,7 +72,7 @@ func main() {
     payload := map[string]string{
         "model": "gpt-4o-mini-tts",
         "voice": "nova",
-        "input": "欢迎使用 清波 API 文字转语音服务。",
+        "input": "欢迎使用清波 API 文字转语音服务。",
     }
 
     body, _ := json.Marshal(payload)
@@ -83,7 +83,7 @@ func main() {
     resp, _ := http.DefaultClient.Do(req)
     defer resp.Body.Close()
 
-    out, _ := os.Create("output.mp3")
+    out, _ := os.Create("output.wav")
     defer out.Close()
     io.Copy(out, resp.Body)
 }
@@ -100,7 +100,7 @@ public class Main {
         {
           "model": "gpt-4o-mini-tts",
           "voice": "nova",
-          "input": "欢迎使用 清波 API 文字转语音服务。"
+          "input": "欢迎使用清波 API 文字转语音服务。"
         }
         """;
 
@@ -114,36 +114,78 @@ public class Main {
 
         HttpResponse<byte[]> response = client.send(request,
             HttpResponse.BodyHandlers.ofByteArray());
-        Files.write(Path.of("output.mp3"), response.body());
+        Files.write(Path.of("output.wav"), response.body());
     }
 }
 ```
 </RequestExample>
 
-## 可用模型
-
-| 模型 ID | 说明 |
-|---------|------|
-| `gpt-4o-mini-tts` | OpenAI 当代文字转语音,11 种音色,支持用 `instructions` 自然语言指定语气 / 语速 / 情绪 |
-
 ## 请求参数
 
 <ParamField body="model" type="string" required>
-  模型 ID:`gpt-4o-mini-tts`
+  模型 ID：`gpt-4o-mini-tts`。
 </ParamField>
 
 <ParamField body="input" type="string" required>
-  要转换的文本内容
+  要转换的文本，最多 4,096 个字符。
 </ParamField>
 
-<ParamField body="voice" type="string" default="alloy">
-  音色,13 种可选:`alloy`、`echo`、`fable`、`onyx`、`nova`、`shimmer`、`coral`、`verse`、`ballad`、`ash`、`sage`、`marin`、`cedar`
+<ParamField body="voice" type="string" required>
+  音色，六种可选：
+
+  - `alloy`：中性、平衡
+  - `echo`：男声、沉稳
+  - `fable`：英式、叙述感
+  - `onyx`：男声、深沉
+  - `nova`：女声、有活力
+  - `shimmer`：女声、温柔
 </ParamField>
 
-<ParamField body="instructions" type="string">
-  用自然语言指定语气 / 语速 / 情绪,例如「用温柔缓慢的语气」。可选,不传按模型默认朗读
+<ParamField body="response_format" type="string" default="wav">
+  音频格式：`wav`（未压缩）、`opus`（流媒体）、`aac`、`flac`（无损压缩）、`pcm`（原始音频数据）。
 </ParamField>
+
+<ParamField body="speed" type="number" default="1.0">
+  语速，取值 `1.0`。
+</ParamField>
+
+以上之外的参数会返回 `400`，不计费。
+
+## 限制
+
+| 条件 | 限制 |
+|---|---|
+| `input` 长度 | 最多 4,096 个字符，且不超过 2,000 token |
+| `speed` | 取值 `1.0` |
+| 每次请求 | 返回一个音频文件 |
+
+## 计费
+
+**按输入文本的字符数计费，不收输出费用**：音频时长、`voice` 和 `response_format` 都不影响价格，字符数是唯一的计费维度，提交前即可确定单次费用。
+
+单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。计费单位是 quota，**500,000 quota = 1 USD**，不是美元。
+
+请求失败不计费。
 
 ## 响应
 
-返回音频文件流（MP3 格式），直接保存为文件即可。
+返回音频文件的二进制流，格式由 `response_format` 决定，默认 `wav`，直接保存为文件即可。出错时返回 JSON 错误对象，不返回音频。
+
+## 可用模型
+
+| 模型 ID | 说明 |
+|---|---|
+| `gpt-4o-mini-tts` | OpenAI 当代文字转语音模型，六种音色，五种音频格式 |
+
+## 当前不支持
+
+- `instructions`：用自然语言指定语气、语速与情绪
+- 流式返回音频
+- `mp3` 输出格式
+
+以上请求返回 `400`，不计费。
+
+## 相关文档
+
+- [语音转文字](/cn/api-reference/audio/whisper-transcription)
+- [Suno 音乐生成](/cn/api-reference/audio/suno)

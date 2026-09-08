@@ -1,0 +1,232 @@
+---
+title: "Gemini Omni Flash"
+description: "模型自定时长的 Gemini Omni 视频模型：文本、参考图或参考视频输入，支持多轮接着改"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+本页覆盖 Omni 系列里由模型决定时长的两个模型：`gemini-omni-1.1-flash` 与 `gemini-omni-flash-preview`。两者共用同一套请求形状和同一种计费方式（按分辨率档 × 秒数），差别在分辨率档位、参考素材上限和可用的图片入参——换模型只改 `model`。需要成片时长精确落在 4 / 6 / 8 / 10 秒时，用 [Omni-Flash-Ext](/cn/api-reference/video/omni/omni-flash-ext)。
+
+## 快速开始
+
+<CodeGroup>
+
+```bash 文生视频
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: omni-flash-001" \
+  -d '{
+    "model": "gemini-omni-flash-preview",
+    "action": "generate",
+    "prompt": "一只蓝色蝴蝶落在花朵上，微距，柔光",
+    "resolution": "720p",
+    "aspect_ratio": "9:16"
+  }'
+```
+
+```bash 参考图生视频
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-omni-1.1-flash",
+    "action": "generate",
+    "prompt": "猫伸出爪子拨弄毛线球",
+    "image_urls": [
+      "https://cdn.example.com/cat.png",
+      "https://cdn.example.com/yarn.png"
+    ],
+    "resolution": "1080p",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```bash 首尾帧过渡
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-omni-1.1-flash",
+    "action": "generate",
+    "prompt": "平滑过渡，镜头缓缓推近",
+    "first_frame_image": "https://cdn.example.com/start.jpg",
+    "last_frame_image": "https://cdn.example.com/end.jpg",
+    "resolution": "720p",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```bash 参考视频改写
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-omni-flash-preview",
+    "action": "generate",
+    "prompt": "人物触碰镜面时，镜面像液体一样泛起涟漪",
+    "video_urls": ["https://cdn.example.com/clip.mp4"]
+  }'
+```
+
+```bash 接着上一次的结果改
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-omni-flash-preview",
+    "action": "generate",
+    "prompt": "接着往下拍：镜头横摇扫过远处的山脉",
+    "ref_task_id": "task-wave1788783109b950713584"
+  }'
+```
+
+</CodeGroup>
+
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
+
+**接着往下做**：先提交一次生成拿到 `task_id`，下一次请求带上 `ref_task_id`（填这个 `task_id`）就能在上一段结果上续写或改写，不用重新上传素材。`ref_task_id` 与 `video_urls` 互斥，一次只传一个。
+
+## 请求参数
+
+<ParamField body="model" type="string" required>
+  二选一：`gemini-omni-1.1-flash` 或 `gemini-omni-flash-preview`。
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  取值 `generate`，可以省略。生成模式不靠 `action` 区分，靠传入的素材：只给 `prompt` 是文生视频，带图片是图生视频，带 `video_urls` 或 `ref_task_id` 是在已有视频上改写。
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  文生视频时是场景描述；图生视频与视频改写时是动作、风格或修改指令。改写时用短句，只改一处时可以补一句「其余保持不变」。
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  输出分辨率，大小写不敏感。
+
+  `gemini-omni-1.1-flash`：`360p`、`720p`、`1080p`、`4k`。
+
+  `gemini-omni-flash-preview`：仅 `720p`。
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  画面比例：`16:9` 横版或 `9:16` 竖版。带 `video_urls` 时输出跟随参考视频的比例。
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  参考图片 URL 数组，需公网可访问。传 1 张时默认作为起始帧；传多张时作为多主体或风格参考，在 `prompt` 里说明每张图的作用与相互关系。
+
+  上限：`gemini-omni-1.1-flash` 合计 10 张（含首尾帧），`gemini-omni-flash-preview` 16 张。
+</ParamField>
+
+<ParamField body="first_frame_image" type="string">
+  首帧图 URL。单独给出时作为视频的起始画面，与 `last_frame_image` 一起给出时生成两帧之间的过渡。
+
+  仅 `gemini-omni-1.1-flash` 支持。
+</ParamField>
+
+<ParamField body="last_frame_image" type="string">
+  尾帧图 URL，必须与 `first_frame_image` 一起提供。两张帧图用相同的画面比例，并与 `aspect_ratio` 保持一致。
+
+  仅 `gemini-omni-1.1-flash` 支持。
+</ParamField>
+
+<ParamField body="video_urls" type="string[]">
+  要改写或续写的视频 URL 数组，需公网可下载的直链。最多 1 条。
+
+  时长上限：`gemini-omni-1.1-flash` 10 秒，`gemini-omni-flash-preview` 24 秒。
+</ParamField>
+
+<ParamField body="ref_task_id" type="string">
+  要续写 / 对话式编辑的我方任务 ID（网关翻译成上游 task_id）；与 `video_urls` 互斥。
+</ParamField>
+
+<ParamField body="image_with_roles" type="array">
+  带角色的图片数组 `{url, role}`，`role` 取 `first_frame` / `last_frame` / `reference`；与 `first_frame_image` / `last_frame_image` 二选一。
+
+  仅 `gemini-omni-1.1-flash` 支持。
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  生成意图对象，目前仅 `task`：`text_to_video` | `image_to_video` | `reference_to_video` | `edit` | `extend`（缺省由输入推断）。
+
+  仅 `gemini-omni-1.1-flash` 支持。
+</ParamField>
+
+通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
+
+两个模型都不接受 `duration`：时长由模型按内容决定，通常 3–10 秒，需要控制节奏时在 `prompt` 里用自然语言描述。`seed` 同样不支持。以上之外的参数会返回 `400`，不计费。
+
+## 限制
+
+- 每次任务只生成一个视频；参考视频最多 1 条。
+- 参考视频与 `ref_task_id` 互斥。
+
+| 项目 | `gemini-omni-1.1-flash` | `gemini-omni-flash-preview` |
+|---|---|---|
+| 分辨率 | `360p` / `720p` / `1080p` / `4k` | 仅 `720p` |
+| 参考图 | 合计 10 张（含首尾帧） | 16 张 |
+| 参考视频 | 最多 1 条，最长 10 秒 | 最多 1 条，最长 24 秒 |
+| 时长 | 由模型决定，3–10 秒 | 由模型决定，3–10 秒 |
+| 画面比例 | `16:9` / `9:16` | `16:9` / `9:16` |
+
+## 计费
+
+按**分辨率档 × 输出视频秒数**计费：每档分辨率有各自的每秒单价，秒数是模型实际生成的成片长度。带参考视频或 `ref_task_id` 时同样按输出秒数计费，参考视频与参考图都不额外收费。
+
+时长由模型决定，提交时无法预知，因此按该模型的时长上限（10 秒）冻结一笔额度，任务完成后按实际生成结果结算，差额退回。
+
+只有成功生成视频才计费。任务失败、取消，或没有返回可用视频时，全额退款。最终费用以任务响应里的 `cost` 为准——整数 quota，**500,000 quota = 1 USD**，不是美元。
+
+<Note>
+各模型的单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。
+
+本节只说明计费维度与口径，不列具体金额。
+</Note>
+
+## 响应
+
+```json 任务完成
+{
+  "task_id": "taski-9e2b0d22d4b9faeabaad8215fe1585fc-task-wave1788783072b950204622",
+  "model": "gemini-omni-1.1-flash",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788783072,
+  "completed_at": 1788783101,
+  "result": {
+    "videos": [
+      {
+        "expires_at": 1789089508,
+        "url": ["https://cdn.example.com/result.mp4"]
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 152081,
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/{task_id}",
+    "cancel": "https://www.qingbo.dev/v1/tasks/{task_id}/cancel"
+  }
+}
+```
+
+`result.videos` 返回生成的视频，`url` 是数组，`expires_at` 是链接过期时间（秒级时间戳）。完整字段说明见[查询任务状态](/cn/api-reference/task/status)。
+
+## 可用模型
+
+| 模型 ID | 分辨率 | 参考图 | 参考视频 | 独有参数 |
+|---|---|---|---|---|
+| `gemini-omni-1.1-flash` | `360p` / `720p` / `1080p` / `4k` | 10 张 | ≤ 10 秒 | `first_frame_image`、`last_frame_image`、`image_with_roles`、`metadata` |
+| `gemini-omni-flash-preview` | 仅 `720p` | 16 张 | ≤ 24 秒 | — |
+
+两个模型的动作、约束和计费方式一致，`ref_task_id` 两者都支持。
+
+## 相关文档
+
+- [Omni 视频系列](/cn/api-reference/video/omni/overview)
+- [Omni-Flash-Ext](/cn/api-reference/video/omni/omni-flash-ext)
+- [视频生成概述](/cn/api-reference/video/overview)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

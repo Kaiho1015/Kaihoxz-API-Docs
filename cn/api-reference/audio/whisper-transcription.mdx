@@ -1,17 +1,17 @@
 ---
-title: "语音识别与翻译"
-description: "语音转文字 (STT) 和语音翻译"
+title: "语音转文字"
+description: "把音频转写成文本，三个模型共用一个同步接口"
 api: "POST https://www.qingbo.dev/v1/audio/transcriptions"
 ---
 
-同步接口 — 请求完成后直接返回识别结果。
+同步接口：上传音频文件，请求直接返回识别出的文本，没有 `task_id`，不需要轮询。三个模型共用这一个端点，切换时只改 `model`。需要反过来把文本读成语音时用 [TTS 文字转语音](/cn/api-reference/audio/tts)。
 
 <RequestExample>
 ```bash cURL
 curl https://www.qingbo.dev/v1/audio/transcriptions \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -F file="@audio.mp3" \
-  -F model="whisper-1"
+  -F model="gpt-4o-transcribe"
 ```
 
 ```python Python
@@ -24,7 +24,7 @@ client = OpenAI(
 
 with open("audio.mp3", "rb") as f:
     transcript = client.audio.transcriptions.create(
-        model="whisper-1",
+        model="gpt-4o-transcribe",
         file=f
     )
 
@@ -41,7 +41,7 @@ const client = new OpenAI({
 });
 
 const transcript = await client.audio.transcriptions.create({
-  model: 'whisper-1',
+  model: 'gpt-4o-transcribe',
   file: fs.createReadStream('audio.mp3')
 });
 
@@ -68,7 +68,7 @@ func main() {
     writer := multipart.NewWriter(body)
     part, _ := writer.CreateFormFile("file", "audio.mp3")
     io.Copy(part, file)
-    writer.WriteField("model", "whisper-1")
+    writer.WriteField("model", "gpt-4o-transcribe")
     writer.Close()
 
     req, _ := http.NewRequest("POST", "https://www.qingbo.dev/v1/audio/transcriptions", body)
@@ -96,7 +96,7 @@ public class Main {
             + "Content-Disposition: form-data; name=\"file\"; filename=\"audio.mp3\"\r\n"
             + "Content-Type: audio/mpeg\r\n\r\n";
         String fieldPart = "\r\n--" + boundary + "\r\n"
-            + "Content-Disposition: form-data; name=\"model\"\r\n\r\nwhisper-1\r\n"
+            + "Content-Disposition: form-data; name=\"model\"\r\n\r\ngpt-4o-transcribe\r\n"
             + "--" + boundary + "--\r\n";
 
         byte[] requestBody = new byte[body.getBytes().length + fileBytes.length + fieldPart.getBytes().length];
@@ -123,51 +123,48 @@ public class Main {
 <ResponseExample>
 ```json 200
 {
-  "text": "欢迎使用 清波 API 语音识别服务。"
+  "text": "欢迎使用清波 API 语音转文字服务。"
 }
 ```
 </ResponseExample>
 
-## 可用模型
-
-| 模型 ID | 说明 |
-|---------|------|
-| `gpt-4o-transcribe` | OpenAI 当代语音转写,词错误率明显低于 Whisper,对口音与嘈杂音频更稳 |
-| `gpt-4o-mini-transcribe` | 经济档,价格是 gpt-4o-transcribe 的一半,准确率仍优于 Whisper |
-| `whisper-1` | OpenAI Whisper,支持多语言识别;三者按音频分钟数计费。**单价高于上面两档**,新接入建议优先用 `gpt-4o-transcribe` / `gpt-4o-mini-transcribe` |
-
-## 两个端点
-
-### 语音转文字
-
-```
-POST /v1/audio/transcriptions
-```
-
-将音频转录为原始语言的文本。
-
-### 语音翻译
-
-```
-POST /v1/audio/translations
-```
-
-将音频翻译为英文文本。参数与转录端点相同。
-
 ## 请求参数
 
-使用 `multipart/form-data` 格式：
+请求体使用 `multipart/form-data`。
 
 <ParamField body="file" type="file" required>
-  音频文件，支持 mp3、mp4、mpeg、mpga、m4a、wav、webm 格式
+  要转写的音频文件，支持 mp3、mp4、mpeg、mpga、m4a、wav、webm。
 </ParamField>
 
 <ParamField body="model" type="string" required>
-  模型 ID:`gpt-4o-transcribe` / `gpt-4o-mini-transcribe` / `whisper-1`。翻译端点(`/v1/audio/translations`)目前仅 `whisper-1` 支持
+  模型 ID：`gpt-4o-transcribe`、`gpt-4o-mini-transcribe` 或 `whisper-1`。
 </ParamField>
+
+以上之外的参数会返回 `400`，不计费。
+
+## 计费
+
+**按音频时长（分钟）计费**：三个模型单价不同，转写出来的文本长度、音频语言和文件格式都不影响价格。
+
+单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。计费单位是 quota，**500,000 quota = 1 USD**，不是美元。
+
+请求失败不计费。
 
 ## 响应
 
 <ResponseField name="text" type="string">
-  识别或翻译后的文本内容
+  转写出的文本内容。
 </ResponseField>
+
+## 可用模型
+
+| 模型 ID | 说明 |
+|---|---|
+| `gpt-4o-transcribe` | 当代语音转文字模型，词错误率明显低于 Whisper，对口音与嘈杂音频更稳 |
+| `gpt-4o-mini-transcribe` | 经济档，单价是 `gpt-4o-transcribe` 的一半，准确率仍优于 Whisper |
+| `whisper-1` | OpenAI Whisper，支持 90 多种语言，对口音和背景噪音有较强容忍度。单价高于上面两档 |
+
+## 相关文档
+
+- [TTS 文字转语音](/cn/api-reference/audio/tts)
+- [Suno 音乐生成](/cn/api-reference/audio/suno)

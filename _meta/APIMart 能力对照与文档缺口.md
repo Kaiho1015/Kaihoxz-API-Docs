@@ -91,8 +91,7 @@ SkyReels / PixVerse / HappyHorse / Omni / Grok Imagine Video。
 `context-ir` / `regeneration` 子能力 · `seedance-2-0/private-avatar` · `wan2.7/r2v` /
 `videoedit`。
 
-⚠️ **本地后台的视频模型组 49 个全部 `active_route_count = 0`**，所以现在无从核对，
-也不该动视频文档。等视频线开始上架时逐组对。
+2026-09-08 更新：视频线已按目录全量上架并逐组核对（见 `媒体批文档规则-20260908.md`），上表的「看起来没有对应页的」已全部有页：`flux-3-video` → FLUX 3 Video；`wan3.0-video` → 万相 Wan 系列；`seedance-2-5` → Seedance 系列；`kling-3.0-turbo` → Kling 系列；`minimax-h3` 的 `regeneration` → MiniMax H3（`context-ir`、`h3-max` 未上架）；`doubao` 即 Seedance；`seedance-2-0/private-avatar` 未上架；`wan2.7/r2v`、`videoedit` → 万相 Wan 系列；`gemini-omni-*` → Omni 视频系列。
 
 ### 音频
 
@@ -100,10 +99,9 @@ SkyReels / PixVerse / HappyHorse / Omni / Grok Imagine Video。
 |---|---|
 | suno（30 个 action + overview） | ✅ Suno 音乐生成（单页） |
 | tts · whisper-1 | ✅ TTS · 语音识别与翻译 |
-| **flow-music（Lyria 3.5，14 个端点：music / cover / extend / replace / stems / lyrics / video-clip / upload / download）** | ⏳ **音乐模型尚未接入**（2026-09-06 Kaiho），接入后再写 |
+| **flow-music（Lyria 3.5，14 个端点：music / cover / extend / replace / stems / lyrics / video-clip / upload / download）** | ✅ Flow Music 音乐生成（2026-09-08 上架，`generate` / `lyrics` 两个动作；其余端点目录未声明） |
 
-`flow-music` 是 APIMart 音频侧比我们多出来的一整块，我们**还没接入**。本地后台音频组
-7 个也全部 0 承接，等接入后按 SOP 走一遍。
+2026-09-08 更新：音频组已全部核对并上架（Suno / Flow Music / gpt-4o-mini-tts / whisper-1 / gpt-4o-transcribe / gpt-4o-mini-transcribe），`tts-1` / `tts-1-hd` 停用。
 
 ---
 

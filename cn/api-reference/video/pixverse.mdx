@@ -1,146 +1,235 @@
 ---
 title: "PixVerse V6"
-description: "PixVerse V6 — 文生 / 图生统一模型,1-15 秒任意时长,可选音频直出,360p-1080p 四档"
+description: "PixVerse V6：文生 / 图生 / 首尾帧 / 多图融合，1–15 秒任意整数时长，可选原生音频"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-PixVerse V6 统一视频生成模型,支持 **文生视频 / 图生视频**,**1-15 秒任意整数时长**,360p / 540p / 720p / 1080p 四档分辨率,可选 **音频直出**(`generate_audio`),适合 **短视频创作 / 创意广告 / 批量素材** 场景。异步出图。
+PixVerse V6 是 PixVerse 的统一视频生成模型：一个模型同时覆盖文生视频、图生视频、首尾帧转场和多图参考融合，支持多镜头连续叙事、原生同步音频（对白、音效与背景音乐）以及电影镜头控制，输出 360p 到 1080p、1–15 秒的片段。生成模式不靠动作区分，靠传哪些媒体字段决定。请求统一走 `POST /v1/tasks` 异步提交。
 
-按 **分辨率 × 时长** 计费,**每秒单价**。开启 `generate_audio` 后命中更贵的 **音频计价档**(`<分辨率>_sound`)。
-
-## 定价
-
-<Note>
-本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
-
-**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
-**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
-</Note>
-
-## 调用示例
+## 快速开始
 
 <CodeGroup>
 
-```bash 文生视频(静音)
+```bash 文生视频
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: pixverse-demo-001" \
   -d '{
     "model": "pixverse-v6",
-    "prompt": "金色黄昏,一只柯基穿过向日葵花田,电影感镜头",
+    "action": "generate",
+    "prompt": "金色黄昏，一只柯基穿过向日葵花田，镜头跟随",
     "resolution": "540p",
     "duration": 5,
     "aspect_ratio": "16:9"
   }'
 ```
 
-```bash 文生视频(带音频)
+```bash 带音频
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "pixverse-v6",
-    "prompt": "东京霓虹小巷,细雨夜景,变形宽银幕镜头光晕",
+    "action": "generate",
+    "prompt": "东京霓虹小巷，细雨夜景，远处传来街声",
     "resolution": "720p",
     "duration": 8,
     "generate_audio": true
   }'
 ```
 
-```bash 图生视频(单图)
+```bash 图生视频
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "pixverse-v6",
-    "prompt": "镜头缓缓推近,微风拂动树叶",
+    "action": "generate",
+    "prompt": "镜头缓缓推近，微风拂动树叶",
     "image_urls": ["https://cdn.example.com/first-frame.jpg"],
     "resolution": "540p",
     "duration": 5
   }'
 ```
 
+```bash 首尾帧
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "pixverse-v6",
+    "action": "generate",
+    "prompt": "从清晨过渡到黄昏，光线逐渐变暖",
+    "first_frame_image": "https://cdn.example.com/first.jpg",
+    "last_frame_image": "https://cdn.example.com/last.jpg",
+    "resolution": "720p",
+    "duration": 5
+  }'
+```
+
+```bash 多图融合
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "pixverse-v6",
+    "action": "generate",
+    "prompt": "把人物放进第二张的场景，光线统一，镜头缓慢环绕",
+    "img_references": [
+      "https://cdn.example.com/person.jpg",
+      "https://cdn.example.com/scene.jpg"
+    ],
+    "resolution": "720p",
+    "duration": 8,
+    "aspect_ratio": "16:9"
+  }'
+```
+
 </CodeGroup>
 
-<ResponseExample>
-```json 提交成功
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
+
+## 请求参数
+
+<ParamField body="model" type="string" required>
+  固定为 `pixverse-v6`。
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  `generate` 是本模型唯一的动作。生成模式由传入的媒体字段决定：只给 `prompt` 是文生视频，带 `image_urls` 是图生视频，`first_frame_image` 与 `last_frame_image` 成对是首尾帧转场，带 `img_references` 是多图参考融合。
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  视频描述，最多 5000 字符。
+</ParamField>
+
+<ParamField body="negative_prompt" type="string">
+  负向提示词，用于排除不想要的内容，最多 2048 字符。
+</ParamField>
+
+<ParamField body="duration" type="integer">
+  视频时长（秒），`1`–`15` 的整数。首尾帧模式只支持 `5` 或 `8`。
+</ParamField>
+
+<ParamField body="resolution" type="string">
+  输出分辨率：`360p`、`540p`、`720p` 或 `1080p`。分辨率决定计费档位。
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string">
+  画面比例：`16:9`、`4:3`、`1:1`、`3:4`、`9:16`、`2:3`、`3:2`、`21:9`。只在文生视频与多图融合模式下生效，其余模式跟随输入图。
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  随机种子，范围 `0`–`2147483647`。相同提示词与相同种子可复现相近结果。
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  图生视频的输入图 URL 数组，只取第一张。
+</ParamField>
+
+<ParamField body="first_frame_image" type="string">
+  首尾帧转场的起始帧图片 URL，必须与 `last_frame_image` 一起提供。
+</ParamField>
+
+<ParamField body="last_frame_image" type="string">
+  首尾帧转场的结束帧图片 URL，必须与 `first_frame_image` 一起提供。
+</ParamField>
+
+<ParamField body="watermark" type="boolean" default="false">
+  是否在视频右下角加水印。
+</ParamField>
+
+<ParamField body="generate_audio" type="boolean" default="false">
+  是否生成带声音的视频。开启后走带声计价档，比静音档贵。
+</ParamField>
+
+<ParamField body="motion_mode" type="string">
+  运动模式。`pixverse-v6` 只支持 `normal`。
+</ParamField>
+
+<ParamField body="generate_multi_clip_switch" type="boolean" default="false">
+  是否生成多镜头连续视频。只在文生视频与图生视频模式下有效。
+</ParamField>
+
+<ParamField body="img_references" type="string[]">
+  多图参考融合的图片 URL 数组，1–7 张。传入即进入多图融合模式。
+</ParamField>
+
+通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
+
+以上之外的参数会返回 `400`，不计费。
+
+## 限制
+
+- 首尾帧模式只支持 5 或 8 秒
+- 本模型一次任务只产出一个结果，不支持用 n 批量生成
+
+| 项目 | 上限 |
+|---|---|
+| 输入图 `image_urls` | 只取第一张 |
+| 首尾帧 | `first_frame_image` 与 `last_frame_image` 必须成对提供 |
+| 多图融合 `img_references` | 1–7 张 |
+| 提示词 | `prompt` ≤ 5000 字符，`negative_prompt` ≤ 2048 字符 |
+| 时长 `duration` | 1–15 秒整数；首尾帧模式为 5 或 8 秒 |
+| 分辨率 `resolution` | `360p` / `540p` / `720p` / `1080p` |
+
+所有图片输入只接受公网可访问的 HTTP(S) 链接，不接受 base64 与 Data URI。
+
+## 计费
+
+按**输出分辨率档 × 输出秒数**计费，秒数取请求里的 `duration`。四档分辨率各有单独的单价，分辨率越高越贵。
+
+`generate_audio` 是第二个计费维度：开启后按同一分辨率的**带声档**结算，带声档高于静音档。参考图、首尾帧、负向提示词与画面比例都不单独计费。
+
+<Note>
+单价会随上游调整，本节只讲计费维度与口径，不列具体金额。
+
+看实时单价：`GET /v1/models` 的 `price_config`，或控制台「模型市场」。
+看单次实际费用：任务响应里的 `cost`（整数 quota，500,000 quota = 1 USD）。
+</Note>
+
+只有成功出片才计费。任务失败、取消，或上游返回成功但没有可交付视频时，全额退款。最终费用以任务响应里的 `cost` 为准，`cost` 是整数 quota 不是美元（500,000 quota = 1 USD）。
+
+## 响应
+
+```json 任务完成
 {
   "task_id": "task-wave1775285160b950328499",
   "model": "pixverse-v6",
   "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1775285160,
+  "completed_at": 1775285260,
+  "result": {
+    "videos": [
+      {
+        "expires_at": 1775371560,
+        "url": ["https://cdn.example.com/result.mp4"]
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 22500,
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499",
+    "cancel": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499/cancel"
+  }
 }
 ```
-</ResponseExample>
 
-提交后用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 轮询状态,详见 [任务系统](/cn/docs/task-system)。
+`result.videos` 返回生成的视频，`url` 是数组，`expires_at` 是链接过期时间（Unix 秒），过期前请自行转存。完整字段说明见[查询任务状态](/cn/api-reference/task/status)。
 
 ## 可用模型
 
-| 模型 ID | 分辨率 | 时长 | 支持 action | 备注 |
+| 模型 ID | 分辨率 | 时长（秒） | 动作 | 说明 |
 |---|---|---|---|---|
-| `pixverse-v6` | 360p / 540p / 720p / 1080p | 1-15 秒 | generate | 文生 / 图生统一,可选音频直出 |
-
-## 通用参数
-
-<ParamField body="model" type="string" required>
-  模型 ID,固定为 `pixverse-v6`
-</ParamField>
-
-<ParamField body="prompt" type="string" required>
-  视频描述文本,建议描述 **场景 / 主体 / 动作 / 镜头 / 氛围**
-</ParamField>
-
-<ParamField body="duration" type="integer" default="5">
-  视频时长(秒),范围 **1-15** 任意整数
-</ParamField>
-
-<ParamField body="resolution" type="string" default="540p">
-  输出分辨率,可选 `360p` / `540p` / `720p` / `1080p`。直接影响计价档位
-</ParamField>
-
-<ParamField body="aspect_ratio" type="string" default="16:9">
-  画面宽高比,可选值:`16:9` / `4:3` / `1:1` / `3:4` / `9:16` / `2:3` / `3:2` / `21:9`
-</ParamField>
-
-<ParamField body="seed" type="integer">
-  随机种子,相同 prompt + seed 可复现相似结果
-</ParamField>
-
-<ParamField body="image_urls" type="string[]">
-  参考图片 URL 数组,用于图生视频,仅取第一张。需公网可下载链接
-</ParamField>
-
-<ParamField body="callback_url" type="string">
-  Webhook 回调地址,任务终态时调用。详见 [回调机制](/cn/docs/sync-async#异步任务-webhook)
-</ParamField>
-
-<ParamField body="callback_events" type="string[]">
-  订阅的回调事件,默认订阅终态(`succeeded` / `failed` / `cancelled`)
-</ParamField>
-
-## 模型特定参数
-
-<ParamField body="generate_audio" type="boolean" default="false">
-  是否生成带声音的视频。
-  - `false`(默认)— 静音输出,按静音档计价
-  - `true` — 音频直出,命中更贵的音频计价档(`<分辨率>_sound`),计价见[定价](#定价)
-</ParamField>
-
-## 资源限制
-
-| 项目 | 限制 |
-|---|---|
-| 参考图片 | 图生视频仅取第一张,需公网可下载链接(JPG / PNG / WEBP) |
-| Prompt 长度 | 建议 ≤ 5000 字符 |
-| 视频时长 | 1-15 秒任意整数 |
-| 分辨率 | 360p / 540p / 720p / 1080p |
-| 输出 | MP4,链接 24 小时有效 |
+| `pixverse-v6` | `360p` / `540p` / `720p` / `1080p` | 1–15 任意整数 | `generate` | 文生 / 图生 / 首尾帧 / 多图融合，可选带声输出 |
 
 ## 相关文档
 
-- [任务系统详解](/cn/docs/task-system) — 任务状态机 / 轮询节奏 / 异步推送
-- [请求响应格式](/cn/docs/request-response) — 通用错误码 / Headers / 限流
-- [认证](/cn/docs/authentication) — API Key 申请与使用
+- [视频生成概述](/cn/api-reference/video/overview)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

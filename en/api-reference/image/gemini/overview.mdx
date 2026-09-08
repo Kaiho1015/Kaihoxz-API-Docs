@@ -1,0 +1,71 @@
+---
+title: "Gemini Image Series"
+description: "The official and economy lines of Nano Banana: one set of request parameters, two billing models"
+---
+
+Nano Banana is Google's Gemini image model line. It comes in an official and an economy line, both served on `POST /v1/tasks` — the request URL does not change between them. The actions and request parameters are largely the same; the differences are billing and the resolutions each tier offers. Pick the model ID that fits.
+
+## Available models
+
+<CardGroup cols={2}>
+  <Card title="Nano Banana Official" href="/en/api-reference/image/gemini/nano-banana">
+    `gemini-3-pro-image` · `gemini-3.1-flash-image` · `gemini-3.1-flash-lite-image` — Google's official API line, billed from actual token usage
+  </Card>
+  <Card title="Nano Banana Economy" href="/en/api-reference/image/gemini/nano-banana-rev">
+    `gemini-3-pro-image-rev` · `gemini-3.1-flash-image-rev` · `gemini-3.1-flash-lite-image-rev` · `gemini-2.5-flash-image-preview-rev` — a fixed price per successful image
+  </Card>
+</CardGroup>
+
+## Choose a line
+
+| Need | Recommended model | Why |
+|---|---|---|
+| A fixed per-image price before submission | Any economy tier | Resolution is the only billing dimension, and reference images add no fee |
+| Cost that follows actual usage | Any official tier | Billed from text and image tokens |
+| Complex instructions and accurate text rendering | `gemini-3-pro-image` or `gemini-3-pro-image-rev` | The flagship tier, up to 4K |
+| Extreme banner ratios (`1:4`, `8:1`, …) | `gemini-3.1-flash-image` or `gemini-3.1-flash-image-rev` | Only the fast tier offers those four ratios |
+| Web search to ground the image | `gemini-3.1-flash-image` or `gemini-3.1-flash-image-rev` | Only the fast tier accepts `google_search` |
+| Low latency at a fixed 1K | `gemini-3.1-flash-lite-image` or `gemini-3.1-flash-lite-image-rev` | 1K output only, no `resolution` parameter |
+
+<Note>
+The two lines never switch automatically: the model ID selects the line, and its own page is authoritative for the parameters it accepts.
+</Note>
+
+## What both lines share
+
+| Item | Value |
+|---|---|
+| Endpoint | `POST /v1/tasks` (async task, see [Task system](/en/docs/task-system)) |
+| Actions | `generate` text-to-image · `edit` reference-image editing (requires `image_urls`) |
+| Output count | One image per request |
+| Reference images | Up to 14 (`gemini-2.5-flash-image-preview-rev` leaves the ceiling to the upstream model) |
+| Aspect ratios | 15 on the fast tier, 11 on every other tier, default `1:1` |
+| Not supported | `mask_url`, `quality`, `seed` |
+
+The differences are concentrated in **billing** and in the **resolutions** each tier offers — see "Choose a line" above.
+
+## Unified request
+
+```bash
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-3-pro-image",
+    "action": "generate",
+    "prompt": "A celadon teacup on an oak table, natural window light, product photography",
+    "aspect_ratio": "1:1",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
+
+## Related
+
+- [Nano Banana Official](/en/api-reference/image/gemini/nano-banana)
+- [Nano Banana Economy](/en/api-reference/image/gemini/nano-banana-rev)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

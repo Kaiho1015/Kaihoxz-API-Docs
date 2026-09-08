@@ -1,0 +1,196 @@
+---
+title: "Omni-Flash-Ext"
+description: "The fixed-duration Omni video model: text-to-video, first-frame or three-image references, and reference-video rework"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+`omni-flash-ext` is the Omni model whose length you control: `duration` is `4`, `6`, `8` or `10` seconds, output runs from 360p to 4K, and the input can be a prompt alone, one first-frame image, three reference images, or a reference clip. When the model should pick the length itself, or you want to keep editing the same clip over several rounds, use [Gemini Omni Flash](/en/api-reference/video/omni/gemini-omni-flash).
+
+## Quick start
+
+<CodeGroup>
+
+```bash Text to video
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: omni-ext-001" \
+  -d '{
+    "model": "omni-flash-ext",
+    "action": "generate",
+    "prompt": "sunset over the sea, gulls skimming the water, cinematic light",
+    "duration": 6,
+    "resolution": "720p",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```bash First-frame image
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "omni-flash-ext",
+    "action": "generate",
+    "prompt": "the character smiles and slowly turns around, gentle push-in",
+    "generation_type": "frame",
+    "image_urls": ["https://cdn.example.com/character.jpg"],
+    "duration": 6,
+    "resolution": "1080p",
+    "aspect_ratio": "9:16"
+  }'
+```
+
+```bash Three reference images
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "omni-flash-ext",
+    "action": "generate",
+    "prompt": "combine the scene, the character and the product into one continuous shot",
+    "generation_type": "reference",
+    "image_urls": [
+      "https://cdn.example.com/scene.jpg",
+      "https://cdn.example.com/character.jpg",
+      "https://cdn.example.com/product.jpg"
+    ],
+    "duration": 10,
+    "resolution": "1080p",
+    "aspect_ratio": "9:16"
+  }'
+```
+
+```bash Reference video
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "omni-flash-ext",
+    "action": "generate",
+    "prompt": "the same scene, shot at night under neon lights",
+    "resolution": "720p",
+    "aspect_ratio": "16:9",
+    "video_urls": ["https://cdn.example.com/reference.mp4"]
+  }'
+```
+
+</CodeGroup>
+
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
+
+## Request parameters
+
+<ParamField body="model" type="string" required>
+  Must be `omni-flash-ext`.
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  Value `generate`; it may be omitted. The mode is not selected with `action` but by what you send: `prompt` alone is text-to-video, `image_urls` makes it image-to-video, and `video_urls` reworks an existing clip.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  The video description. The more specific the scene, subject, action, setting, camera movement and visual style, the steadier the result.
+</ParamField>
+
+<ParamField body="duration" type="integer" default="6">
+  Clip length in seconds: `4`, `6`, `8` or `10`.
+
+  Do not send this field together with `video_urls` — the reference video determines the length.
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  Output resolution: `360p`, `720p`, `1080p` or `4k`, case-insensitive.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Frame ratio: `16:9` landscape or `9:16` portrait. With `video_urls`, the output usually follows the reference video's ratio.
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Reference image URLs, publicly accessible. Send none, one, or three; how the count maps to `generation_type` is under "Limits".
+
+  It can be combined with `video_urls`: the images act as identity or composition references while the video acts as the motion reference.
+</ParamField>
+
+<ParamField body="video_urls" type="string[]">
+  Reference video URLs, publicly downloadable direct links. At most one clip, up to 10 seconds. Do not send `duration` alongside it.
+</ParamField>
+
+<ParamField body="generation_type" type="string">
+  How images are used: `frame` (exactly 1) or `reference` (1 or 3).
+</ParamField>
+
+See [Submit Task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key`, and the maximum-cost header.
+
+This model does not support `seed`, `first_frame_image`, `last_frame_image` or `ref_task_id`; a first frame is expressed as `generation_type: "frame"` with one image in `image_urls`. Any other parameter returns `400` and is not billed.
+
+## Limits
+
+- One video per task; 0, 1 or 3 images (2 images are rejected upstream).
+- `generation_type=frame` takes exactly one image as the first frame.
+- `generation_type=reference` takes 1 or 3 reference images.
+- With a reference video duration cannot be sent (omit it); at most one video of ≤ 10 s, billed per second of the reference video.
+
+| Item | Limit |
+|---|---|
+| Reference images | Up to 3 |
+| Reference video | At most 1, up to 10 seconds |
+| Duration | `4` / `6` / `8` / `10` seconds |
+| Resolution | `360p` / `720p` / `1080p` / `4k` |
+| Aspect ratio | `16:9` / `9:16` |
+
+## Pricing
+
+**Without a reference video**, billing is a **whole-clip price by resolution × duration**: `resolution` and `duration` are the only two billing dimensions, every combination of the four resolutions and four durations has its own price, and the cost of a call is known before you submit it. Reference images cost nothing extra.
+
+**With a reference video** (`video_urls`) the shape changes: billing runs **per second of the reference video** and the whole-clip price is not charged. Each resolution tier has its own per-second rate, and a reference video may be at most 10 seconds. How reference-video seconds are rounded is covered in [Video Generation Overview](/en/api-reference/video/overview#input-video-duration-and-billing).
+
+Submitting a task places a hold; the task then settles on the actual generated result and the difference is released.
+
+You are only billed for a successfully generated video. Failed and cancelled tasks, and tasks that return no usable video, are refunded in full. What a call actually cost is the `cost` field on the task response — an integer quota at **500,000 quota = 1 USD**, not dollars.
+
+<Note>
+Per-model rates are in `price_config` on `GET /v1/models` and in the console's Model Market.
+
+This section describes the billing dimensions only; it carries no amounts.
+</Note>
+
+## Response
+
+```json Completed task
+{
+  "task_id": "taski-f4df1815445069da8995fa77f7cfc947-task-wave1788784802b950097545",
+  "model": "omni-flash-ext",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788784802,
+  "completed_at": 1788784868,
+  "result": {
+    "videos": [
+      {
+        "expires_at": 1789089508,
+        "url": ["https://cdn.example.com/result.mp4"]
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 67500,
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/{task_id}",
+    "cancel": "https://www.qingbo.dev/v1/tasks/{task_id}/cancel"
+  }
+}
+```
+
+The generated video is returned in `result.videos`, where `url` is an array and `expires_at` is the link's expiry as a Unix timestamp in seconds. See [Query Task Status](/en/api-reference/task/status) for every field.
+
+## Related
+
+- [Omni Video Series](/en/api-reference/video/omni/overview)
+- [Gemini Omni Flash](/en/api-reference/video/omni/gemini-omni-flash)
+- [Video Generation Overview](/en/api-reference/video/overview)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

@@ -2,6 +2,114 @@
 title: "模型动态"
 ---
 
+<Update label="2026-09-08" description="模型上架">
+**Nano Banana 官方版上架 · 经济版补上一代档**
+
+- **模型 ID**：`gemini-3-pro-image`（旗舰）　·　`gemini-3.1-flash-image`（快速）　·　`gemini-3.1-flash-lite-image`（最轻）　·　`gemini-2.5-flash-image-preview-rev`（经济版上一代档）
+- 官方版三档走 `POST /v1/tasks`，支持 `generate` 文生图与 `edit` 参考图编辑（最多 14 张参考图），每次请求出 1 张；旗舰档 `1k` / `2k` / `4k`，快速档 `0.5k` / `1k` / `2k` / `4k` 并额外支持 `1:4`、`4:1`、`1:8`、`8:1` 四种极端画幅，最轻档固定 1K、不接受 `resolution`。
+- 官方版**按实际 token 用量结算**：提交时按预估用量冻结，完成后按实际用量结算并退回差额；计费维度为文本输入、图片输入、文本输出、图片输出，参考图算图片输入。
+- `google_search` / `google_image_search` 只有 `gemini-3.1-flash-image` 与 `gemini-3.1-flash-image-rev` 接受。
+- 经济版新增 `gemini-2.5-flash-image-preview-rev`，11 种画幅、固定 1K，仍按成功出图的固定张价结算。
+- **文档**：[Gemini 图像系列](/cn/api-reference/image/gemini/overview) · [Nano Banana 官方版](/cn/api-reference/image/gemini/nano-banana) · [Nano Banana 经济版](/cn/api-reference/image/gemini/nano-banana-rev)
+</Update>
+
+<Update label="2026-09-08" description="模型上架">
+**GPT Image 1 与 GPT Image 1.5 恢复可用**
+
+- **模型 ID**：`gpt-image-1`　·　`gpt-image-1.5`
+- 两个模型参数、动作与限制完全一致：文生图与参考图编辑、掩码局部重绘、透明背景与 `png` / `jpeg` 输出，画幅 `1:1` / `2:3` / `3:2`，四档画质，最多 15 张参考图，每次出 1 张。不接受 `resolution` 和 `seed`。
+- 按实际 token 用量结算；`gpt-image-1.5` 比 `gpt-image-1` 多计文本输出。
+- **文档**：[GPT Image 系列](/cn/api-reference/image/gpt-image/overview) · [GPT Image 1 与 1.5 官方版](/cn/api-reference/image/gpt-image/gpt-image-1)
+</Update>
+
+<Update label="2026-09-08" description="模型上架">
+**Grok Imagine · 图像四档与视频 1.5 逆向档**
+
+- **模型 ID**：`grok-imagine-image-2.0`　·　`grok-imagine-image-2.0-rev`　·　`grok-imagine-image-quality`　·　`grok-imagine-1.5-rev`　·　`grok-imagine-1.5-edit-rev`　·　`grok-imagine-video-1.5-rev`
+- **图像**：`grok-imagine-image-2.0` 官方档与 `-rev` 逆向档；`grok-imagine-image-quality` 是 xAI 官方高质量档，14 种画幅、`1k` / `2k` 分档，支持 1–3 张参考图编辑，参考图按张另计；`grok-imagine-1.5-rev`（文生图）与 `grok-imagine-1.5-edit-rev`（生成 / 编辑）一次最多 10 张。均按张固定价。
+- **视频**：`grok-imagine-video-1.5-rev` 文生 / 图生视频，480p / 720p，6–15 秒，最多 7 张参考图，按分辨率档 × 秒数计费。
+- **文档**：[Grok Imagine 系列](/cn/api-reference/image/grok-imagine) · [Grok Imagine Video 系列](/cn/api-reference/video/grok-imagine-video)
+</Update>
+
+<Update label="2026-09-08" description="模型上架">
+**Gemini Omni Flash 上架 · 模型自定时长的视频生成**
+
+- **模型 ID**：`gemini-omni-1.1-flash`　·　`gemini-omni-flash-preview`
+- 两个模型都走 `POST /v1/tasks` 的 `generate`，从文本、参考图或一段参考视频生成视频；**不接受 `duration`**，时长由模型按内容决定；画幅 `16:9` / `9:16`，每次出 1 个视频。
+- `gemini-omni-1.1-flash`：`360p` / `720p` / `1080p` / `4k`，参考图合计 10 张（含首尾帧），支持 `first_frame_image` / `last_frame_image`、`image_with_roles` 与 `metadata`，参考视频最长 10 秒。`gemini-omni-flash-preview`：固定 `720p`，参考图最多 16 张，参考视频最长 24 秒。
+- 两者都支持 `ref_task_id`：带上一次任务的 `task_id` 即可在结果上续写或改写，与 `video_urls` 互斥。
+- 按分辨率档 × 输出视频秒数计费，提交时按时长上限冻结额度，完成后按实际结果结算并退回差额。
+- **文档**：[Omni 视频系列](/cn/api-reference/video/omni/overview) · [Gemini Omni Flash](/cn/api-reference/video/omni/gemini-omni-flash) · [Omni-Flash-Ext](/cn/api-reference/video/omni/omni-flash-ext)
+</Update>
+
+<Update label="2026-09-08" description="模型上架">
+**4 个视频模型上架 · 万相 3.0 / HappyHorse 1.1 / FLUX 3 Video 两档**
+
+- **模型 ID**：`wan3.0-video`　·　`happyhorse-1.1`　·　`flux-3-video`　·　`flux-3-video-draft`
+- `wan3.0-video`：万相多模态视频入口，一个模型 ID 覆盖文生、首尾帧、参考图 / 参考视频 / 参考音频，以及文档（`file_url`）与网页（`link_url`）参考；`480p` / `720p` / `1080p`，2–30 秒；用 `generation_type` 区分 `frame` 与 `reference` 两族输入。
+- `happyhorse-1.1`：文生 / 首帧图生 / 参考图生视频统一入口，`720p` / `1080p`，3–15 秒任意整数，五种画幅。
+- `flux-3-video` / `flux-3-video-draft`：从文本、1–10 张有序关键帧或一段续写视频生成 5–20 秒带同步音频的片段，八种画幅含 `auto`；标准档支持 `hd` / `fhd`，Draft 档只出 `hd`、画质更低更便宜，适合先预览再出片。
+- `happyhorse-1.0` 的 `edit` 动作明确了时长语义：`duration` 传 `0` 表示沿用源视频时长，计费秒数取源视频时长。
+- **文档**：[万相 Wan 系列](/cn/api-reference/video/wan) · [HappyHorse 系列](/cn/api-reference/video/happyhorse) · [FLUX 3 Video](/cn/api-reference/video/flux/flux-3-video)
+</Update>
+
+<Update label="2026-09-08" description="模型上架">
+**3 个视频模型上架 · Hailuo 02 与 Vidu Q3 Pro / Turbo**
+
+- **模型 ID**：`minimax-hailuo-02`　·　`vidu-q3-pro`　·　`vidu-q3-turbo`
+- `minimax-hailuo-02`：MiniMax 海螺 02，支持文生视频、首帧与首尾帧，`512p` / `768p` / `1080p`，5 或 10 秒；`512p` 需要首帧，`1080p` 仅 5 秒。
+- `vidu-q3-pro` / `vidu-q3-turbo`：Vidu Q3 的高质量档与加速档，能力相同——文生视频、起始帧或首尾帧，`540p` / `720p` / `1080p`，1–16 秒，默认生成原生音频（`generate_audio`）。带图片时画幅由输入图片决定。
+- 三个模型都走 `POST /v1/tasks` 的 `generate` 动作，按分辨率档 × 秒数计费。
+- **文档**：[Hailuo 系列](/cn/api-reference/video/hailuo) · [Vidu Q3 系列](/cn/api-reference/video/vidu)
+</Update>
+
+<Update label="2026-09-08" description="模型上架">
+**Flow Music 上架 · 音乐生成**
+
+- **模型 ID**：`flow-music`
+- Lyria 引擎的文本生成音乐：`generate` 出整首歌或纯音乐（可传歌词、标题、BPM、时长、随机种子），`lyrics` 单独生成歌词文本，走 `POST /v1/tasks`；按次计费，两个动作价格不同。
+- Suno 同批新增 `download` 动作，把源音轨导出为音频文件。
+- **文档**：[Flow Music 音乐生成](/cn/api-reference/audio/flow-music/flow-music) · [Suno 音乐生成](/cn/api-reference/audio/suno)
+</Update>
+
+<Update label="2026-09-08" description="能力更新">
+**Seedance 2.5 开放视频编辑与视频延长**
+
+- **模型 ID**：`seedance-2.5`
+- 新增两个动作：`edit` 按提示词编辑源视频，`duration` 传 `0` 表示输出沿用源视频时长；`extend` 从源视频往后续拍。两者都用 `video_urls` 传源视频，画幅固定 `adaptive`。
+- 同时按目录重新核对了 Seedance / Sora / PixVerse / SkyReels 四页的参数、取值范围与约束，`seedance-1.0-pro` 与 `seedance-1.0-pro-fast` 的时长更正为 2–12 秒任意整数。
+- **文档**：[Seedance 系列](/cn/api-reference/video/seedance) · [Sora 2 系列](/cn/api-reference/video/sora) · [PixVerse V6](/cn/api-reference/video/pixverse) · [SkyReels V4 系列](/cn/api-reference/video/skyreels)
+</Update>
+
+<Update label="2026-09-08" description="能力更新">
+**Kling 与 Veo 的动作与参数对齐**
+
+- **新增动作**：`kling-v3-omni` · `kling-video-o1` 支持 `action: "edit"`，编辑 3–10 秒源视频、输出沿用源视频时长；`veo3.1-fast-rev` · `veo3.1-quality-rev` 支持 `action: "extend"`，用 `ref_task_id` 续写自己生成的视频。
+- **新增参数**：Kling 的多镜头分镜 `multi_shot` / `shot_type` / `multi_prompt` 与参考主体 `element_list`（`kling-v3` · `kling-v3-omni`）、带角色图片 `image_with_roles`（`kling-v3-omni` · `kling-video-o1`）；Veo 官方版的 `person_generation` / `resize_mode` / `seed` / `negative_prompt`，经济版的 `generation_type` / `enable_gif` / `raw`。
+- **时长**：`kling-3.0-turbo` · `kling-v3` · `kling-v3-omni` 接受 3–15 秒任意整数；`veo3.1-fast` · `veo3.1-quality` 接受 4 / 6 / 8 秒，1080p 仅 8 秒。
+- **文档**：[Kling 系列](/cn/api-reference/video/kling) · [Veo 系列](/cn/api-reference/video/veo)
+</Update>
+
+<Update label="2026-09-08" description="能力更新">
+**Midjourney 链式动作补齐**
+
+- **模型 ID**：`midjourney`
+- 动作表补齐 12 种链式动作：`upscale`、`variation`、`high-variation`、`low-variation`、`reroll`、`zoom`、`pan`、`inpaint`、`modal`、`edit`、`remix-strong`、`remix-subtle`，统一用 `ref_task_id` 引用上一步任务的 `task_id`，用 `index` 选四宫格里的第几张。
+- 补齐 `imagine` 的创作参数（`stylize`、`chaos`、`weird`、`tile`、`iw`、`cref` / `sref` / `dref` 及权重、`raw`、`draft`、`hd`、`stop`、`extra`）与 `speed`、`version`（新增 `v8.2`）的取值；按动作与速度档计费。
+- **文档**：[Midjourney](/cn/api-reference/image/midjourney)
+</Update>
+
+<Update label="2026-09-08" description="模型下架">
+**5 个媒体模型下架**
+
+- **模型 ID**：`seedance-2.0-face`　·　`seedance-2.0-fast-face`　·　`minimax-h3-max`　·　`grok-imagine-1.0-rev`　·　`grok-imagine-1.0-edit-rev`
+- `seedance-2.0-face` / `seedance-2.0-fast-face`：`seedance-2.0` 与 `seedance-2.0-fast` 已支持人脸参考，单独的 face 档不再提供，直接改用不带 face 的模型 ID。
+- `minimax-h3-max`：上游已不再提供。MiniMax H3 线继续提供 `minimax-h3` 与 `minimax-h3-regeneration`。
+- `grok-imagine-1.0-rev` / `grok-imagine-1.0-edit-rev`：上游已不再提供，请改用 `grok-imagine-1.5-rev` / `grok-imagine-1.5-edit-rev`。
+- 以上模型即日下架，调用将返回错误。
+- **文档**：[Seedance 系列](/cn/api-reference/video/seedance) · [MiniMax H3](/cn/api-reference/video/minimax-h3) · [Grok Imagine 系列](/cn/api-reference/image/grok-imagine)
+</Update>
+
 <Update label="2026-09-06" description="模型上架">
 **Nano Banana 经济版上架 · Gemini 图像三档**
 

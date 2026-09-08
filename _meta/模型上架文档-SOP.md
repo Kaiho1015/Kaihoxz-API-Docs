@@ -201,8 +201,8 @@ frontmatter: title · description · api（写全 URL，Mintlify 的 Try it 读�
 | 顺序 | 中文 | English | 何时出现 |
 |---|---|---|---|
 | 1 | 鉴权 | Authorizations | 该接口的请求头与 Chat 不同时必写（例：`x-api-key`、`x-goog-api-key`） |
-| 2 | 快速开始 | Quickstart | 媒体类模型页；按 `supported_actions` 出 CodeGroup |
-| 3 | 请求参数 | Body | 必写 |
+| 2 | 快速开始 | Quick start | 媒体类模型页；按 `supported_actions` 出 CodeGroup |
+| 3 | 请求参数 | Request parameters | 必写 |
 | 4 | 限制 | Limits | 有 `constraints` 时 |
 | 5 | 计费 | Pricing | 媒体类必写；文本类合并进「用量与计费」 |
 | 6 | 响应 | Response | 必写 |

@@ -1,28 +1,14 @@
 ---
 title: "Nano Banana Economy"
-description: "Google Nano Banana (Gemini Image) economy routes: fixed per-image pricing for text-to-image and multi-reference editing"
+description: "Nano Banana (Gemini Image) economy routes: fixed per-image pricing for text-to-image and multi-reference editing"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-Nano Banana is Google's Gemini image model line. This page covers the **three economy routes** that are live today. They share one set of request parameters and one billing model (a fixed price per successful image) and differ only in aspect ratios, resolutions and unit price — switching tiers means changing `model` and nothing else.
+Nano Banana is Google's Gemini image model line. This page covers the **four economy models**. They share one set of request parameters and one billing model (a fixed price per successful image) and differ only in aspect ratios, resolutions and line-specific parameters — switching tiers means changing `model` and nothing else. To be billed from actual token usage instead, use [Nano Banana Official](/en/api-reference/image/gemini/nano-banana).
 
 <Note>
-The economy routes are served through an aggregating supplier, not Google's official API. The official routes bill from token usage and are not live yet; they will get their own page when they launch.
+The economy line is not Google's official API, and the two lines never switch automatically: the model ID selects the line.
 </Note>
-
-## Available models
-
-| Model ID | Tier | Aspect ratios | Resolutions |
-|---|---|---|---|
-| `gemini-3-pro-image-rev` | Flagship | 11 | `1k` `2k` (same price) |
-| `gemini-3.1-flash-image-rev` | Fast | **15** | `1k` `2k` (`2k` costs more) |
-| `gemini-3.1-flash-lite-image-rev` | Lightest | 11 | `1k` only |
-
-All three do text-to-image and editing with up to 14 reference images, one image per request.
-
-- **The 11 shared aspect ratios**: `auto` `1:1` `2:3` `3:2` `3:4` `4:3` `4:5` `5:4` `9:16` `16:9` `21:9`
-- **The fast tier adds four extreme ratios**: `1:4` `4:1` `1:8` `8:1`, for long horizontal and vertical banners
-- **The lightest tier does not accept `resolution`** and always outputs 1K
 
 ## Quick start
 
@@ -76,6 +62,21 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   }'
 ```
 
+```bash Grounded in web search
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-3.1-flash-image-rev",
+    "action": "generate",
+    "prompt": "An infographic of the ten scenic spots of West Lake, with accurate labels",
+    "aspect_ratio": "4:5",
+    "resolution": "2k",
+    "google_search": true,
+    "google_image_search": true
+  }'
+```
+
 </CodeGroup>
 
 A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
@@ -83,7 +84,7 @@ A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/
 ## Request parameters
 
 <ParamField body="model" type="string" required>
-  One of `gemini-3-pro-image-rev`, `gemini-3.1-flash-image-rev` or `gemini-3.1-flash-lite-image-rev`.
+  One of `gemini-3-pro-image-rev`, `gemini-3.1-flash-image-rev`, `gemini-3.1-flash-lite-image-rev` or `gemini-2.5-flash-image-preview-rev`.
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
@@ -98,19 +99,19 @@ A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  Reference image URLs. Required for `edit`, up to 14. Reference images carry no extra charge.
+  Reference image URLs. Required for `edit`, up to 14; on `gemini-2.5-flash-image-preview-rev` the ceiling is left to the upstream model. Reference images carry no extra charge.
 </ParamField>
 
 <ParamField body="aspect_ratio" type="string" default="1:1">
-  Frame ratio. Eleven are shared by all three tiers: `auto`, `1:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9`.
+  Frame ratio. Eleven are shared by all four tiers: `auto`, `1:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9`.
 
   `gemini-3.1-flash-image-rev` additionally supports `1:4`, `4:1`, `1:8` and `8:1`.
 
-  `auto` lets the model decide: it picks from the prompt for text-to-image, and follows the input image for edits.
+  `auto` lets the model decide: it picks from the prompt for text-to-image, and follows the input image for edits. On `gemini-2.5-flash-image-preview-rev`, omitting the parameter also leaves the ratio to the model.
 </ParamField>
 
 <ParamField body="resolution" type="string" default="1k">
-  Output resolution, `1k` or `2k`.
+  Output resolution. The tiers each model offers are listed under "Available models": `1k`, `2k` and `4k` on the flagship tier, `0.5k`, `1k`, `2k` and `4k` on the fast tier, and `1k` only on the previous-generation tier.
 
   `gemini-3.1-flash-lite-image-rev` does not support this parameter and always outputs 1K; sending it returns `400`.
 </ParamField>
@@ -119,10 +120,18 @@ A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/
   Number of images to generate. Value: `1`. Each request returns one image.
 </ParamField>
 
+<ParamField body="google_search" type="boolean" default="false">
+  Search the web for text context before generating. Only `gemini-3.1-flash-image-rev` accepts this parameter.
+</ParamField>
+
+<ParamField body="google_image_search" type="boolean" default="false">
+  Search the web for reference images; requires `google_search: true`. Only `gemini-3.1-flash-image-rev` accepts this parameter.
+</ParamField>
+
 See [Submit a task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key` and the maximum-cost header.
 
 <Warning>
-The economy routes have no line-specific parameters. `mask_url`, `quality`, `seed`, `google_search`, `google_image_search` and `official_fallback` are not supported; any other parameter returns `400` and is not billed. For masked inpainting use [`gpt-image-2`](/en/api-reference/image/gpt-image/gpt-image-2).
+The economy line does not support `mask_url`, `quality` or `seed`. `google_search` and `google_image_search` are accepted only by `gemini-3.1-flash-image-rev`; the other three tiers return `400` for them. Any other parameter returns `400` and is not billed. For masked inpainting use [`gpt-image-2`](/en/api-reference/image/gpt-image/gpt-image-2).
 </Warning>
 
 ## Limits
@@ -131,16 +140,23 @@ The economy routes have no line-specific parameters. `mask_url`, `quality`, `see
 |---|---|
 | Per request | One image returned |
 | `action: "edit"` | At least one reference image is required |
-| Reference images | Up to 14 |
-| Resolution | `1k` / `2k` on the flagship and fast tiers; the lightest tier is `1k` only and rejects `resolution` |
+| Reference images | Up to 14; on `gemini-2.5-flash-image-preview-rev` the ceiling is left to the upstream model |
+| Resolution | Tiers per model are listed under "Available models"; `gemini-3.1-flash-lite-image-rev` rejects `resolution` |
 
 ## Pricing
 
-Billed at a **fixed price per successfully generated image**. The three tiers price differently: the flagship is the most expensive and charges the same at `1k` and `2k`, the fast tier charges more at `2k` than `1k`, and the lightest is the cheapest and only offers `1k`.
+Billed at a **fixed price per successfully generated image**. `generate` and `edit` cost the same, reference images add no fee, and aspect ratio, prompt length and web search have no effect on the price — **resolution is the only billing dimension, so the cost of a call is known before it is submitted**.
 
-Rates are in `price_config` on `GET /v1/models` and in the console's Model Market. What a single call actually cost is the `cost` field on the task response — an integer quota at **500,000 quota = 1 USD**, not dollars.
+The tiers price differently:
 
-`generate` and `edit` cost the same, reference images add no fee, and neither aspect ratio nor prompt length affects the price — **resolution is the only billing dimension, so the cost of a call is known before it is sent**. A `resolution` outside the tiers a model supports settles at its fallback price, equal to its `1k` price.
+| Model ID | Price tiers |
+|---|---|
+| `gemini-3-pro-image-rev` | `1k` and `2k` cost the same; `4k` is its own tier |
+| `gemini-3.1-flash-image-rev` | `0.5k` and `1k` cost the same; `2k` and `4k` are each their own tier |
+| `gemini-3.1-flash-lite-image-rev` | A single 1K tier |
+| `gemini-2.5-flash-image-preview-rev` | One price |
+
+Rates are in `price_config` on `GET /v1/models` and in the console's Model Market. A resolution that `price_config.image_prices` does not list separately settles at the `default` price alongside it. What a single call actually cost is the `cost` field on the task response — an integer quota at **500,000 quota = 1 USD**, not dollars.
 
 You are only billed for a successfully generated image. Failed and cancelled tasks, and tasks that return no usable image, are refunded in full.
 
@@ -149,27 +165,51 @@ You are only billed for a successfully generated image. Failed and cancelled tas
 ```json Completed task
 {
   "task_id": "taski_example",
-  "model": "gemini-3.1-flash-image-rev",
+  "model": "gemini-3-pro-image-rev",
   "action": "edit",
   "status": "completed",
   "progress": "100%",
+  "created_at": 1788686741,
+  "completed_at": 1788686763,
+  "billing_status": "settled",
+  "cost": 16875,
   "result": {
     "images": [
       {
+        "expires_at": 1788992341,
         "url": ["https://cdn.example.com/result.png"]
       }
     ]
   },
-  "billing_status": "settled",
-  "cost": 9375
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski_example",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski_example/cancel"
+  }
 }
 ```
 
-Generated images come back in `result.images`. See [Task status](/en/api-reference/task/status) for the full field list.
+Generated images come back in `result.images`, where `url` is an array and `expires_at` is when the link stops working. See [Query Task Status](/en/api-reference/task/status) for the full field list.
+
+## Available models
+
+| Model ID | Tier | Aspect ratios | Resolutions | Line-specific parameters |
+|---|---|---|---|---|
+| `gemini-3-pro-image-rev` | Flagship | 11 | `1k` `2k` `4k` | — |
+| `gemini-3.1-flash-image-rev` | Fast | **15** | `0.5k` `1k` `2k` `4k` | `google_search` `google_image_search` |
+| `gemini-3.1-flash-lite-image-rev` | Lightest | 11 | 1K only | — |
+| `gemini-2.5-flash-image-preview-rev` | Previous generation | 11 | `1k` | — |
+
+All four do text-to-image and reference-image editing, one image per request.
+
+- **The 11 shared aspect ratios**: `auto` `1:1` `2:3` `3:2` `3:4` `4:3` `4:5` `5:4` `9:16` `16:9` `21:9`
+- **The fast tier adds four extreme ratios**: `1:4` `4:1` `1:8` `8:1`, for long horizontal and vertical banners
+- **The lightest tier does not accept `resolution`** and always outputs 1K
+- **Up to 14 reference images**; on `gemini-2.5-flash-image-preview-rev` the ceiling is left to the upstream model
 
 ## Related
 
-- [Image Generation Overview](/en/api-reference/image/overview)
+- [Gemini Image Series](/en/api-reference/image/gemini/overview)
+- [Nano Banana Official](/en/api-reference/image/gemini/nano-banana)
 - [Submit Task](/en/api-reference/task/submit)
 - [Query Task Status](/en/api-reference/task/status)
 - [Task System](/en/docs/task-system)

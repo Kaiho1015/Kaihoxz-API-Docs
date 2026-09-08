@@ -1,84 +1,42 @@
 ---
 title: "Vidu Q3 Series"
-description: "ShengShu Vidu Q3 — reference-to-video / image-to-video, smart shot transitions, any integer 1-16 sec"
+description: "ShengShu Vidu Q3: reference-to-video, multi-reference blending, text-to-video and first / last frames with native audio, up to 16 seconds"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-ShengShu Vidu Q3 video generation series. **Reference-to-video (R2V)** is what it does best — it takes public image URLs as subject / style references, the prompt describes motion and camera work, and character appearance comes from the reference images. Best suited to **character consistency / style continuity / multi-shot transitions**.
+ShengShu Technology's Vidu Q3 line. This page covers `vidu-q3`, `vidu-q3-mix`, `vidu-q3-pro` and `vidu-q3-turbo`: all four go through the same task endpoint, all four have `generate` as their only action, and all four are billed by resolution tier and seconds. They differ in whether reference images are required, which resolutions they offer, and whether they produce audio. The first two are reference-to-video (`image_urls` is required, and the characters and style come from those images); the other two do text-to-video as well as start-frame and first-and-last-frame video, with native audio on by default.
 
-**Two tiers:**
-
-- **`vidu-q3`** — standard tier, the everyday default, smarter shot transitions, 540p / 720p / 1080p, 1-16 sec. Aspect ratio follows the reference image; **does not accept `aspect_ratio`**
-- **`vidu-q3-mix`** — remix tier, blends multiple stills into one coherent clip, 540p / 720p / 1080p, 1-16 sec, accepts `aspect_ratio`, ideal for short-drama re-cutting and ad creative remixes
-
-Billed by **resolution × duration**, **per second**, any integer from 1 to 16 seconds.
-
-## Pricing
-
-<Note>
-No unit prices on this page — prices track upstream changes, and anything written here will drift out of date.
-
-**Live prices:** the console's Model Market, or the `GET /v1/models` endpoint (see [Model list](/en/docs/models)).
-**Actual cost of one call:** every response carries `cost` / `usage.cost` — that is the number to trust.
-</Note>
-
-## Examples
+## Quick start
 
 <CodeGroup>
 
-```bash Reference-image to video (standard)
+```bash Reference to video
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: vidu-demo-001" \
   -d '{
     "model": "vidu-q3",
-    "prompt": "A girl running toward the sunset on a beach at dusk, hair flying, cinematic lighting",
-    "image_urls": ["https://cdn.example.com/girl.jpg"],
+    "action": "generate",
+    "prompt": "Keep the character consistent, running through a forest, camera following",
+    "image_urls": ["https://cdn.example.com/character.jpg"],
     "duration": 5,
     "resolution": "1080p"
   }'
 ```
 
-```bash Image-to-video (standard, single image)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "vidu-q3",
-    "prompt": "The subject slowly turns around, camera pushes in",
-    "image_urls": ["https://cdn.example.com/portrait.jpg"],
-    "duration": 5,
-    "resolution": "1080p"
-  }'
-```
-
-```bash Multi-image reference (standard, R2V)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "vidu-q3",
-    "prompt": "Keep the character consistent, running through a forest, camera follows",
-    "image_urls": [
-      "https://cdn.example.com/char-1.jpg",
-      "https://cdn.example.com/style-ref.jpg"
-    ],
-    "duration": 6,
-    "resolution": "1080p"
-  }'
-```
-
-```bash Multi-image remix (Mix tier)
+```bash Multi-reference blend
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "vidu-q3-mix",
-    "prompt": "Camera cuts smoothly between scenes, consistent mood throughout",
+    "action": "generate",
+    "prompt": "The character sits down in this room and picks up the cup on the table",
     "image_urls": [
-      "https://cdn.example.com/scene-1.jpg",
-      "https://cdn.example.com/scene-2.jpg",
-      "https://cdn.example.com/scene-3.jpg"
+      "https://cdn.example.com/character.jpg",
+      "https://cdn.example.com/scene.jpg",
+      "https://cdn.example.com/cup.jpg"
     ],
     "duration": 8,
     "resolution": "1080p",
@@ -86,107 +44,160 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   }'
 ```
 
+```bash Text to video
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "vidu-q3-pro",
+    "action": "generate",
+    "prompt": "A coastal observatory at sunrise, static camera, waves breaking on the rocks",
+    "duration": 5,
+    "resolution": "720p",
+    "aspect_ratio": "16:9",
+    "generate_audio": true
+  }'
+```
+
+```bash First and last frame
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "vidu-q3-turbo",
+    "action": "generate",
+    "prompt": "The camera moves slowly from the room out to the street",
+    "image_urls": [
+      "https://cdn.example.com/start.jpg",
+      "https://cdn.example.com/end.jpg"
+    ],
+    "duration": 5,
+    "resolution": "720p"
+  }'
+```
+
 </CodeGroup>
 
-<ResponseExample>
-```json Submitted
-{
-  "task_id": "task-wave1775285160b950328499",
-  "model": "vidu-q3",
-  "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
-}
-```
-</ResponseExample>
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
 
-After submitting, poll [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status) for status — see [Task system](/en/docs/task-system).
-
-## Available models
-
-| Model ID | Resolution | Duration (sec) | Actions | aspect_ratio | Notes |
-|---|---|---|---|---|---|
-| `vidu-q3` | 540p / 720p / 1080p | 1-16 | generate | not supported | Standard tier, everyday default, ratio follows the reference image |
-| `vidu-q3-mix` | 540p / 720p / 1080p | 1-16 | generate | supported | Remix tier, coherent output from multiple stills |
-
-## Common parameters
+## Request parameters
 
 <ParamField body="model" type="string" required>
-  Model ID. Accepted values:
-  - `vidu-q3`
-  - `vidu-q3-mix`
+  One of `vidu-q3`, `vidu-q3-mix`, `vidu-q3-pro` or `vidu-q3-turbo`.
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  `generate` — the only action for this model.
-
-  **Mode is not selected by `action`, it follows what you send:** `image_urls` makes it reference-image-to-video; `first_frame_image` + `last_frame_image` makes it first/last frame; `video_urls` / `audio_urls` make it reference-to-video.
-
-  `vidu-q3` / `vidu-q3-mix` have **no pure text-to-video mode** — `image_urls` is required.
+  `generate` is the only action of all four models. The mode is not selected by `action` but by how many images `image_urls` carries: for `vidu-q3-pro` and `vidu-q3-turbo`, none is text-to-video, one is a start frame and two are first and last frame. `vidu-q3` and `vidu-q3-mix` always need reference images.
 </ParamField>
 
-<ParamField body="prompt" type="string" required>
-  Text description of the video. Describe **motion / camera / mood** — character appearance comes from `image_urls`.
+<ParamField body="prompt" type="string">
+  Description of the video — motion, camera, mood; with reference images the appearance comes from the images. Required for `vidu-q3` and `vidu-q3-mix`, and for `vidu-q3-pro` / `vidu-q3-turbo` when `image_urls` is not sent.
 </ParamField>
 
-<ParamField body="resolution" type="string" default="720p">
-  Output resolution. Accepted values:
-  - `540p`
-  - `720p`
-  - `1080p`
+<ParamField body="image_urls" type="string[]">
+  Image URLs.
+
+  - `vidu-q3`, `vidu-q3-mix`: reference images, required; they decide the subject, style and setting
+  - `vidu-q3-pro`, `vidu-q3-turbo`: optional, at most 2 — one image is the start frame, two are the first and last frame
 </ParamField>
 
-<ParamField body="duration" type="integer" default="5">
-  Video length in seconds — any integer from **1 to 16**
+<ParamField body="duration" type="integer">
+  Clip length in seconds, an integer.
+
+  - `vidu-q3`: `3` to `16`
+  - `vidu-q3-mix`: `1` to `16`
+  - `vidu-q3-pro`, `vidu-q3-turbo`: `1` to `16`, default `5`
 </ParamField>
 
-<ParamField body="image_urls" type="string[]" required>
-  Array of reference image URLs, used as subject / style reference (R2V), as the first frame, or as remix material. **Required** for both `vidu-q3` and `vidu-q3-mix`. If it is missing, the request is rejected at submission and nothing is held.
+<ParamField body="resolution" type="string">
+  Output resolution.
+
+  - `vidu-q3`: `540p`, `720p` or `1080p`
+  - `vidu-q3-mix`: `720p` or `1080p`
+  - `vidu-q3-pro`, `vidu-q3-turbo`: `540p`, `720p` or `1080p`, default `720p`
 </ParamField>
 
-<ParamField body="callback_url" type="string">
-  Webhook URL, called when the task reaches a terminal state. See [Callbacks](/en/docs/sync-async#async-task-webhook)
+<ParamField body="aspect_ratio" type="string">
+  Frame ratio: `16:9`, `9:16`, `4:3`, `3:4`, `1:1`. `vidu-q3`, `vidu-q3-pro` and `vidu-q3-turbo` use `16:9` when it is omitted. `vidu-q3-pro` and `vidu-q3-turbo` do not take this parameter together with `image_urls`; the ratio then comes from the input image.
 </ParamField>
 
-<ParamField body="callback_events" type="string[]">
-  Callback events to subscribe to. Defaults to terminal states (`succeeded` / `failed` / `cancelled`)
+<ParamField body="generate_audio" type="boolean" default="true">
+  Whether to generate audio (dialogue and sound effects). Accepted by `vidu-q3-pro` and `vidu-q3-turbo` only; set it to `false` for a silent clip.
 </ParamField>
 
-## Model-specific parameters
+<ParamField body="seed" type="integer">
+  Random seed. The same parameters with the same seed produce similar, though not identical, results.
+</ParamField>
 
-<Tabs>
-  <Tab title="vidu-q3">
-    The standard tier has no model-specific parameters — everything available is in [Common parameters](#common-parameters).
+The shared `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key` and cost-cap headers are documented in [Submit Task](/en/api-reference/task/submit).
 
-    <Note>
-    `vidu-q3` **does not accept `aspect_ratio`** — the output ratio is decided by the reference image / model. Use `vidu-q3-mix` if you need to set the ratio.
-    </Note>
-  </Tab>
-
-  <Tab title="vidu-q3-mix">
-    <ParamField body="aspect_ratio" type="string" default="16:9">
-      Aspect ratio (Mix tier only). Accepted values:
-      - `16:9` — landscape
-      - `9:16` — portrait
-      - `1:1` — square
-    </ParamField>
-
-    The Mix tier blends multiple reference images with automatic transitions — ideal for short-drama re-cutting and ad creative remixes.
-  </Tab>
-</Tabs>
+None of the four models accepts `first_frame_image`, `last_frame_image` (frames are expressed through `image_urls`), `video_urls`, `audio_urls`, `n`, `negative_prompt` or `quality`, and `generate_audio` is accepted by `vidu-q3-pro` and `vidu-q3-turbo` only. Anything beyond the parameters above returns `400` and is not billed.
 
 ## Limits
 
-| Item | Limit |
-|---|---|
-| Reference images (`image_urls`) | JPG / PNG / WEBP, must be publicly downloadable URLs |
-| Prompt length | ≤ 2000 characters recommended |
-| Video length | any integer 1-16 sec |
-| Output | MP4, link valid for 24 hours |
+| Model | Condition | Limit |
+|---|---|---|
+| `vidu-q3` `vidu-q3-mix` | Per request | This model produces one result per task; n is not supported |
+| `vidu-q3` `vidu-q3-mix` | Per request | `image_urls` is required |
+| `vidu-q3-pro` `vidu-q3-turbo` | Per request | One video per task; at most 2 images (1 = start frame, 2 = first and last frame). |
+| `vidu-q3-pro` `vidu-q3-turbo` | `image_urls` sent | With input images the aspect ratio follows the image; aspect_ratio cannot be sent. |
+
+## Pricing
+
+Billed by **resolution tier times seconds**: the resolution sets the per-second rate, `duration` sets the number of seconds, and their product is the cost of the call — known before you submit. The four models have different per-second rates, and within a model a higher resolution costs more.
+
+`generate_audio`, `seed`, the aspect ratio and the number of reference images do not affect the price. `vidu-q3-pro` and `vidu-q3-turbo` bill at their `720p` default tier when `resolution` is omitted.
+
+<Note>
+**This page does not list unit prices** — rates change upstream, so this section covers billing dimensions and how they are applied.
+
+Current rates are in `price_config` on `GET /v1/models` and in the console's Model Market. What a single call actually cost is the `cost` field on the task response: an integer quota, **500,000 quota = 1 USD**.
+</Note>
+
+You are only billed for a video that is produced. Failed and cancelled tasks, and tasks that return no usable video, are refunded in full.
+
+## Response
+
+```json Task completed
+{
+  "task_id": "taski-c63f1fff62a8c279cb7fd33f8c8586ac-task-wave1788769966b950814242",
+  "model": "vidu-q3-pro",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788769966,
+  "completed_at": 1788770002,
+  "result": {
+    "videos": [
+      {
+        "url": ["https://cdn.example.com/result.mp4"],
+        "expires_at": 1789089508
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 31500,
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski-c63f1fff62a8c279cb7fd33f8c8586ac-task-wave1788769966b950814242",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski-c63f1fff62a8c279cb7fd33f8c8586ac-task-wave1788769966b950814242/cancel"
+  }
+}
+```
+
+`result.videos` holds the generated video and `expires_at` is when the link stops working (Unix seconds) — copy the file to your own storage before then. Full field reference in [Query Task Status](/en/api-reference/task/status).
+
+## Available models
+
+| Model ID | Resolutions | Duration (s) | Image input | Notes |
+|---|---|---|---|---|
+| `vidu-q3` | `540p` `720p` `1080p` | 3–16 | Reference images, required | Reference-to-video with multi-shot cutting |
+| `vidu-q3-mix` | `720p` `1080p` | 1–16 | Reference images, required | Blends several references into one coherent clip |
+| `vidu-q3-pro` | `540p` `720p` `1080p` | 1–16 | Optional, at most 2 | Text / start frame / first and last frame, audio on by default |
+| `vidu-q3-turbo` | `540p` `720p` `1080p` | 1–16 | Optional, at most 2 | Same capabilities as Pro, faster tier at a lower rate |
 
 ## Related
 
-- [Task system](/en/docs/task-system) — state machine / polling cadence / async push
-- [Request & response format](/en/docs/request-response) — common error codes / headers / rate limits
-- [Authentication](/en/docs/authentication) — getting and using an API key
+- [Video Generation Overview](/en/api-reference/video/overview)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

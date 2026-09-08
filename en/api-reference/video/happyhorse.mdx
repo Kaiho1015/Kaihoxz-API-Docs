@@ -1,199 +1,210 @@
 ---
 title: "HappyHorse Series"
-description: "Alibaba Cloud Bailian HappyHorse Video — single model, unified entry, intelligent routing across T2V/I2V/R2V/EDIT"
+description: "HappyHorse video models: text, image, reference and video editing on one endpoint, billed by resolution tier × seconds"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-Video generation model on Alibaba Cloud Bailian.
+HappyHorse is a video model line with natively synchronized audio. This page covers two models: `happyhorse-1.0` supports both `generate` and `edit`, producing video from text, a first frame or reference images, and rewriting a source video; `happyhorse-1.1` does `generate` only and is the reference-image tier on the same input set. Both share `POST /v1/tasks` and take almost the same parameters — they differ in actions, video input and audio handling.
 
-**Single model, unified entry** — just one `happyhorse-1.0`. The backend automatically routes to T2V / I2V / R2V / EDIT based on the fields you pass, no model id switching needed.
-
-Billed by **resolution × duration**, any integer between 3-15 seconds.
-
-## Pricing
-
-<Note>
-Prices are not listed here — they follow upstream changes, and anything written into the docs drifts out of date.
-
-**Live prices:** the "Model Market" in the console, or the `GET /v1/models` endpoint (see [Models](/en/docs/models)).
-**What a call actually cost:** every response carries `cost` / `usage.cost` — that is the authoritative number.
-</Note>
-
-## Mode Routing
-
-| Fields Passed | Routed Mode | Notes |
-|---|---|---|
-| `prompt` only | **T2V** (text-to-video) | Frame ratio controlled by `aspect_ratio` |
-| `+ first_frame_image` (single frame) | **I2V** (image-to-video) | `aspect_ratio` is ignored, follows the first frame's ratio |
-| `+ image_urls` (1-9 images) | **R2V** (reference-to-video) | Multi-image style / character consistency |
-| `+ video_urls` (single-element array) | **EDIT** (video editing) | Can layer `image_urls` ≤5 as style references |
-
-<Warning>
-**Mutually exclusive fields** — `first_frame_image` / `image_urls` / `video_urls` are pairwise mutually exclusive. Only `video_urls + image_urls` may be passed together (EDIT mode with style references layered on).
-</Warning>
-
-## Examples
+## Quick start
 
 <CodeGroup>
 
-```bash Text-to-video (minimal)
+```bash Text-to-video
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: hh-t2v-001" \
   -d '{
-    "model": "happyhorse-1.0",
+    "model": "happyhorse-1.1",
+    "action": "generate",
     "prompt": "A Shiba Inu in a spacesuit walking on the moon, cinematic lighting",
-    "duration": 5,
     "resolution": "1080p",
-    "aspect_ratio": "16:9"
+    "aspect_ratio": "16:9",
+    "duration": 5
   }'
 ```
 
-```bash Image-to-video (I2V)
+```bash Image-to-video (first frame)
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "happyhorse-1.0",
-    "prompt": "Character slowly walking toward the camera",
+    "model": "happyhorse-1.1",
+    "action": "generate",
+    "prompt": "The character slowly walks toward the camera",
     "first_frame_image": "https://cdn.example.com/portrait.jpg",
-    "duration": 8,
-    "resolution": "1080p"
+    "resolution": "1080p",
+    "duration": 8
   }'
 ```
 
-```bash Reference-to-video (R2V)
+```bash Reference-image video
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "happyhorse-1.0",
+    "action": "generate",
     "prompt": "Keep the character consistent, running through a forest",
     "image_urls": [
       "https://cdn.example.com/char-1.jpg",
       "https://cdn.example.com/char-2.jpg"
     ],
-    "duration": 6,
-    "resolution": "1080p"
+    "resolution": "1080p",
+    "duration": 6
   }'
 ```
 
-```bash Video editing (EDIT)
+```bash Video editing
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "happyhorse-1.0",
     "action": "edit",
-    "prompt": "Change the scene to a snowy day",
+    "prompt": "Change the scene to a snowy day, keep the character motion",
     "video_urls": ["https://cdn.example.com/source.mp4"],
+    "image_urls": ["https://cdn.example.com/style.jpg"],
     "audio_setting": "origin",
-    "duration": 5,
-    "resolution": "1080p"
+    "resolution": "1080p",
+    "duration": 0
   }'
 ```
 
 </CodeGroup>
 
-<ResponseExample>
-```json Submitted
-{
-  "task_id": "task-wave1775285160b950328499",
-  "model": "happyhorse-1.0",
-  "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
-}
-```
-</ResponseExample>
+A successful submission returns a `task_id`. Poll [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status) for the result, wait inside the call with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
 
-After submission, poll status with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status). See [Task System](/en/docs/task-system) for details.
-
-## Available Models
-
-| Model ID | Description |
-|---|---|
-| `happyhorse-1.0` | Unified entry, T2V/I2V/R2V/EDIT auto-routing, 720P/1080P, 3-15 seconds |
-
-## Common Parameters
+## Request parameters
 
 <ParamField body="model" type="string" required>
-  Fixed value `happyhorse-1.0`
+  One of two: `happyhorse-1.0` or `happyhorse-1.1`.
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  `generate` — the only action this model takes.
-
-  **The mode is decided by what you send, not by the action:** `prompt` alone is text-to-video; `image_urls` is image-to-video; `first_frame_image` + `last_frame_image` is a first/last-frame transition; `video_urls` / `audio_urls` is reference-to-video.
+  - `generate` — generate a video. Both models support it
+  - `edit` — rewrite a source video; requires `video_urls`. Only `happyhorse-1.0` supports it
 </ParamField>
 
 <ParamField body="prompt" type="string">
-  Video description, up to 5000 characters. **Required for T2V**; optional as guidance for other modes
-</ParamField>
-
-<ParamField body="duration" type="integer" default="5">
-  Video duration in seconds, any integer in 3-15. **`0` is not accepted** — `0 = follow the source duration` is a `wan2.7-videoedit` convention and does not apply to this model
-</ParamField>
-
-<ParamField body="resolution" type="string" default="720p">
-  Output resolution. Allowed values:
-  - `720p`
-  - `1080p`
-</ParamField>
-
-<ParamField body="aspect_ratio" type="string" default="16:9">
-  Frame aspect ratio. **Only effective in T2V**; in I2V / R2V / EDIT it follows the source media. Allowed values:
-  - `16:9` — landscape widescreen
-  - `9:16` — portrait tall
-  - `4:3` — landscape
-  - `3:4` — portrait
-  - `1:1` — square
+  Description of the video, or the edit instruction. Optional when a first frame or reference images are supplied, but useful to guide camera and motion.
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  Reference image URL array, **1-9 images**:
-  - Triggers **R2V** mode (multi-image style / character consistency)
-  - In EDIT mode, layered as style references (≤5 images)
+  Reference image URLs, used as subject / style references for a new scene. On `happyhorse-1.0` they may accompany `video_urls` under `edit` as style references.
 </ParamField>
 
 <ParamField body="first_frame_image" type="string">
-  First-frame image URL, triggers **I2V** mode
+  First-frame image URL. With it set, the aspect ratio follows the image and `aspect_ratio` has no effect.
 </ParamField>
 
 <ParamField body="video_urls" type="string[]">
-  Source video URL array (single element), **triggers EDIT mode**:
-  - base64 not currently supported
-  - Must be a publicly downloadable URL
+  Source video URLs. Only the `edit` action on `happyhorse-1.0` takes it: exactly one clip, 6–15 seconds, and it is required.
 </ParamField>
 
-<ParamField body="audio_urls" type="string[]">
-  Reference audio URL array (`reference_audio` mode)
+<ParamField body="resolution" type="string">
+  Output resolution: `720p` or `1080p`.
 </ParamField>
 
-<ParamField body="callback_url" type="string">
-  Webhook callback URL, invoked when the task reaches a terminal state. See [Callbacks](/en/docs/sync-async#async-task-webhook)
+<ParamField body="duration" type="integer">
+  Output length in seconds, any integer `3`–`15`.
+
+  The `edit` action on `happyhorse-1.0` follows the source video length: `0` means "use the source video length", and any other value leaves the output length unchanged.
 </ParamField>
 
-## Model-Specific Parameters
-
-<ParamField body="audio_setting" type="string" default="auto">
-  Audio setting, **only effective in EDIT mode**. Allowed values:
-  - `auto` — automatically generate audio matching the edited video
-  - `origin` — keep the source video's original audio track
+<ParamField body="aspect_ratio" type="string">
+  Aspect ratio: `16:9`, `9:16`, `1:1`, `4:3`, `3:4`. With a first frame or a source video present, the aspect ratio follows the input asset.
 </ParamField>
 
-## Resource Limits
+<ParamField body="seed" type="integer">
+  Random seed. The same request with the same seed produces similar results.
+</ParamField>
 
-| Item | Limit |
-|---|---|
-| Reference images | Up to 9, each ≤ 30MB, JPG/PNG/WEBP |
-| Source video (EDIT) | MP4/MOV, ≤ 100MB, 2-30 seconds |
-| Reference audio | WAV/MP3, ≤ 15MB, 3-30 seconds |
-| Output | MP4, link valid for 24 hours |
+<ParamField body="audio_setting" type="string">
+  Audio handling, effective only for the `edit` action on `happyhorse-1.0`: `auto` generates audio, `origin` keeps the original track.
+</ParamField>
 
-## Related Docs
+<ParamField body="watermark" type="boolean" default="false">
+  Whether to add a watermark to the output. Both models take it.
+</ParamField>
 
-- [Task System](/en/docs/task-system) — task state machine / polling cadence / async push
-- [Request & Response Format](/en/docs/request-response) — common error codes / Headers / rate limits
-- [Authentication](/en/docs/authentication) — API Key issuance and usage
+See [Submit Task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key`, and the maximum-cost header.
+
+Neither model supports `n`, `quality`, `generate_audio` or `audio_urls`. Any other parameter returns `400` and is not billed.
+
+## Limits
+
+| Model ID | Condition | Limit |
+|---|---|---|
+| Both models | Per task | This model produces one result per task; n is not supported |
+| `happyhorse-1.0` | `action: "edit"` | Video edit needs one 6-15 s source video; the output length follows the source and duration has no effect |
+| `happyhorse-1.0` | `action: "generate"` | generate does not take a source video; use edit |
+| `happyhorse-1.1` | Video input | Does not take `video_urls` and has no `edit` action |
+
+## Pricing
+
+Both models are billed by **resolution tier × seconds**. `price_config.video_prices` is keyed by resolution, and `happyhorse-1.0` additionally keys by action (`edit_720p` / `edit_1080p`), so editing and generation settle on their own tiers.
+
+| Model ID | Billing dimensions | Billed seconds |
+|---|---|---|
+| `happyhorse-1.0` (`generate`) | Resolution tier × seconds | The requested `duration` |
+| `happyhorse-1.0` (`edit`) | Action × resolution tier × seconds | The source video length (6–15 s) |
+| `happyhorse-1.1` | Resolution tier × seconds | The requested `duration` |
+
+Because `edit` output follows the source video, billed seconds come from the source video length and `duration` plays no part. How input seconds are read, and what happens when they cannot be read, is in [Video Generation Overview](/en/api-reference/video/overview#input-video-duration-and-billing).
+
+You are only billed for a successfully generated video. Failed and cancelled tasks, and tasks that return no usable video, are refunded in full. The final charge is the `cost` field on the task response — an integer quota at **500,000 quota = 1 USD**, not dollars.
+
+<Note>
+**Unit prices are not listed here.** They track upstream changes; this section covers billing dimensions only.
+
+Live rates: the `price_config` field of `GET /v1/models`, or the console's Model Market.
+What one call cost: the `cost` field on the task response (integer quota, 500,000 quota = 1 USD).
+</Note>
+
+## Response
+
+```json Completed task
+{
+  "task_id": "task-wave1775285160b950328499",
+  "model": "happyhorse-1.1",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1775285160,
+  "completed_at": 1775285305,
+  "billing_status": "settled",
+  "cost": 483750,
+  "result": {
+    "videos": [
+      {
+        "expires_at": 1775544360,
+        "url": ["https://cdn.example.com/result.mp4"]
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499",
+    "cancel": "https://www.qingbo.dev/v1/tasks/task-wave1775285160b950328499/cancel"
+  }
+}
+```
+
+Generated videos are returned in `result.videos`; `url` is an array and `expires_at` is when the video link expires. See [Query Task Status](/en/api-reference/task/status) for the full field reference.
+
+## Available models
+
+| Model ID | Actions | Resolution | Duration (s) | Media inputs accepted |
+|---|---|---|---|---|
+| `happyhorse-1.0` | `generate` `edit` | `720p` `1080p` | `3`–`15`; `edit` follows the source length | `image_urls` · `first_frame_image` · `video_urls` (`edit` only, one clip 6–15 s) |
+| `happyhorse-1.1` | `generate` | `720p` `1080p` | `3`–`15` | `image_urls` · `first_frame_image` |
+
+Both models support the five aspect ratios `16:9`, `9:16`, `1:1`, `4:3` and `3:4`. `happyhorse-1.0` outputs natively synchronized audio; `happyhorse-1.1` targets reference-image generation.
+
+## Related
+
+- [Video Generation Overview](/en/api-reference/video/overview)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

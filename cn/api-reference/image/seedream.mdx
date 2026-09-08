@@ -1,201 +1,200 @@
 ---
 title: "Seedream 系列"
-description: "字节跳动豆包图像生成 — 文生图 / 图像编辑 / 组图生成"
+description: "字节跳动 Seedream 图像模型：文生图与单图参考编辑，按张固定价"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-字节跳动 Seed 团队的图像生成模型系列,**两代四档**:
+Seedream 是字节跳动的图像生成与编辑模型系列。本页覆盖当前可用的四个模型，它们共用同一套请求参数、同一个任务接口和同一种计费方式（按成功出图的固定张价），差别在分辨率档、画幅数量和各自的专有参数——换模型只改 `model`。
 
-- **5.0 Pro** — 品质优先,电影级细节与文字准确度,1K / 1.5K / 2K(1.5K 与 1K 同价、更清晰),最多 10 张参考图,2K 单独计价
-- **5.0 Lite** — 视觉推理(CoT)+ 实时联网搜索,强身份保留(眼/下颌/比例/肤色跨风格不变),2K / 3K / 4K,性价比线
-- **4.5** — 4.x 系列精修档,文字准确度与多参考图风格融合更好,2K / 4K,最多 10 张参考图、单次最多 15 张
-- **4.0** — 文生图与编辑一体,图内文字渲染强,1K / 2K / 4K,最多 10 张参考图,比 5.0 早一代、价格更低
-
-按张计费。
-
-## 定价
-
-<Note>
-本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
-
-**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
-**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
-</Note>
-
-## 模式速查
-
-| 模式 | 触发字段 | action |
-|---|---|---|
-| **文生图** | 仅 `prompt` | `generate` |
-| **图像编辑(局部重绘 / 光影修改)** | `+ image_urls` + `action: "edit"` | `edit` |
-| **组图生成(主题相关一组)** | `sequential_image_generation: "auto"` | `generate` |
-
-## 调用示例
+## 快速开始
 
 <CodeGroup>
 
-```bash 文生图(最简)
+```bash 文生图
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: seedream-demo-001" \
   -d '{
-    "model": "seedream-5.0-lite",
-    "prompt": "未来主义城市夜景,霓虹灯映在湿润街面,电影感构图",
-    "resolution": "2K",
-    "aspect_ratio": "16:9"
+    "model": "seedream-4.0",
+    "action": "generate",
+    "prompt": "青瓷茶杯放在原木桌面上，窗边自然光，产品摄影",
+    "aspect_ratio": "1:1",
+    "resolution": "2k",
+    "n": 1
   }'
 ```
 
-```bash 图像编辑(edit)
+```bash 参考图编辑
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: seedream-edit-001" \
   -d '{
-    "model": "seedream-5.0-lite",
+    "model": "seedream-5.0-pro",
     "action": "edit",
-    "prompt": "把背景换成黄昏天空,人物保持不变",
-    "image_urls": ["https://cdn.example.com/portrait.jpg"],
-    "resolution": "2K"
+    "prompt": "保留主体，把背景换成清晨的竹林",
+    "image_urls": ["https://cdn.example.com/source.png"],
+    "aspect_ratio": "auto",
+    "resolution": "2k",
+    "n": 1
   }'
 ```
 
-```bash 多图参考(edit + 多张)
+```bash 指定输出格式
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "seedream-5.0-lite",
-    "action": "edit",
-    "prompt": "把第一张图的角色放进第二张图的场景里",
-    "image_urls": [
-      "https://cdn.example.com/character.jpg",
-      "https://cdn.example.com/scene.jpg"
-    ],
-    "resolution": "4K",
-    "aspect_ratio": "16:9"
-  }'
-```
-
-```bash 组图生成(主题相关 1 组)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "seedream-5.0-lite",
-    "prompt": "电商主图四张:正面 / 侧面 / 细节 / 场景应用",
-    "sequential_image_generation": "auto",
-    "sequential_image_generation_options": {"max_images": 4},
-    "resolution": "4K",
-    "aspect_ratio": "1:1"
+    "action": "generate",
+    "prompt": "极简风格的产品海报，大面积留白，中央是一支钢笔",
+    "aspect_ratio": "3:4",
+    "resolution": "4k",
+    "output_format": "png",
+    "watermark": false
   }'
 ```
 
 </CodeGroup>
 
-<ResponseExample>
-```json 提交成功
-{
-  "task_id": "task-wave1775285160b950328499",
-  "model": "seedream-5.0-lite",
-  "action": "generate",
-  "status": "queued",
-  "created_at": 1775285160040,
-  "progress": 0
-}
-```
-</ResponseExample>
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
 
-提交后用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 轮询状态,详见 [任务系统](/cn/docs/task-system)。
-
-## 可用模型
-
-| 模型 ID | 说明 |
-|---|---|
-| `seedream-5.0-pro` | 品质优先档,电影级细节,1K / 1.5K / 2K(1.5K 与 1K 同价;2K 单独计价;不传分辨率按 2K 计),最多 10 张参考图 |
-| `seedream-5.0-lite` | 视觉推理 + 联网搜索,身份保留强,2K / 3K / 4K,文生 / 编辑 / 组图统一接口 |
-| `seedream-4.5` | 4.x 精修档,文字更准、多参考图融合更好,2K / 4K(不支持 1K) |
-| `seedream-4.0` | 文生图 + 编辑一体,文字渲染强,1K / 2K / 4K,价格最低 |
-
-## 通用参数
+## 请求参数
 
 <ParamField body="model" type="string" required>
-  目前为 `seedream-5.0-lite`
+  四选一：`seedream-4.0`、`seedream-4.5`、`seedream-5.0-lite` 或 `seedream-5.0-pro`。
 </ParamField>
 
 <ParamField body="action" type="string" default="generate">
-  - `generate` — 文生图(默认)
-  - `edit` — 图像编辑,配合 `image_urls` 使用
-
-  **模式不靠 action 区分,靠传什么:** 只给 `prompt` 是文生图;带一张 `image_urls` 是图生图;带多张是多图参考融合;再带 `mask_url` 就是局部重绘。
+  - `generate`：根据文字生成图片
+  - `edit`：基于参考图改写；必须提供 `image_urls`
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
-  图像描述文本,支持中英文
-</ParamField>
-
-<ParamField body="n" type="integer" default="1">
-  生成数量(单次返回多张)
-</ParamField>
-
-<ParamField body="aspect_ratio" type="string" default="1:1">
-  画面宽高比,共 9 种:
-  - `1:1` — 正方形
-  - `4:3` / `3:4` — 横/竖版标准
-  - `16:9` / `9:16` — 横/竖版宽屏
-  - `3:2` / `2:3` — 横/竖版相机比
-  - `21:9` / `9:21` — 超宽屏 / 超长竖图
-</ParamField>
-
-<ParamField body="resolution" type="string" default="2K">
-  输出分辨率,可选 `1K` / `2K` / `4K`
-
-  `seedream-4.5` 不支持 `1K`,传了会被拒。
+  图片描述或编辑指令，中英文均可。
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  参考图片 URL 数组,`action: "edit"` 时使用
+  参考图片 URL 数组。`edit` 时必填，最多 1 张；`generate` 不接受参考图。
 </ParamField>
 
-<ParamField body="callback_url" type="string">
-  Webhook 回调地址,任务终态时调用。详见 [回调机制](/cn/docs/sync-async#异步任务-webhook)
+<ParamField body="aspect_ratio" type="string" default="1:1">
+  画面比例。四个模型共通 10 种：`1:1`、`4:3`、`3:4`、`16:9`、`9:16`、`3:2`、`2:3`、`2:1`、`1:2`、`21:9`。
+
+  `seedream-4.0` 与 `seedream-4.5` 额外支持 `9:21`。
+
+  `auto` 表示由模型决定比例。`seedream-5.0-pro` 的默认值是 `auto`，其余三个模型默认 `1:1`，且只在 `edit` 下接受 `auto`。
 </ParamField>
 
-<ParamField body="callback_events" type="string[]">
-  订阅的回调事件类型,详见 [回调机制](/cn/docs/sync-async#异步任务-webhook)
+<ParamField body="resolution" type="string" default="2k">
+  输出分辨率，各模型档位不同：
+
+  - `seedream-4.0`：`1k`、`2k`、`4k`
+  - `seedream-4.5`：`2k`、`4k`
+  - `seedream-5.0-lite`：`2k`、`3k`、`4k`
+  - `seedream-5.0-pro`：`1k`、`1.5k`、`2k`，默认 `1.5k`
 </ParamField>
 
-## 模型特定参数
+<ParamField body="n" type="integer" default="1">
+  生成数量，取值 `1`。每次请求返回一张图。
+</ParamField>
 
 <ParamField body="watermark" type="boolean" default="false">
-  是否加 AI 生成水印
+  是否在输出图片中添加水印。
 </ParamField>
 
-<ParamField body="optimize_prompt_options" type="string" default="standard">
-  提示词优化模式,可选值:
-  - `standard` — 标准优化(默认)
-  - `fast` — 快速模式
+<ParamField body="optimize_prompt_options" type="string | object">
+  提示词优化模式，只有 `seedream-4.0` 与 `seedream-4.5` 支持，默认 `standard`。
+
+  - `standard`：质量优先，耗时更长
+  - `fast`：速度优先
+
+  `seedream-4.0` 直接传字符串（`"fast"`）；`seedream-4.5` 传对象（`{"mode": "fast"}`）。
 </ParamField>
 
-<ParamField body="sequential_image_generation" type="string" default="disabled">
-  组图生成模式,可选值:
-  - `disabled` — 单图(默认)
-  - `auto` — 自动组图(主题相关多张)
+<ParamField body="output_format" type="string" default="jpeg">
+  输出图片格式，`jpeg` 或 `png`。只有 `seedream-5.0-lite` 与 `seedream-5.0-pro` 支持。
 </ParamField>
 
-<ParamField body="sequential_image_generation_options" type="object">
-  组图选项,如 `{"max_images": 4}`
+<ParamField body="background" type="string" default="opaque">
+  背景：`opaque` 不透明 / `transparent` 透明。只有 `seedream-5.0-pro` 支持，且透明背景仅在单张带 alpha 通道的输入图做图生图、同时 `output_format` 为 `png` 时可用。
 </ParamField>
 
-## 资源限制
+通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
 
-| 项目 | 限制 |
+本系列不接受 `seed`、`quality`、`negative_prompt` 和 `mask_url`。以上之外的参数会返回 `400`，不计费。
+
+## 限制
+
+| 条件 | 限制 |
 |---|---|
-| 单张图片大小 | ≤ 30MB,支持 JPG/PNG/WEBP |
-| 输出分辨率 | `1K` / `2K` / `4K` |
-| 输出文件 | 图片链接,24 小时有效 |
+| 每次请求 | 返回 1 张图，`prompt` 必填 |
+| `action: "generate"` | 不接受参考图 |
+| `action: "edit"` | 必须提供 1 张参考图 |
+| 参考图张数 | 最多 1 张 |
+| `aspect_ratio: "auto"` | `seedream-4.0`、`seedream-4.5`、`seedream-5.0-lite` 只在 `edit` 下可用 |
+| `optimize_prompt_options` | 仅 `seedream-4.0`（字符串）与 `seedream-4.5`（对象） |
+| `output_format` / `background` | `output_format` 仅 5.0 两档；`background` 仅 `seedream-5.0-pro` |
+
+## 计费
+
+按成功出图的**固定张价**结算。`seedream-4.0`、`seedream-4.5`、`seedream-5.0-lite` 三个模型的各档分辨率同价，`seedream-5.0-pro` 的 `2k` 比 `1k` / `1.5k` 贵一档。
+
+单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。单次调用的实际花费见任务响应里的 `cost`——整数 quota，**500,000 quota = 1 USD**，不是美元。
+
+`generate` 与 `edit` 同价，参考图不加价，画幅、输出格式与提示词长度都不影响价格——分辨率是唯一的计费维度，提交前即可确定单次费用。`resolution` 不在该模型支持的档位内时，按其兜底价结算（等于该模型的基础档价）。
+
+只有成功出图才计费。任务失败、取消，或没有返回可用图片时，全额退款。
+
+## 响应
+
+```json 任务完成
+{
+  "task_id": "taski_example",
+  "model": "seedream-4.0",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788754231,
+  "completed_at": 1788754238,
+  "result": {
+    "images": [
+      {
+        "expires_at": 1789089508,
+        "url": ["https://cdn.example.com/result.jpg"]
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski_example",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski_example/cancel"
+  },
+  "billing_status": "settled",
+  "cost": 13500
+}
+```
+
+`result.images` 返回生成的图片，`expires_at` 是该链接的失效时间戳。完整字段说明见[查询任务状态](/cn/api-reference/task/status)。
+
+## 可用模型
+
+| 模型 ID | 分辨率 | 画幅 | 专有参数 |
+|---|---|---|---|
+| `seedream-4.0` | `1k` `2k` `4k`（同价） | 11 种 + `auto` | `optimize_prompt_options`（字符串） |
+| `seedream-4.5` | `2k` `4k`（同价） | 11 种 + `auto` | `optimize_prompt_options`（对象） |
+| `seedream-5.0-lite` | `2k` `3k` `4k`（同价） | 10 种 + `auto` | `output_format` |
+| `seedream-5.0-pro` | `1k` `1.5k` `2k`（`2k` 更贵） | 10 种 + `auto` | `output_format`、`background` |
+
+四个模型都支持文生图与单张参考图编辑，每次请求出 1 张图，都接受 `watermark`。
+
+- **10 种共通画幅**：`1:1` `4:3` `3:4` `16:9` `9:16` `3:2` `2:3` `2:1` `1:2` `21:9`
+- **`seedream-4.0` 与 `seedream-4.5` 额外支持 `9:21`**
+- **`auto` 由模型按输入决定画幅**：`seedream-4.0`、`seedream-4.5`、`seedream-5.0-lite` 只在 `edit` 下接受它；`seedream-5.0-pro` 两个动作都接受，且它的默认画幅就是 `auto`
 
 ## 相关文档
 
-- [任务系统详解](/cn/docs/task-system) — 任务状态机 / 轮询节奏 / 异步推送
-- [请求响应格式](/cn/docs/request-response) — 通用错误码 / Headers / 限流
-- [认证](/cn/docs/authentication) — API Key 申请与使用
+- [图像生成概述](/cn/api-reference/image/overview)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

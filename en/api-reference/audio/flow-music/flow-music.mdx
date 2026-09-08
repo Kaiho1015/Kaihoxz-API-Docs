@@ -1,0 +1,186 @@
+---
+title: "Flow Music"
+description: "Text-to-music on the Lyria engine, with lyrics, title, BPM, length and seed control"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+`flow-music` runs the Lyria engine to turn a style prompt and lyrics into a full song or an instrumental, and can also write lyrics on their own. Both actions are submitted through the unified task endpoint `POST /v1/tasks`: `generate` produces audio, `lyrics` produces text. For follow-up work such as extending, covering or splitting stems, use [Suno Music Generation](/en/api-reference/audio/suno).
+
+## Quick start
+
+<CodeGroup>
+
+```bash Lyrics plus style
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "flow-music",
+    "action": "generate",
+    "prompt": "calm acoustic folk, gentle guitar, sunrise by the sea",
+    "lyrics": "[Verse 1]\nWaves roll in beneath the morning light\n[Chorus]\nCarry me home on the tide",
+    "title": "Sunrise by the Sea",
+    "length": 30
+  }'
+```
+
+```bash Style prompt only
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "flow-music",
+    "action": "generate",
+    "prompt": "Upbeat electronic pop with piano and synths, 120 BPM",
+    "bpm": "120",
+    "length": 60
+  }'
+```
+
+```bash Lyrics only
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "flow-music",
+    "action": "lyrics",
+    "prompt": "A short song about lighthouses and patience"
+  }'
+```
+
+</CodeGroup>
+
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), or wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait).
+
+## Request parameters
+
+<ParamField body="model" type="string" required>
+  Always `flow-music`.
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  - `generate`: produce a song or an instrumental
+  - `lyrics`: produce lyric text only
+</ParamField>
+
+<ParamField body="prompt" type="string">
+  A style or sound description for `generate`; the subject to write about for `lyrics`, where it is required.
+</ParamField>
+
+The parameters below apply to `generate` only.
+
+<ParamField body="version" type="string">
+  Engine version; omit to use the default engine (Lyria 3 Pro), or `lyria-3.5`.
+</ParamField>
+
+<ParamField body="lyrics" type="string">
+  Lyrics with section tags like `[Verse 1]` / `[Chorus]`; omit for instrumental or model-written lyrics.
+</ParamField>
+
+<ParamField body="title" type="string">
+  Song title.
+</ParamField>
+
+<ParamField body="bpm" type="string">
+  Beats per minute, a number sent as a string (>= 1).
+</ParamField>
+
+<ParamField body="length" type="integer">
+  Target length in seconds, `1`–`240`.
+</ParamField>
+
+<ParamField body="seed" type="string">
+  Random seed (string).
+</ParamField>
+
+Anything beyond the fields above returns `400` and is not billed.
+
+## Limits
+
+Lyrics generation requires a prompt.
+
+| Condition | Limit |
+|---|---|
+| `generate` | At least one of `prompt` and `lyrics` |
+| `length` | `1`–`240` seconds |
+| `bpm` | A number as a string, minimum `1` |
+| Per request | One track returned |
+
+## Pricing
+
+**Billed per call, with a different price for each action.** `generate` has one flat rate and `lyrics` another, and `generate` costs distinctly more. Neither `length`, `bpm`, `version` nor lyric length changes the rate — the action is the only billing dimension, so the cost of a call is known in advance.
+
+Rates are in `price_config.audio_prices` on `GET /v1/models`, keyed by action, and in the console's Model Market. What a single call actually cost is the `cost` field on the task response — an integer quota at **500,000 quota = 1 USD**, not dollars.
+
+Only a successful result is billed. Failed and cancelled tasks, and tasks that return nothing deliverable, are refunded in full.
+
+## Response
+
+<CodeGroup>
+
+```json generate
+{
+  "task_id": "taski_example",
+  "model": "flow-music",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788768730,
+  "completed_at": 1788768792,
+  "result": {
+    "audios": [
+      {
+        "expires_at": 1789089508,
+        "url": ["https://cdn.example.com/result.m4a"]
+      }
+    ]
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski_example",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski_example/cancel"
+  },
+  "billing_status": "settled",
+  "cost": 33750
+}
+```
+
+```json lyrics
+{
+  "task_id": "taski_example",
+  "model": "flow-music",
+  "action": "lyrics",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788769450,
+  "completed_at": 1788769485,
+  "result": {
+    "audios": {
+      "lyrics": [
+        {
+          "lyrics": "[Verse 1]\nSalt on my shoulders\n...",
+          "title": "Wed to Ground"
+        }
+      ]
+    }
+  },
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski_example",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski_example/cancel"
+  },
+  "billing_status": "settled",
+  "cost": 11250
+}
+```
+
+</CodeGroup>
+
+`generate` returns its output in `result.audios[]`, one track per task: `url` is an array of audio links and `expires_at` is when those links stop working.
+
+`lyrics` returns no audio: the lyric text sits in the `lyrics` field of each `result.audios.lyrics[]` entry, alongside `title`. Both feed straight back into `generate` as `lyrics` and `title`.
+
+## Related
+
+- [Suno Music Generation](/en/api-reference/audio/suno)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

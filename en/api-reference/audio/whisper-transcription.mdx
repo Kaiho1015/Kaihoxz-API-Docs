@@ -1,17 +1,17 @@
 ---
-title: "Speech Recognition & Translation"
-description: "Speech-to-text (STT) and speech translation"
+title: "Speech to Text"
+description: "Transcribe audio into text, on three models behind one synchronous endpoint"
 api: "POST https://www.qingbo.dev/v1/audio/transcriptions"
 ---
 
-Synchronous endpoint — returns the recognition result directly when the request completes.
+A synchronous endpoint: upload an audio file and the request returns the transcript, with no `task_id` and no polling. All three models share this endpoint — switching between them means changing `model` only. For the opposite direction, reading text aloud, use [Text-to-Speech](/en/api-reference/audio/tts).
 
 <RequestExample>
 ```bash cURL
 curl https://www.qingbo.dev/v1/audio/transcriptions \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -F file="@audio.mp3" \
-  -F model="whisper-1"
+  -F model="gpt-4o-transcribe"
 ```
 
 ```python Python
@@ -24,7 +24,7 @@ client = OpenAI(
 
 with open("audio.mp3", "rb") as f:
     transcript = client.audio.transcriptions.create(
-        model="whisper-1",
+        model="gpt-4o-transcribe",
         file=f
     )
 
@@ -41,7 +41,7 @@ const client = new OpenAI({
 });
 
 const transcript = await client.audio.transcriptions.create({
-  model: 'whisper-1',
+  model: 'gpt-4o-transcribe',
   file: fs.createReadStream('audio.mp3')
 });
 
@@ -68,7 +68,7 @@ func main() {
     writer := multipart.NewWriter(body)
     part, _ := writer.CreateFormFile("file", "audio.mp3")
     io.Copy(part, file)
-    writer.WriteField("model", "whisper-1")
+    writer.WriteField("model", "gpt-4o-transcribe")
     writer.Close()
 
     req, _ := http.NewRequest("POST", "https://www.qingbo.dev/v1/audio/transcriptions", body)
@@ -96,7 +96,7 @@ public class Main {
             + "Content-Disposition: form-data; name=\"file\"; filename=\"audio.mp3\"\r\n"
             + "Content-Type: audio/mpeg\r\n\r\n";
         String fieldPart = "\r\n--" + boundary + "\r\n"
-            + "Content-Disposition: form-data; name=\"model\"\r\n\r\nwhisper-1\r\n"
+            + "Content-Disposition: form-data; name=\"model\"\r\n\r\ngpt-4o-transcribe\r\n"
             + "--" + boundary + "--\r\n";
 
         byte[] requestBody = new byte[body.getBytes().length + fileBytes.length + fieldPart.getBytes().length];
@@ -123,51 +123,48 @@ public class Main {
 <ResponseExample>
 ```json 200
 {
-  "text": "欢迎使用 清波 API 语音识别服务。"
+  "text": "Welcome to the QWave speech-to-text API."
 }
 ```
 </ResponseExample>
 
-## Available Models
+## Request parameters
 
-| Model ID | Description |
-|---------|------|
-| `gpt-4o-transcribe` | OpenAI's current-generation transcription — markedly lower word-error rate than Whisper, more robust to accents and noisy audio |
-| `gpt-4o-mini-transcribe` | Budget tier at half the price of gpt-4o-transcribe, still ahead of Whisper on accuracy |
-| `whisper-1` | OpenAI Whisper, multilingual recognition; all three are billed per minute of audio. **Priced above both tiers above** — prefer `gpt-4o-transcribe` / `gpt-4o-mini-transcribe` for new integrations |
-
-## Two Endpoints
-
-### Speech-to-text
-
-```
-POST /v1/audio/transcriptions
-```
-
-Transcribe audio into text in its original language.
-
-### Speech translation
-
-```
-POST /v1/audio/translations
-```
-
-Translate audio into English text. Parameters are the same as the transcription endpoint.
-
-## Request Parameters
-
-Use the `multipart/form-data` format:
+The request body uses `multipart/form-data`.
 
 <ParamField body="file" type="file" required>
-  Audio file. Supported formats: mp3, mp4, mpeg, mpga, m4a, wav, webm.
+  The audio file to transcribe. Supported formats: mp3, mp4, mpeg, mpga, m4a, wav, webm.
 </ParamField>
 
 <ParamField body="model" type="string" required>
-  Model ID: `gpt-4o-transcribe` / `gpt-4o-mini-transcribe` / `whisper-1`. The translation endpoint (`/v1/audio/translations`) currently supports `whisper-1` only
+  Model ID: `gpt-4o-transcribe`, `gpt-4o-mini-transcribe` or `whisper-1`.
 </ParamField>
+
+Anything beyond the fields above returns `400` and is not billed.
+
+## Pricing
+
+**Billed by audio length in minutes.** The three models have different rates; transcript length, spoken language and file format make no difference to the price.
+
+Rates are in `price_config` on `GET /v1/models` and in the console's Model Market. The billing unit is quota, at **500,000 quota = 1 USD**, not dollars.
+
+A failed request is not billed.
 
 ## Response
 
 <ResponseField name="text" type="string">
-  The recognized or translated text.
+  The transcribed text.
 </ResponseField>
+
+## Available models
+
+| Model ID | Description |
+|---|---|
+| `gpt-4o-transcribe` | Current-generation speech-to-text, with a markedly lower word-error rate than Whisper and more robust handling of accents and noisy audio |
+| `gpt-4o-mini-transcribe` | Budget tier at half the rate of `gpt-4o-transcribe`, still ahead of Whisper on accuracy |
+| `whisper-1` | OpenAI Whisper, 90+ languages, tolerant of accents and background noise. Priced above both tiers above |
+
+## Related
+
+- [Text-to-Speech](/en/api-reference/audio/tts)
+- [Suno Music Generation](/en/api-reference/audio/suno)

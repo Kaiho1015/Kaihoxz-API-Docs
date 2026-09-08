@@ -1,0 +1,232 @@
+---
+title: "Gemini Omni Flash"
+description: "The model-chosen-length Gemini Omni video models: text, reference images or a reference video, with multi-turn editing"
+api: "POST https://www.qingbo.dev/v1/tasks"
+---
+
+This page covers the two Omni models whose length is decided by the model: `gemini-omni-1.1-flash` and `gemini-omni-flash-preview`. They share one request shape and one billing model (resolution tier × seconds); they differ in resolution tiers, reference-material limits, and which image parameters they accept — switching between them means changing `model` and nothing else. When the clip has to land on exactly 4, 6, 8 or 10 seconds, use [Omni-Flash-Ext](/en/api-reference/video/omni/omni-flash-ext).
+
+## Quick start
+
+<CodeGroup>
+
+```bash Text to video
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: omni-flash-001" \
+  -d '{
+    "model": "gemini-omni-flash-preview",
+    "action": "generate",
+    "prompt": "a blue butterfly landing on a flower, macro, soft light",
+    "resolution": "720p",
+    "aspect_ratio": "9:16"
+  }'
+```
+
+```bash Reference images
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-omni-1.1-flash",
+    "action": "generate",
+    "prompt": "the cat playfully bats at the ball of yarn",
+    "image_urls": [
+      "https://cdn.example.com/cat.png",
+      "https://cdn.example.com/yarn.png"
+    ],
+    "resolution": "1080p",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```bash First and last frame
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-omni-1.1-flash",
+    "action": "generate",
+    "prompt": "smooth transition, camera slowly pushes in",
+    "first_frame_image": "https://cdn.example.com/start.jpg",
+    "last_frame_image": "https://cdn.example.com/end.jpg",
+    "resolution": "720p",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```bash Rework a reference video
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-omni-flash-preview",
+    "action": "generate",
+    "prompt": "when the person touches the mirror, make it ripple like liquid",
+    "video_urls": ["https://cdn.example.com/clip.mp4"]
+  }'
+```
+
+```bash Continue from the previous result
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-omni-flash-preview",
+    "action": "generate",
+    "prompt": "keep going: the camera pans across the mountains in the distance",
+    "ref_task_id": "task-wave1788783109b950713584"
+  }'
+```
+
+</CodeGroup>
+
+A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/tasks/{task_id}`](/en/api-reference/task/status), wait inline with [`Prefer: wait`](/en/api-reference/task/submit#in-request-waiting-prefer-wait), or configure a webhook.
+
+**Working in rounds**: submit one generation, take its `task_id`, and pass it as `ref_task_id` on the next request to extend or edit that result without re-uploading anything. `ref_task_id` and `video_urls` are mutually exclusive — send one or the other.
+
+## Request parameters
+
+<ParamField body="model" type="string" required>
+  Either `gemini-omni-1.1-flash` or `gemini-omni-flash-preview`.
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  Value `generate`; it may be omitted. The mode is not selected with `action` but by what you send: `prompt` alone is text-to-video, images make it image-to-video, and `video_urls` or `ref_task_id` reworks an existing video.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  A scene description for text-to-video; an action, style or editing instruction for image-to-video and video rework. Keep edit instructions short, and add "keep everything else the same" when changing only one thing.
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  Output resolution, case-insensitive.
+
+  `gemini-omni-1.1-flash`: `360p`, `720p`, `1080p`, `4k`.
+
+  `gemini-omni-flash-preview`: `720p` only.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Frame ratio: `16:9` landscape or `9:16` portrait. With `video_urls`, the output follows the reference video's ratio.
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Reference image URLs, publicly accessible. One image is used as the starting frame by default; several are used as multi-subject or style references — describe each image's role and how they interact in `prompt`.
+
+  Limits: 10 images in total for `gemini-omni-1.1-flash` (first and last frames included), 16 for `gemini-omni-flash-preview`.
+</ParamField>
+
+<ParamField body="first_frame_image" type="string">
+  First-frame image URL. On its own it becomes the opening frame; together with `last_frame_image` it produces a transition between the two.
+
+  `gemini-omni-1.1-flash` only.
+</ParamField>
+
+<ParamField body="last_frame_image" type="string">
+  Last-frame image URL, which must be sent together with `first_frame_image`. Use the same frame ratio for both images and match it to `aspect_ratio`.
+
+  `gemini-omni-1.1-flash` only.
+</ParamField>
+
+<ParamField body="video_urls" type="string[]">
+  URLs of the video to edit or extend, as publicly downloadable direct links. At most one clip.
+
+  Length limit: 10 seconds for `gemini-omni-1.1-flash`, 24 seconds for `gemini-omni-flash-preview`.
+</ParamField>
+
+<ParamField body="ref_task_id" type="string">
+  Our task id to extend or conversationally edit (translated to the upstream task id); mutually exclusive with `video_urls`.
+</ParamField>
+
+<ParamField body="image_with_roles" type="array">
+  Role-tagged images `{url, role}` with role `first_frame` / `last_frame` / `reference`; use either this or `first_frame_image` / `last_frame_image`.
+
+  `gemini-omni-1.1-flash` only.
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Generation-intent object; currently only `task`: `text_to_video` | `image_to_video` | `reference_to_video` | `edit` | `extend` (inferred when omitted).
+
+  `gemini-omni-1.1-flash` only.
+</ParamField>
+
+See [Submit Task](/en/api-reference/task/submit) for `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key`, and the maximum-cost header.
+
+Neither model takes `duration`: the model decides the length from the content, typically 3–10 seconds, and pacing is steered with natural language in `prompt`. `seed` is not supported either. Any other parameter returns `400` and is not billed.
+
+## Limits
+
+- One video per task; at most one reference video.
+- A reference video and `ref_task_id` are mutually exclusive.
+
+| Item | `gemini-omni-1.1-flash` | `gemini-omni-flash-preview` |
+|---|---|---|
+| Resolution | `360p` / `720p` / `1080p` / `4k` | `720p` only |
+| Reference images | 10 in total (frames included) | 16 |
+| Reference video | At most 1, up to 10 seconds | At most 1, up to 24 seconds |
+| Duration | Model-chosen, 3–10 seconds | Model-chosen, 3–10 seconds |
+| Aspect ratio | `16:9` / `9:16` | `16:9` / `9:16` |
+
+## Pricing
+
+Billing runs on **resolution tier × output seconds**: each resolution tier has its own per-second rate, and the seconds are those of the clip the model actually produced. Requests carrying a reference video or `ref_task_id` are billed the same way, on output seconds; reference videos and reference images cost nothing extra.
+
+Because the length is the model's choice and is unknown at submission, the hold is placed at the model's maximum length (10 seconds); the task then settles on the actual generated result and the difference is released.
+
+You are only billed for a successfully generated video. Failed and cancelled tasks, and tasks that return no usable video, are refunded in full. What a call actually cost is the `cost` field on the task response — an integer quota at **500,000 quota = 1 USD**, not dollars.
+
+<Note>
+Per-model rates are in `price_config` on `GET /v1/models` and in the console's Model Market.
+
+This section describes the billing dimensions only; it carries no amounts.
+</Note>
+
+## Response
+
+```json Completed task
+{
+  "task_id": "taski-9e2b0d22d4b9faeabaad8215fe1585fc-task-wave1788783072b950204622",
+  "model": "gemini-omni-1.1-flash",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788783072,
+  "completed_at": 1788783101,
+  "result": {
+    "videos": [
+      {
+        "expires_at": 1789089508,
+        "url": ["https://cdn.example.com/result.mp4"]
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 152081,
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/{task_id}",
+    "cancel": "https://www.qingbo.dev/v1/tasks/{task_id}/cancel"
+  }
+}
+```
+
+The generated video is returned in `result.videos`, where `url` is an array and `expires_at` is the link's expiry as a Unix timestamp in seconds. See [Query Task Status](/en/api-reference/task/status) for every field.
+
+## Available models
+
+| Model ID | Resolution | Reference images | Reference video | Model-only parameters |
+|---|---|---|---|---|
+| `gemini-omni-1.1-flash` | `360p` / `720p` / `1080p` / `4k` | 10 | ≤ 10 s | `first_frame_image`, `last_frame_image`, `image_with_roles`, `metadata` |
+| `gemini-omni-flash-preview` | `720p` only | 16 | ≤ 24 s | — |
+
+Actions, limits and billing are identical on both models, and both accept `ref_task_id`.
+
+## Related
+
+- [Omni Video Series](/en/api-reference/video/omni/overview)
+- [Omni-Flash-Ext](/en/api-reference/video/omni/omni-flash-ext)
+- [Video Generation Overview](/en/api-reference/video/overview)
+- [Submit Task](/en/api-reference/task/submit)
+- [Query Task Status](/en/api-reference/task/status)
+- [Task System](/en/docs/task-system)

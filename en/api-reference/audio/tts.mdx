@@ -4,9 +4,7 @@ description: "Convert text into natural, fluent speech"
 api: "POST https://www.qingbo.dev/v1/audio/speech"
 ---
 
-Synchronous endpoint — returns the audio stream directly when the request completes.
-
-Billed by **input text characters**, with no output charge; the rate is in `price_config` on `GET /v1/models`.
+A synchronous endpoint: the response is the audio file itself, with no `task_id` and no polling. It serves `gpt-4o-mini-tts` only; for songs and sung vocals, use [Suno Music Generation](/en/api-reference/audio/suno).
 
 <RequestExample>
 ```bash cURL
@@ -16,9 +14,9 @@ curl https://www.qingbo.dev/v1/audio/speech \
   -d '{
     "model": "gpt-4o-mini-tts",
     "voice": "nova",
-    "input": "欢迎使用 清波 API 文字转语音服务。"
+    "input": "Welcome to the QWave text-to-speech API."
   }' \
-  --output output.mp3
+  --output output.wav
 ```
 
 ```python Python
@@ -32,10 +30,11 @@ client = OpenAI(
 response = client.audio.speech.create(
     model="gpt-4o-mini-tts",
     voice="nova",
-    input="欢迎使用 清波 API 文字转语音服务。"
+    input="Welcome to the QWave text-to-speech API.",
+    response_format="wav"
 )
 
-response.stream_to_file("output.mp3")
+response.stream_to_file("output.wav")
 ```
 
 ```javascript JavaScript
@@ -50,11 +49,12 @@ const client = new OpenAI({
 const response = await client.audio.speech.create({
   model: 'gpt-4o-mini-tts',
   voice: 'nova',
-  input: '欢迎使用 清波 API 文字转语音服务。'
+  input: 'Welcome to the QWave text-to-speech API.',
+  response_format: 'wav'
 });
 
 const buffer = Buffer.from(await response.arrayBuffer());
-fs.writeFileSync('output.mp3', buffer);
+fs.writeFileSync('output.wav', buffer);
 ```
 
 ```go Go
@@ -72,7 +72,7 @@ func main() {
     payload := map[string]string{
         "model": "gpt-4o-mini-tts",
         "voice": "nova",
-        "input": "欢迎使用 清波 API 文字转语音服务。",
+        "input": "Welcome to the QWave text-to-speech API.",
     }
 
     body, _ := json.Marshal(payload)
@@ -83,7 +83,7 @@ func main() {
     resp, _ := http.DefaultClient.Do(req)
     defer resp.Body.Close()
 
-    out, _ := os.Create("output.mp3")
+    out, _ := os.Create("output.wav")
     defer out.Close()
     io.Copy(out, resp.Body)
 }
@@ -100,7 +100,7 @@ public class Main {
         {
           "model": "gpt-4o-mini-tts",
           "voice": "nova",
-          "input": "欢迎使用 清波 API 文字转语音服务。"
+          "input": "Welcome to the QWave text-to-speech API."
         }
         """;
 
@@ -114,36 +114,78 @@ public class Main {
 
         HttpResponse<byte[]> response = client.send(request,
             HttpResponse.BodyHandlers.ofByteArray());
-        Files.write(Path.of("output.mp3"), response.body());
+        Files.write(Path.of("output.wav"), response.body());
     }
 }
 ```
 </RequestExample>
 
-## Available Models
-
-| Model ID | Description |
-|---------|------|
-| `gpt-4o-mini-tts` | OpenAI's current-generation text-to-speech: 11 voices, with `instructions` for setting tone, pace and emotion in plain language |
-
-## Request Parameters
+## Request parameters
 
 <ParamField body="model" type="string" required>
-  Model ID: `gpt-4o-mini-tts`
+  Model ID: `gpt-4o-mini-tts`.
 </ParamField>
 
 <ParamField body="input" type="string" required>
-  The text to convert.
+  The text to convert, up to 4,096 characters.
 </ParamField>
 
-<ParamField body="voice" type="string" default="alloy">
-  Voice, 13 options: `alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer`, `coral`, `verse`, `ballad`, `ash`, `sage`, `marin`, `cedar`
+<ParamField body="voice" type="string" required>
+  Voice, six options:
+
+  - `alloy`: neutral, balanced
+  - `echo`: male, calm
+  - `fable`: British, narrative
+  - `onyx`: male, deep
+  - `nova`: female, energetic
+  - `shimmer`: female, gentle
 </ParamField>
 
-<ParamField body="instructions" type="string">
-  Set tone, pace and emotion in plain language, e.g. "speak gently and slowly". Optional; omitted, the model reads with its default delivery
+<ParamField body="response_format" type="string" default="wav">
+  Audio format: `wav` (uncompressed), `opus` (streaming), `aac`, `flac` (lossless), `pcm` (raw audio data).
 </ParamField>
+
+<ParamField body="speed" type="number" default="1.0">
+  Playback speed, value `1.0`.
+</ParamField>
+
+Anything beyond the fields above returns `400` and is not billed.
+
+## Limits
+
+| Condition | Limit |
+|---|---|
+| `input` length | Up to 4,096 characters, and no more than 2,000 tokens |
+| `speed` | Value `1.0` |
+| Per request | One audio file returned |
+
+## Pricing
+
+**Billed by the number of input text characters, with no output charge.** Audio length, `voice` and `response_format` make no difference — the character count is the only billing dimension, so the cost of a call is known in advance.
+
+Rates are in `price_config` on `GET /v1/models` and in the console's Model Market. The billing unit is quota, at **500,000 quota = 1 USD**, not dollars.
+
+A failed request is not billed.
 
 ## Response
 
-Returns an audio file stream (MP3 format) — save it directly to a file.
+The response body is the audio file as a binary stream, in the format given by `response_format` (`wav` by default) — save it directly to a file. On error the response is a JSON error object and carries no audio.
+
+## Available models
+
+| Model ID | Description |
+|---|---|
+| `gpt-4o-mini-tts` | OpenAI's current-generation text-to-speech model, six voices and five audio formats |
+
+## Not supported
+
+- `instructions`, for setting tone, pace and emotion in plain language
+- Streaming audio responses
+- The `mp3` output format
+
+These requests return `400` and are not billed.
+
+## Related
+
+- [Speech to Text](/en/api-reference/audio/whisper-transcription)
+- [Suno Music Generation](/en/api-reference/audio/suno)

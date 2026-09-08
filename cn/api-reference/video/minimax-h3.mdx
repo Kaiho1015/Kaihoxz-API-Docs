@@ -1,39 +1,12 @@
 ---
 title: "MiniMax H3"
-description: "MiniMax H3 — 全模态视频生成,文生 / 图生 / 参考生三合一,原生出声,4–15 秒"
+description: "MiniMax H3 全模态视频生成：文本、参考图、首尾帧、参考视频与参考音频，以及 2K 再生成"
 api: "POST https://www.qingbo.dev/v1/tasks"
 ---
 
-MiniMax H3 是 MiniMax 2026 年 7 月发布的全模态视频模型。一个 endpoint 同时吃**文本、图片、视频、音频**四类输入,单次渲染直接出**带音轨**的成片,不用再单独配音。
+MiniMax H3 是 MiniMax 的全模态视频模型：一个接口同时接受文本、图片、视频和音频输入，单次生成直接出带音轨的成片。本页覆盖两个模型：`minimax-h3` 负责生成，`minimax-h3-regeneration` 把已完成的 `minimax-h3` 768P 有声任务再生成原生 2K。只要文生视频或首帧生视频、不需要多模态参考时，[Hailuo 系列](/cn/api-reference/video/hailuo)更省。
 
-三种用法在同一个接口里,靠传什么决定:
-
-- **文生视频** — 只给 `prompt`
-- **图生视频** — 给 `image_urls`,或用 `first_frame_image` / `last_frame_image` 指定首尾帧
-- **参考生视频** — 给 `video_urls`(参考运镜与风格)或 `audio_urls`(参考节奏与配乐)
-
-异步任务:提交返回 `task_id`,轮询 [任务状态](/cn/api-reference/task/status) 直到 `completed`。
-
-## 定价
-
-<Note>
-本页不列单价 —— 价格会随上游调整,写在文档里迟早和实际对不上。
-
-**看实时价格:** 控制台「模型市场」,或 `GET /v1/models` 查询接口(见 [模型列表](/cn/docs/models))。
-**看单次实际花费:** 每次调用的响应里都带 `cost` / `usage.cost`,以它为准。
-</Note>
-
-## 可用模型
-
-| 模型 ID | 分辨率 | 时长(秒) | 音轨 | 特色 |
-|---|---|---|---|---|
-| `minimax-h3` | `768p` / `2k` | 4–15 任意整数 | ✅ 原生 | 全模态输入,单次出带声成片 |
-| `minimax-h3-max` | `480p` / `768p` | 4–15 任意整数 | ✅ 原生 | 更快更省的低分辨率档,能力与 H3 相同 |
-| `minimax-h3-regeneration` | `2k` | 4–15 任意整数 | ✅ 原生 | 把已有的 768p H3 成片按原生 2K 重渲染,`video_urls` 必传 |
-
-按 **分辨率 × 时长** 计费,`2k` 档更贵。**传参考视频(`video_urls`)时,参考视频秒数与输出秒数叠加后按同一档单价计费**(不换档、不翻倍),`minimax-h3-regeneration` 同此口径。参考视频最长 **15 秒**。参考图前 5 张免费,之后上游按张加收,我们目前**不另计**。
-
-## 调用示例
+## 快速开始
 
 <CodeGroup>
 
@@ -41,24 +14,14 @@ MiniMax H3 是 MiniMax 2026 年 7 月发布的全模态视频模型。一个 end
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: h3-demo-001" \
   -d '{
     "model": "minimax-h3",
-    "prompt": "清晨的山间小镇,雾气缓缓散开,镜头从屋顶推向远山",
+    "action": "generate",
+    "prompt": "清晨的山间小镇，雾气缓缓散开，镜头从屋顶推向远山",
+    "duration": 8,
     "resolution": "2k",
-    "duration": 8
-  }'
-```
-
-```bash 图生视频(单张作首帧)
-curl -X POST https://www.qingbo.dev/v1/tasks \
-  -H "Authorization: Bearer $WAVE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "minimax-h3",
-    "prompt": "人物缓缓抬头,风吹动头发,镜头轻微推近",
-    "image_urls": ["https://cdn.example.com/portrait.jpg"],
-    "resolution": "768p",
-    "duration": 6
+    "aspect_ratio": "16:9"
   }'
 ```
 
@@ -68,86 +31,182 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "model": "minimax-h3",
-    "prompt": "从白天过渡到夜晚,灯光逐盏亮起",
+    "action": "generate",
+    "prompt": "从白天过渡到夜晚，灯光逐盏亮起",
     "first_frame_image": "https://cdn.example.com/day.jpg",
     "last_frame_image": "https://cdn.example.com/night.jpg",
-    "duration": 10
+    "duration": 10,
+    "resolution": "768p"
   }'
 ```
 
-```bash 参考生视频(视频 + 音频)
+```bash 多模态参考
 curl -X POST https://www.qingbo.dev/v1/tasks \
   -H "Authorization: Bearer $WAVE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "minimax-h3",
-    "prompt": "同样的运镜节奏,换成雪山场景",
+    "action": "generate",
+    "prompt": "沿用参考视频的运镜节奏，把场景换成雪山",
+    "image_urls": ["https://cdn.example.com/character.jpg"],
     "video_urls": ["https://cdn.example.com/reference.mp4"],
     "audio_urls": ["https://cdn.example.com/bgm.mp3"],
-    "resolution": "2k",
-    "duration": 12
+    "duration": 12,
+    "resolution": "2k"
+  }'
+```
+
+```bash 2K 再生成
+curl -X POST https://www.qingbo.dev/v1/tasks \
+  -H "Authorization: Bearer $WAVE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "minimax-h3-regeneration",
+    "action": "regenerate",
+    "ref_task_id": "taski-d2d658ce585b5046dde1b95a884cc96c-task-wave1788783825b950188816"
   }'
 ```
 
 </CodeGroup>
 
-## 通用参数
+提交成功后返回 `task_id`。用 [`GET /v1/tasks/{task_id}`](/cn/api-reference/task/status) 查询结果，也可以用 [`Prefer: wait`](/cn/api-reference/task/submit#请求内等待prefer-wait) 在一次调用里等待，或配置 Webhook。
+
+**接着往下做**：先用 `minimax-h3` 以 `resolution: "768p"` 生成一段视频，等任务 `completed` 后，把它返回的 `task_id` 填进 `minimax-h3-regeneration` 的 `ref_task_id`，就能拿到同一段内容的原生 2K 版本。`ref_task_id` 传的是本平台的任务 ID，不是上游的 ID；提示词、参考素材都由源任务带过来，不用重复提交。
+
+## 请求参数
 
 <ParamField body="model" type="string" required>
-  固定 `minimax-h3`
+  `minimax-h3` 或 `minimax-h3-regeneration`。
+</ParamField>
+
+<ParamField body="action" type="string" default="generate">
+  - `generate`：`minimax-h3` 的唯一动作
+  - `regenerate`：`minimax-h3-regeneration` 的唯一动作，需要 `ref_task_id`
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
-  画面描述。即使给了参考素材也建议写清楚要什么 —— 参考素材负责"像什么",prompt 负责"做什么"
+  画面描述。`generate` 必填，即使带了参考素材也要写清要生成什么：参考素材决定「像什么」，提示词决定「做什么」。
 </ParamField>
 
-<ParamField body="resolution" type="string" default="768p">
-  `768p` / `2k`
+<ParamField body="duration" type="integer" required>
+  视频时长（秒），`4` 到 `15` 之间的整数。`generate` 必填。
 </ParamField>
 
-<ParamField body="duration" type="integer" default="5">
-  4–15 之间任意整数秒
+<ParamField body="resolution" type="string" default="2k">
+  输出分辨率：`768p` 或 `2k`。用 `minimax-h3-regeneration` 再生成的前提是源任务为 `768p`。
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string">
+  画面比例：`21:9`、`16:9`、`4:3`、`1:1`、`3:4`、`9:16`。带首帧或尾帧时画面比例由图片决定。
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  参考图或首帧。公网可访问的图片 URL
+  参考图片 URL 数组，最多 9 张。每一张都按参考图处理，不会因为张数被当成首帧或尾帧。
 </ParamField>
 
 <ParamField body="first_frame_image" type="string">
-  首帧图 URL
+  首帧图片 URL，作为视频的起始画面。
 </ParamField>
 
 <ParamField body="last_frame_image" type="string">
-  尾帧图 URL,与 `first_frame_image` 配合做「从 A 变到 B」
+  尾帧图片 URL，与 `first_frame_image` 配合做「从 A 变到 B」。
 </ParamField>
 
 <ParamField body="video_urls" type="string[]">
-  参考视频,提供运镜、节奏与风格参考。最长 **15 秒**;`minimax-h3-regeneration` **必传**,**缺少时提交即被拒,不预扣。**
+  参考视频 URL 数组，提供运镜、节奏与风格参考。最多 3 段，总时长不超过 15 秒。
 </ParamField>
 
 <ParamField body="audio_urls" type="string[]">
-  参考音频,影响成片的节奏与配乐走向
+  参考音频 URL 数组，影响成片的节奏与配乐。最多 3 段，总时长不超过 15 秒；必须与参考图片一起提供。
 </ParamField>
 
-<ParamField body="callback_url" type="string">
-  任务到达终态时回调,见[回调机制](/cn/docs/sync-async#async-task-webhook)
+<ParamField body="watermark" type="boolean" default="false">
+  输出添加水印。
 </ParamField>
+
+<ParamField body="ref_task_id" type="string">
+  已完成的 `minimax-h3` 任务 ID，只在 `minimax-h3-regeneration` 的 `regenerate` 动作下使用，且必填。源任务必须是同账号下已成功的 `minimax-h3` `generate` 任务，分辨率为 `768p`、带音轨。
+</ParamField>
+
+通用的 `callback_url`、`callback_events`、`Prefer: wait`、`Idempotency-Key` 和费用上限请求头见[提交任务](/cn/api-reference/task/submit)。
+
+`minimax-h3` 不接受 `seed`、`n`、`negative_prompt`、`quality` 和 `generate_audio`（音轨随成片一起产出）。`minimax-h3-regeneration` 只接受 `model` 与 `ref_task_id`，其余参数从源任务继承。以上之外的参数会返回 `400`，不计费。
+
+## 限制
+
+| 模型 | 条件 | 限制 |
+|---|---|---|
+| `minimax-h3` | `action: "generate"` | 必须提供提示词。 |
+| `minimax-h3` | `action: "generate"` | 视频生成必须明确提供时长。 |
+| `minimax-h3` | 传 `first_frame_image` | 首尾帧模式不能与多模态参考混用。 |
+| `minimax-h3` | 传 `audio_urls` | 参考音频必须与参考图片一起提供。 |
+| `minimax-h3-regeneration` | `action: "regenerate"` | 再生成必须提供已完成的本地 H3 任务 ID。 |
+
+| 项目 | 上限 |
+|---|---|
+| 时长 | 4–15 秒，整数 |
+| 参考图片 | 最多 9 张 |
+| 参考视频 | 最多 3 段，总时长 ≤ 15 秒，帧率 23.976–60 fps |
+| 参考音频 | 最多 3 段，总时长 ≤ 15 秒 |
+
+## 计费
+
+`minimax-h3` 按**分辨率档 × 秒数**计费：`768p` 与 `2k` 各有一个每秒单价，乘以 `duration` 就是输出部分的费用。另外两个维度只在用到时才计：
+
+- **参考视频**：带 `video_urls` 时，输出秒按同分辨率的参考档单价计算，并按参考视频的实际总秒数再计一段输入费用；取不到参考视频时长时，按 15 秒的上限计。
+- **参考图片**：`image_urls` 的前 5 张不加价，从第 6 张起每张按固定价加收。首帧、尾帧和参考音频不单独计费。
+
+`minimax-h3-regeneration` 用同一套口径，单价按 `2k` 档，计费用的时长与参考素材取自 `ref_task_id` 指向的源任务——源任务里的参考视频与参考图片会在再生成时再计一次。
 
 <Note>
-**图生与参考生互斥。** 首尾帧(`first_frame_image` / `last_frame_image`)与参考素材(`video_urls` / `audio_urls`)不能在同一次请求里混用 —— 上游把它们当两种不同的生成模式。
+**本页不列具体单价**——单价会随上游调整，这里只讲计费维度与口径。
+
+实时单价见 `GET /v1/models` 返回的 `price_config`，或控制台「模型市场」。单次调用的实际费用见任务响应里的 `cost`：整数 quota，**500,000 quota = 1 USD**。
 </Note>
 
-## 资源限制
+提交时按上述维度冻结一笔额度，任务完成后按实际结果结算，差额退回。只有成功出片才计费；任务失败、取消，或没有返回可用视频时，全额退款。
 
-| 项目 | 限制 |
-|---|---|
-| 参考图 | 最多 9 张 |
-| 参考视频 | 最多 3 段,每段 2–15 秒 |
-| 参考音频 | 最多 3 段,每段 2–15 秒 |
-| 参考素材总时长 | ≤ 15 秒 |
-| 提示词 | ≤ 7000 字符 |
+## 响应
+
+```json 任务完成
+{
+  "task_id": "taski-d2d658ce585b5046dde1b95a884cc96c-task-wave1788783825b950188816",
+  "model": "minimax-h3",
+  "action": "generate",
+  "status": "completed",
+  "progress": "100%",
+  "created_at": 1788783825,
+  "completed_at": 1788783934,
+  "result": {
+    "videos": [
+      {
+        "url": ["https://cdn.example.com/result.mp4"],
+        "expires_at": 1789089508
+      }
+    ]
+  },
+  "billing_status": "settled",
+  "cost": 144000,
+  "urls": {
+    "get": "https://www.qingbo.dev/v1/tasks/taski-d2d658ce585b5046dde1b95a884cc96c-task-wave1788783825b950188816",
+    "cancel": "https://www.qingbo.dev/v1/tasks/taski-d2d658ce585b5046dde1b95a884cc96c-task-wave1788783825b950188816/cancel"
+  }
+}
+```
+
+`result.videos` 返回带音轨的成片，`expires_at` 是链接过期时间（Unix 秒），过期前把文件转存到自己的存储。再生成任务的响应形状相同，`model` 为 `minimax-h3-regeneration`。完整字段说明见[查询任务状态](/cn/api-reference/task/status)。
+
+## 可用模型
+
+| 模型 ID | 动作 | 分辨率 | 时长（秒） | 输入 |
+|---|---|---|---|---|
+| `minimax-h3` | `generate` | `768p` `2k` | 4–15 | 文本、参考图、首尾帧、参考视频、参考音频 |
+| `minimax-h3-regeneration` | `regenerate` | `2k` | 取自源任务 | 已完成的 `minimax-h3` 768P 任务 ID |
 
 ## 相关文档
 
-- [任务系统](/cn/docs/task-system) — 提交、轮询、回调
-- [模型列表](/cn/docs/models) — 查询可用模型与实时单价
+- [Hailuo 系列](/cn/api-reference/video/hailuo)
+- [视频生成概述](/cn/api-reference/video/overview)
+- [提交任务](/cn/api-reference/task/submit)
+- [查询任务状态](/cn/api-reference/task/status)
+- [任务系统](/cn/docs/task-system)

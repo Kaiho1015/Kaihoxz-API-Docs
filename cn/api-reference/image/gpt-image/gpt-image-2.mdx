@@ -179,11 +179,12 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 }
 ```
 
-`result.images` 返回生成图片。任务失败或取消时预留费用自动退回；如果上游返回成功但没有可交付图片，任务会按失败处理并退款。
+`result.images` 返回生成图片。任务失败或取消时冻结额度全额退款；如果上游返回成功但没有可交付图片，任务会按失败处理并退款。
 
 ## 相关文档
 
 - [GPT Image 系列](/cn/api-reference/image/gpt-image/overview)
+- [GPT Image 1 与 1.5 官方版](/cn/api-reference/image/gpt-image/gpt-image-1)
 - [GPT Image 2 逆向版](/cn/api-reference/image/gpt-image/gpt-image-2-rev)
 - [提交任务](/cn/api-reference/task/submit)
 - [查询任务状态](/cn/api-reference/task/status)
