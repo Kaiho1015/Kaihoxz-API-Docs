@@ -140,7 +140,7 @@ The shared `callback_url`, `callback_events`, `Prefer: wait`, `Idempotency-Key` 
 | `minimax-h3` | `action: "generate"` | Video generation requires an explicit duration. |
 | `minimax-h3` | `first_frame_image` sent | Frame mode cannot be mixed with multimodal references. |
 | `minimax-h3` | `audio_urls` sent | Reference audio must be provided together with a reference image. |
-| `minimax-h3-regeneration` | `action: "regenerate"` | Regeneration requires a completed local H3 task id. |
+| `minimax-h3-regeneration` | `action: "regenerate"` | Regeneration requires a completed local H3 task id whose output is 768p (pass resolution=768p on generate). |
 
 | Item | Ceiling |
 |---|---|

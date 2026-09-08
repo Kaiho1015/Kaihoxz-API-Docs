@@ -99,7 +99,7 @@ A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  Reference image URLs. Required for `edit`, up to 14; on `gemini-2.5-flash-image-preview-rev` the ceiling is left to the upstream model. Reference images carry no extra charge.
+  Reference image URLs. Required for `edit`, up to 14 on all four tiers. Reference images carry no extra charge.
 </ParamField>
 
 <ParamField body="aspect_ratio" type="string" default="1:1">
@@ -111,7 +111,7 @@ A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/
 </ParamField>
 
 <ParamField body="resolution" type="string" default="1k">
-  Output resolution. The tiers each model offers are listed under "Available models": `1k`, `2k` and `4k` on the flagship tier, `0.5k`, `1k`, `2k` and `4k` on the fast tier, and `1k` only on the previous-generation tier.
+  Output resolution; the default is `1k` on all three tiers that accept it. The tiers each model offers are listed under "Available models": `1k`, `2k` and `4k` on the flagship tier, `0.5k`, `1k`, `2k` and `4k` on the fast tier, and `1k` only on the previous-generation tier.
 
   `gemini-3.1-flash-lite-image-rev` does not support this parameter and always outputs 1K; sending it returns `400`.
 </ParamField>
@@ -138,9 +138,9 @@ The economy line does not support `mask_url`, `quality` or `seed`. `google_searc
 
 | Condition | Limit |
 |---|---|
-| Per request | One image returned |
-| `action: "edit"` | At least one reference image is required |
-| Reference images | Up to 14; on `gemini-2.5-flash-image-preview-rev` the ceiling is left to the upstream model |
+| Per request | One image per request. |
+| `action: "edit"` | Add at least one reference image to edit |
+| Reference images | Up to 14 |
 | Resolution | Tiers per model are listed under "Available models"; `gemini-3.1-flash-lite-image-rev` rejects `resolution` |
 
 ## Pricing
@@ -204,7 +204,7 @@ All four do text-to-image and reference-image editing, one image per request.
 - **The 11 shared aspect ratios**: `auto` `1:1` `2:3` `3:2` `3:4` `4:3` `4:5` `5:4` `9:16` `16:9` `21:9`
 - **The fast tier adds four extreme ratios**: `1:4` `4:1` `1:8` `8:1`, for long horizontal and vertical banners
 - **The lightest tier does not accept `resolution`** and always outputs 1K
-- **Up to 14 reference images**; on `gemini-2.5-flash-image-preview-rev` the ceiling is left to the upstream model
+- **Up to 14 reference images**, the same on all four tiers
 
 ## Related
 

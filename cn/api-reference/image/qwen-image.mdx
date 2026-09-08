@@ -78,7 +78,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  参考图片 URL 数组。`qwen-image-3.0` 与 `qwen-image-3.0-pro` 在 `edit` 时需要 1 至 3 张，`generate` 不接受参考图。
+  参考图片 URL 数组。`qwen-image-2.0` 与 `qwen-image-2.0-pro` 在 `edit` 时至少需要 1 张。`qwen-image-3.0` 与 `qwen-image-3.0-pro` 在 `edit` 时需要 1 至 3 张，`generate` 不接受参考图。
 </ParamField>
 
 <ParamField body="aspect_ratio" type="string">
@@ -114,6 +114,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 | 条件 | 限制 |
 |---|---|
 | `qwen-image-2.0` / `qwen-image-2.0-pro` | 一次最多出 6 张 |
+| `action: "edit"`（2.0 两档） | 图片编辑需要至少 1 张参考图 |
 | `qwen-image-3.0` / `qwen-image-3.0-pro` | 提示词必填，每次生成 1 张图片 |
 | `action: "generate"`（3.0 两档） | 文生图不接收参考图，请改用 `edit` |
 | `action: "edit"`（3.0 两档） | 图片编辑需要 1 至 3 张参考图 |

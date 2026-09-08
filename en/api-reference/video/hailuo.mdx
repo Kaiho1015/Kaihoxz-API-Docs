@@ -90,14 +90,14 @@ A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/
   Clip length in seconds.
 
   - `minimax-hailuo-02`: `5` or `10`, default `5`
-  - `minimax-hailuo-2.3` and `minimax-hailuo-2.3-fast`: `6` or `10`
+  - `minimax-hailuo-2.3` and `minimax-hailuo-2.3-fast`: `6` or `10`, default `6`
 </ParamField>
 
 <ParamField body="resolution" type="string">
   Output resolution.
 
   - `minimax-hailuo-02`: `512p`, `768p` or `1080p`, default `768p`
-  - `minimax-hailuo-2.3` and `minimax-hailuo-2.3-fast`: `768p` or `1080p`
+  - `minimax-hailuo-2.3` and `minimax-hailuo-2.3-fast`: `768p` or `1080p`, default `768p`
 </ParamField>
 
 <ParamField body="first_frame_image" type="string">
@@ -190,9 +190,9 @@ You are only billed for a video that is produced. Failed and cancelled tasks, an
 
 | Model ID | Resolutions | Duration (s) | Modes | Notes |
 |---|---|---|---|---|
-| `minimax-hailuo-02` | `512p` `768p` `1080p` | 5 / 10 | Text, first frame, first and last frame | `512p` needs a first frame; `1080p` is 5 s only |
-| `minimax-hailuo-2.3` | `768p` `1080p` | 6 / 10 | Text, first frame | Camera-movement tags and `seed` |
-| `minimax-hailuo-2.3-fast` | `768p` `1080p` | 6 / 10 | First frame (required) | Faster tier of 2.3, lower rate |
+| `minimax-hailuo-02` | `512p` `768p` (default) `1080p` | 5 (default) / 10 | Text, first frame, first and last frame | `512p` needs a first frame; `1080p` is 5 s only |
+| `minimax-hailuo-2.3` | `768p` (default) `1080p` | 6 (default) / 10 | Text, first frame | Camera-movement tags and `seed` |
+| `minimax-hailuo-2.3-fast` | `768p` (default) `1080p` | 6 (default) / 10 | First frame (required) | Faster tier of 2.3, lower rate |
 
 ## Examples
 

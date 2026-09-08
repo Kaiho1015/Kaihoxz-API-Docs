@@ -90,14 +90,14 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
   视频时长（秒）。
 
   - `minimax-hailuo-02`：`5` 或 `10`，默认 `5`
-  - `minimax-hailuo-2.3` 与 `minimax-hailuo-2.3-fast`：`6` 或 `10`
+  - `minimax-hailuo-2.3` 与 `minimax-hailuo-2.3-fast`：`6` 或 `10`，默认 `6`
 </ParamField>
 
 <ParamField body="resolution" type="string">
   输出分辨率。
 
   - `minimax-hailuo-02`：`512p`、`768p` 或 `1080p`，默认 `768p`
-  - `minimax-hailuo-2.3` 与 `minimax-hailuo-2.3-fast`：`768p` 或 `1080p`
+  - `minimax-hailuo-2.3` 与 `minimax-hailuo-2.3-fast`：`768p` 或 `1080p`，默认 `768p`
 </ParamField>
 
 <ParamField body="first_frame_image" type="string">
@@ -190,9 +190,9 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 | 模型 ID | 分辨率 | 时长（秒） | 模式 | 备注 |
 |---|---|---|---|---|
-| `minimax-hailuo-02` | `512p` `768p` `1080p` | 5 / 10 | 文生视频、首帧、首尾帧 | `512p` 需要首帧；`1080p` 仅 5 秒 |
-| `minimax-hailuo-2.3` | `768p` `1080p` | 6 / 10 | 文生视频、首帧 | 支持运镜标签与 `seed` |
-| `minimax-hailuo-2.3-fast` | `768p` `1080p` | 6 / 10 | 首帧（必填） | 2.3 的加速档，单价更低 |
+| `minimax-hailuo-02` | `512p` `768p`（默认）`1080p` | 5（默认）/ 10 | 文生视频、首帧、首尾帧 | `512p` 需要首帧；`1080p` 仅 5 秒 |
+| `minimax-hailuo-2.3` | `768p`（默认）`1080p` | 6（默认）/ 10 | 文生视频、首帧 | 支持运镜标签与 `seed` |
+| `minimax-hailuo-2.3-fast` | `768p`（默认）`1080p` | 6（默认）/ 10 | 首帧（必填） | 2.3 的加速档，单价更低 |
 
 ## 使用示例
 

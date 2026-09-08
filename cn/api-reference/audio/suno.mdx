@@ -74,7 +74,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 | 动作 | 说明 |
 |---|---|
 | `generate` | 生成一首完整歌曲：灵感模式给一句描述，自定义模式给歌词 |
-| `inspo` | 以参考音频为灵感生成新歌 |
+| `inspo` | 以参考音频为灵感生成新歌，用 `audio_urls` 传 1–4 条参考音频 |
 | `lyrics` | 只生成歌词文本，不出曲 |
 | `sounds` | 生成音效，可指定类型、BPM 与调性 |
 | `upsample_tags` | 把粗略的风格描述扩写成更完整的风格标签 |
@@ -120,7 +120,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 | 动作 | 说明 |
 |---|---|
 | `wav` | 把源音轨导出为 WAV 文件 |
-| `download` | 把源音轨导出为音频文件 |
+| `download` | 把源音轨导出为音频文件，用 `formats` 指定格式 |
 | `generate_video` | 为歌曲生成 MV 视频 |
 | `aligned_lyrics` | 输出逐句对齐的歌词时间轴 |
 | `bpm` | 分析歌曲 BPM |
@@ -137,6 +137,10 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 <ParamField body="prompt" type="string">
   灵感模式下是内容描述；`custom: true` 时是歌词正文；`lyrics` 与 `sounds` 动作下是主题描述。
+</ParamField>
+
+<ParamField body="audio_urls" type="string[]">
+  参考音频 URL 数组，需公网可访问。只有 `inspo` 动作接受，且必填，可传 1–4 条。
 </ParamField>
 
 <ParamField body="callback_url" type="string">
@@ -196,6 +200,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 | `bpm` | integer | `sounds` | 目标 BPM |
 | `key` | string | `sounds` | 调性 |
 | `lyrics_model` | string | `lyrics` | 写词用的模型 |
+| `formats` | array | `download` | 下载格式数组，例如 `["mp3","wav"]`；可选值 `mp3` / `m4a` / `wav`，至少一项。必填 |
 | `audio_url` | string | `create_voice` | 用来创建音色的音频 URL。必填 |
 | `audioFilePath` | string | `upload` | 要导入的音频文件路径。必填 |
 | `name` | string | `persona` | Persona 名称。必填 |
@@ -210,8 +215,11 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 
 本模型一次任务只产出一个结果，不支持用 `n` 批量生成。
 
+`inspo` 动作需要 1 至 4 条参考音频 URL。
+
 | 动作 | 必填参数 |
 |---|---|
+| `inspo` | `audio_urls` |
 | `extend` | `continue_at` |
 | `crop`、`remove_section`、`replace_section`、`sample` | `start_s` 与 `end_s` |
 | `fade_in`、`fade_out` | `duration_s` |
@@ -219,6 +227,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 | `create_voice` | `audio_url` |
 | `upload` | `audioFilePath` |
 | `persona` | `name` |
+| `download` | `formats` |
 
 ## 计费
 

@@ -140,7 +140,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 | `minimax-h3` | `action: "generate"` | 视频生成必须明确提供时长。 |
 | `minimax-h3` | 传 `first_frame_image` | 首尾帧模式不能与多模态参考混用。 |
 | `minimax-h3` | 传 `audio_urls` | 参考音频必须与参考图片一起提供。 |
-| `minimax-h3-regeneration` | `action: "regenerate"` | 再生成必须提供已完成的本地 H3 任务 ID。 |
+| `minimax-h3-regeneration` | `action: "regenerate"` | 再生成必须提供已完成的本地 H3 任务 ID，且源任务须为 768p 输出（generate 时显式传 resolution=768p）。 |
 
 | 项目 | 上限 |
 |---|---|

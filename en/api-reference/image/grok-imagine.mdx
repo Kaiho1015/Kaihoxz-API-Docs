@@ -124,7 +124,7 @@ A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  Reference image URLs, publicly reachable. Required for `edit`: `grok-imagine-image` takes 1–5, `grok-imagine-image-quality` and `grok-imagine-image-2.0` take 1–3. `grok-imagine-1.5-rev` also accepts reference images under `generate`; `grok-imagine-image-2.0-rev` does not accept them.
+  Reference image URLs, publicly reachable. Required for `edit`: `grok-imagine-image` takes 1–5, `grok-imagine-image-quality` and `grok-imagine-image-2.0` take 1–3, `grok-imagine-1.5-edit-rev` takes 1–5. `grok-imagine-1.5-rev` also accepts reference images under `generate`, up to 5; `grok-imagine-image-2.0-rev` does not accept them.
 
   Array order is preserved for multi-reference requests, so the prompt can refer to the first image, the second image, and so on.
 </ParamField>
@@ -209,8 +209,8 @@ You are only billed for a successfully generated image. Failed and cancelled tas
 | `grok-imagine-image-quality` | `generate` / `edit` | 14 | `1k` `2k` | 1–3, charged per image |
 | `grok-imagine-image-2.0` | `generate` / `edit` | 14 | `1k` `2k` × `low` `medium` | 1–3, charged per image |
 | `grok-imagine-image-2.0-rev` | `generate` | 7 | Fixed | Not supported |
-| `grok-imagine-1.5-rev` | `generate` | 5 | Fixed | Accepted, no extra fee |
-| `grok-imagine-1.5-edit-rev` | `generate` / `edit` | Not selectable | Fixed | Accepted, no extra fee |
+| `grok-imagine-1.5-rev` | `generate` | 5 | Fixed | Up to 5, no extra fee |
+| `grok-imagine-1.5-edit-rev` | `generate` / `edit` | Not selectable | Fixed | Up to 5, no extra fee |
 
 Aspect ratio sets:
 

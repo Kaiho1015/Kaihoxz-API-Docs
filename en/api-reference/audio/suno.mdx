@@ -74,7 +74,7 @@ A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/
 | Action | What it does |
 |---|---|
 | `generate` | A complete song: inspiration mode takes a description, custom mode takes your lyrics |
-| `inspo` | Build a new song from a reference recording |
+| `inspo` | Build a new song from a reference recording; pass 1–4 references in `audio_urls` |
 | `lyrics` | Write lyrics only, no audio |
 | `sounds` | Generate a sound effect, optionally with type, BPM and key |
 | `upsample_tags` | Expand a rough style description into fuller style tags |
@@ -120,7 +120,7 @@ A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/
 | Action | What it does |
 |---|---|
 | `wav` | Export the source track as a WAV file |
-| `download` | Export the source track as an audio file |
+| `download` | Export the source track as an audio file, in the formats given by `formats` |
 | `generate_video` | Produce a music video for the song |
 | `aligned_lyrics` | Return line-by-line lyric timings |
 | `bpm` | Analyse the song's BPM |
@@ -137,6 +137,10 @@ A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/
 
 <ParamField body="prompt" type="string">
   A content description in inspiration mode, the lyrics themselves when `custom: true`, and the subject to write about for `lyrics` and `sounds`.
+</ParamField>
+
+<ParamField body="audio_urls" type="string[]">
+  Reference audio URLs, publicly reachable. Accepted only by the `inspo` action, where it is required and takes 1–4 entries.
 </ParamField>
 
 <ParamField body="callback_url" type="string">
@@ -196,6 +200,7 @@ Two exceptions: `create_voice` takes a publicly reachable `audio_url`, and `uplo
 | `bpm` | integer | `sounds` | Target BPM |
 | `key` | string | `sounds` | Musical key |
 | `lyrics_model` | string | `lyrics` | Model used for lyric writing |
+| `formats` | array | `download` | Requested download formats, e.g. `["mp3","wav"]`; allowed values `mp3` / `m4a` / `wav`, at least one item. Required |
 | `audio_url` | string | `create_voice` | Audio URL to build the voice from. Required |
 | `audioFilePath` | string | `upload` | Path of the audio file to import. Required |
 | `name` | string | `persona` | Persona name. Required |
@@ -210,8 +215,11 @@ Parameters are validated per action: sending an action-specific parameter with a
 
 This model produces one result per task; `n` is not supported.
 
+The `inspo` action takes 1 to 4 reference audio URLs.
+
 | Action | Required parameters |
 |---|---|
+| `inspo` | `audio_urls` |
 | `extend` | `continue_at` |
 | `crop`, `remove_section`, `replace_section`, `sample` | `start_s` and `end_s` |
 | `fade_in`, `fade_out` | `duration_s` |
@@ -219,6 +227,7 @@ This model produces one result per task; `n` is not supported.
 | `create_voice` | `audio_url` |
 | `upload` | `audioFilePath` |
 | `persona` | `name` |
+| `download` | `formats` |
 
 ## Pricing
 

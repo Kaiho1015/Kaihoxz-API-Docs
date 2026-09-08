@@ -124,7 +124,7 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  参考图 URL 数组，需公网可访问。`action: "edit"` 时必填：`grok-imagine-image` 接受 1–5 张，`grok-imagine-image-quality` 和 `grok-imagine-image-2.0` 接受 1–3 张。`grok-imagine-1.5-rev` 在 `generate` 下也接受参考图；`grok-imagine-image-2.0-rev` 不接受。
+  参考图 URL 数组，需公网可访问。`action: "edit"` 时必填：`grok-imagine-image` 接受 1–5 张，`grok-imagine-image-quality` 和 `grok-imagine-image-2.0` 接受 1–3 张，`grok-imagine-1.5-edit-rev` 接受 1–5 张。`grok-imagine-1.5-rev` 在 `generate` 下也接受参考图，最多 5 张；`grok-imagine-image-2.0-rev` 不接受。
 
   多图参考时数组顺序保留，可在提示词里按顺序指代第一张、第二张。
 </ParamField>
@@ -209,8 +209,8 @@ curl -X POST https://www.qingbo.dev/v1/tasks \
 | `grok-imagine-image-quality` | `generate` / `edit` | 14 种 | `1k` `2k` | 1–3 张，按张另计 |
 | `grok-imagine-image-2.0` | `generate` / `edit` | 14 种 | `1k` `2k` × `low` `medium` | 1–3 张，按张另计 |
 | `grok-imagine-image-2.0-rev` | `generate` | 7 种 | 固定 | 不接收 |
-| `grok-imagine-1.5-rev` | `generate` | 5 种 | 固定 | 可传，不加价 |
-| `grok-imagine-1.5-edit-rev` | `generate` / `edit` | 不可选 | 固定 | 可传，不加价 |
+| `grok-imagine-1.5-rev` | `generate` | 5 种 | 固定 | 最多 5 张，不加价 |
+| `grok-imagine-1.5-edit-rev` | `generate` / `edit` | 不可选 | 固定 | 最多 5 张，不加价 |
 
 画幅取值集合：
 

@@ -78,7 +78,7 @@ A successful submission returns a `task_id`. Retrieve the result with [`GET /v1/
 </ParamField>
 
 <ParamField body="image_urls" type="string[]">
-  Reference image URLs. `qwen-image-3.0` and `qwen-image-3.0-pro` require one to three of them on `edit` and accept none on `generate`.
+  Reference image URLs. `qwen-image-2.0` and `qwen-image-2.0-pro` require at least one on `edit`. `qwen-image-3.0` and `qwen-image-3.0-pro` require one to three of them on `edit` and accept none on `generate`.
 </ParamField>
 
 <ParamField body="aspect_ratio" type="string">
@@ -114,6 +114,7 @@ This series does not accept `seed`, `quality`, `watermark` or `mask_url`. Any ot
 | Condition | Limit |
 |---|---|
 | `qwen-image-2.0` / `qwen-image-2.0-pro` | Up to 6 images per request |
+| `action: "edit"` (both 2.0 models) | Image editing requires at least one reference image |
 | `qwen-image-3.0` / `qwen-image-3.0-pro` | A prompt is required and each request generates one image |
 | `action: "generate"` (both 3.0 models) | Text-to-image does not take reference images; use `edit` |
 | `action: "edit"` (both 3.0 models) | Image editing requires 1 to 3 reference images |
