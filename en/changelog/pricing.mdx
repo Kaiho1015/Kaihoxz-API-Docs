@@ -27,7 +27,7 @@ Two more changes:
 - **`gpt-image-2` without `quality`** now generates and bills at **`low`** instead of `high` (`gpt-image-1` / `gpt-image-1.5` use `medium`), matching OpenAI's own defaults — this is a **price cut**. Passing `auto` explicitly still bills at the top tier.
 - **FLUX.2 reference images are charged by MP tier**: with exactly one reference image the surcharge follows that image's actual MP tier (1–4 MP); with two or more, each is charged at the 1 MP tier.
 
-Effective **immediately**, for calls made after the change. Live prices are in [Explore](https://qingbo.dev/explore) and the console's Model Market; `POST /waveapi/public/quote` with `video_urls` / `image_urls` returns an estimate.
+Effective **immediately**, for calls made after the change. Live prices are in [Explore](https://qingbo.dev/explore) and the console's Model Market; `POST https://www.qingbo.dev/waveapi/quote` with `video_urls` / `image_urls` returns an estimate.
 </Update>
 
 <Update label="2026-09-03" description="Pricing change">
@@ -67,7 +67,7 @@ For the models below, reference images (`image_urls`) are now **charged per imag
 | `gpt-image-2` / `gpt-image-1.5` | $0.0025 (gpt-image-2 previously used 1–3 / 4+ image tiers; now linear) |
 | `gpt-image-1` | $0.0031 |
 
-Cost per call = output tier price + number of reference images × unit price; calls without reference images are unaffected. Seedream 4.x / 5.0-lite, Qwen Image 2.0, Wan 2.7 Image and the Nano Banana family do not charge for reference images. Live prices are on [Explore](https://qingbo.dev/explore) and in the console "Model Market"; `POST /waveapi/public/quote` with `image_urls` returns an estimate.
+Cost per call = output tier price + number of reference images × unit price; calls without reference images are unaffected. Seedream 4.x / 5.0-lite, Qwen Image 2.0, Wan 2.7 Image and the Nano Banana family do not charge for reference images. Live prices are on [Explore](https://qingbo.dev/explore) and in the console "Model Market"; `POST https://www.qingbo.dev/waveapi/quote` with `image_urls` returns an estimate.
 </Update>
 
 <Update label="2026-09-02" description="Pricing change">
